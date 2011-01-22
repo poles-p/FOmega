@@ -67,9 +67,12 @@
 
 \pagebreak
 
+\theoremstyle{plain}
+\newtheorem{twierdzenie}{Twierdzenie}
+\newtheorem{lemay}{Lemat}
 
 \theoremstyle{definition}
-\newtheorem{theorem}{Definicja}
+\newtheorem{definicja}{Definicja}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -98,7 +101,7 @@ Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy($t$) ora
   t ::= &  &  \\
    & $x$ & \textit{zmienne}  \\
    & $\lambda x:T.t$ & \textit{abstrakcja} \\
-   & tt & \textit{aplikacja} \\
+   & t\;t & \textit{aplikacja} \\
    & & \\
   T ::= &  &  \\
    & $X$ & \textit{zmienna typowa} \\
@@ -134,7 +137,7 @@ Główną cechą systemu $\lambda_{\omega}$ jest to, że typy zależą od innych
    \hline
    T ::= & $\cdots$ &  \\
    & $\lambda X::K.T$ & \textit{konstruktor abstrakcji typowej} \\
-   & $T T$ & \textit{konstruktor aplikacji typowej} \\
+   & $T\;T$ & \textit{konstruktor aplikacji typowej} \\
    \hline
 \end{tabular}
     \item rodzaje \\
@@ -142,28 +145,67 @@ Główną cechą systemu $\lambda_{\omega}$ jest to, że typy zależą od innych
   \hline
   K ::= &  &   \\
    & $\ast$ & \textit{rodzaj wszystkich typów} \\
-   & $K \Rightarrow K$ & \textit{???} \\
+   & $K \Rightarrow K$ & \textit{rodzaj funkcji typowej} \\
   \hline
 \end{tabular}
 \end{itemize} 
 
+\subsection{Kontrola rodzaju}
 
+\begin{definicja}
+	\emph{Kontekst typowania} opisany jest składnią abstrakcyjną
+	
+	\begin{tabular}{ | l c r | }
+		\hline
+		$\Gamma$ ::= & & \\
+		& $\emptyset$ & \textit{pusty kontekst} \\
+		& $\Gamma,x:T$& \textit{wiązanie zmiennej} \\ 
+		& $\Gamma,X::K$& \textit{wiązanie rodzaju} \\ 
+		\hline
+	\end{tabular}
+	
+	Konteksty typowania bedziemy często traktować jako skończone zbiory wiązań i będziemy
+	używać teoriomnogościowych symboli na nich. Np. przynależność do kontekstu formalnie
+	definiujemy jako:
+	\[
+		\frac{}{B \in \Gamma,B}
+		\qquad
+		\frac{B \in \Gamma}{B \in \Gamma,B'}
+	\]
+	Definicje pozostałych operacji toriomnogościowych są na tyle naturalne, że zostawiamy
+	je Czytelnikowi do uzupełnienia.
+\end{definicja}
 
-\emph{Konstruktory rodzaju} definiujemy następująco:
-    \begin{itemize}
-        \item $\frac{X::K \in \Gamma}{\Gamma \vdash X::K}$
-        \item $\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1 T_2 :: K_{2}}$
-        \item $\frac{\Gamma \vdash X :: K_1 \hspace{1em} \Gamma \vdash T :: K_2}{\Gamma \vdash \lambda X::K. T :: K_{1} \Rightarrow K_{2}}$
-        \item $\frac{\Gamma \vdash X :: K \hspace{1em} \Gamma \vdash T :: \ast}{\Gamma \vdash \forall X::K. T :: \ast}$
-        \item $\frac{\Gamma \vdash T_1 : \ast \hspace{1em} \Gamma \vdash T_2 : \ast}{T_1 \rightarrow T_2 : \ast}$
-    \end{itemize}
+W systemie $F_\omega$ każdemu poprawnie zbudowanemu konstruktorowi rodzaju przyporządkowujemy rodzaj.
+Przyporządkowanie to określa relacja $(.\vdash.::.)$ Zdefiniowana następująco.
 
+\begin{definicja}
+	Jeżeli zachodzi $\Gamma \vdash T :: K$, to powiemy, że
+	\emph {konstruktor typowy $T$ jest rodzaju $K$ w~kontekście $\Gamma$}, gdzie
+	relacja określenia rodzaju $(.\vdash.::.) \subseteq \Gamma \times T \times K$
+	jest to najmniejsza relacja zamnknięta na reguły:
+	\[
+		\frac{X::K \in \Gamma}{\Gamma \vdash X::K}
+		\qquad
+		\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1 T_2 :: K_{2}}
+	\]
+	\[
+		\frac{\Gamma \vdash X :: K_1 \hspace{1em} \Gamma \vdash T :: K_2}{\Gamma \vdash \lambda X::K. T :: K_{1} \Rightarrow K_{2}}
+		\qquad
+		\frac{\Gamma \vdash X :: K \hspace{1em} \Gamma \vdash T :: \ast}{\Gamma \vdash \forall X::K. T :: \ast}
+	\]
+	\[
+		\frac{\Gamma \vdash T_1 : \ast \hspace{1em} \Gamma \vdash T_2 : \ast}{T_1 \rightarrow T_2 : \ast}
+	\]	
+\end{definicja}
 
-\begin{theorem}
+\begin{definicja}
 \emph{Typem} nazywamy konstruktor rodzaju $\ast$.
-\end{theorem}
+\end{definicja}
 
-\begin{theorem}
+\subsection{Typowanie}
+
+\begin{definicja}
 No o podstawieniu konstruktora za zmienną konstruktorową można napisać albo nie. Tutaj można też wrzucić kod.
     \begin{itemize}
         \item $\alpha [\beta := \phi]= \begin{cases}  \alpha & \beta=\alpha \\ \beta & \text{w.p.p} \end{cases}$
@@ -171,16 +213,16 @@ No o podstawieniu konstruktora za zmienną konstruktorową można napisać albo 
         \item $\forall \alpha \sigma [\beta := \phi]= \begin{cases} \forall \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \forall \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
         \item $\lambda \alpha \sigma [\beta := \phi]= \begin{cases} \lambda \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \lambda \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
     \end{itemize}
-\end{theorem}
+\end{definicja}
 
 no i konstruktory są silnie normalizowalne, własność churcha-rossera zachodzi...
 
-\begin{theorem}
+\begin{definicja}
 Reguły przepisywania typów w systemie $F_{\omega}$ w wersji Curry'ego standardowe, oprócz: \\
 
 $\frac{\Gamma \vdash M : \forall \alpha \sigma}{\Gamma \vdash M : nf(\sigma [ \alpha := \tau ])}$
 
-\end{theorem}
+\end{definicja}
 
 
 Nierozstzygalne są problemy:
