@@ -31,3 +31,4 @@ doc/*.aux
 doc/*.bat
 doc/*.log
 doc/*.pdf
+*.scproj
