@@ -69,7 +69,7 @@
 
 \theoremstyle{plain}
 \newtheorem{twierdzenie}{Twierdzenie}
-\newtheorem{lemay}{Lemat}
+\newtheorem{lemat}{Lemat}
 
 \theoremstyle{definition}
 \newtheorem{definicja}{Definicja}
@@ -172,7 +172,7 @@ Główną cechą systemu $\lambda_{\omega}$ jest to, że typy zależą od innych
 		\qquad
 		\frac{B \in \Gamma}{B \in \Gamma,B'}
 	\]
-	Definicje pozostałych operacji toriomnogościowych są na tyle naturalne, że zostawiamy
+	Definicje pozostałych operacji teoriomnogościowych są na tyle naturalne, że zostawiamy
 	je Czytelnikowi do uzupełnienia.
 \end{definicja}
 
@@ -306,59 +306,36 @@ Nierozstzygalne są problemy:
         \item typowalność: dane M, Czy $\exists \Gamma \tau . \Gamma \vdash M : \tau$
     \end{itemize}
 
-
-\subsection{pare słów o rozszerzeniach}
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Sładnia abstrakcyjna języka}
+\section{Własności i dowody}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
+\begin{twierdzenie}[Progres]
+Niech $t$ będzie termem nie będącym wartością, oraz niech $\Gamma$ oraz $T$ będą
+kontekstem typowania i~typem, takim że zachodzi $\Gamma\vdash t : T$. Wówczas istnieje
+taki term $t'$, że $t \longrightarrow_\beta t'$.
+\end{twierdzenie}
+\begin{proof}
+\end{proof}
 
-
+\begin{twierdzenie}[Zachowanie typu]
+Niech zachodzi $\Gamma \vdash t:T$, oraz $t \longrightarrow_\beta t'$ dla pewnych
+$\Gamma$, $t$, $t'$ oraz $T$. Wówczas zachodzi
+$\Gamma\vdash t' : T$.
+\end{twierdzenie}
+\begin{proof}
+\end{proof}
+	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Semantyka i typowanie}                                 
+\section{Możliwe rozszerzenia}                                 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
-
-\subsection{rachunek lambda}
-
-
-
-\begin{tabular}{ l c r }
-  v ::= & $\cdots$ &  \\
-   & $\lambda x:T.t$ & \textit{wartość abstrakcji} \\
-\end{tabular}
-
-
-
-\begin{tabular}{ l c r }
-  $\Gamma$ ::= & $\cdots$ &  \\
-   & $\emptyset$ & \textit{pusty kontekst} \\
-   & $\Gamma,x:T$& \textit{wiązanie zmiennej} \\ 
-\end{tabular}
-
-
-
-\subsection{kinds}
-
-
-
-\begin{tabular}{ l c r }
-  v ::= & $\cdots$ &  \\
-   & $\lambda x::K.t$ & \textit{wartość abstrakcji typowej} \\
-\end{tabular}
-
-\begin{tabular}{ l c r }
-  $\Gamma$ ::= & $\cdots$ &  \\
-   & $\Gamma,X::K$& \textit{wiązanie zmiennej typowej} \\ 
-\end{tabular}
 
 \subsection{wyrażenia arytmetyczne i logiczne}
 \subsection{unit i sekwencje}
@@ -371,15 +348,6 @@ Nierozstzygalne są problemy:
 \subsection{rekonstrukcje typów}
 \subsection{typy rekurencyjne}
 \subsection{dopasowanie wzorca}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Własności i dowody}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{equation}{0}
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
