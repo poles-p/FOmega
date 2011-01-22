@@ -150,7 +150,7 @@ Główną cechą systemu $\lambda_{\omega}$ jest to, że typy zależą od innych
 \end{tabular}
 \end{itemize} 
 
-\subsection{Kontrola rodzaju}
+\subsection{Podstawowe definicje}
 
 \begin{definicja}
 	\emph{Kontekst typowania} opisany jest składnią abstrakcyjną
@@ -176,18 +176,31 @@ Główną cechą systemu $\lambda_{\omega}$ jest to, że typy zależą od innych
 	je Czytelnikowi do uzupełnienia.
 \end{definicja}
 
+\begin{definicja}
+Tu należało by zdefiniować zmienne wolne, podstawienia, itp.
+    \begin{itemize}
+        \item $\alpha [\beta := \phi]= \begin{cases}  \alpha & \beta=\alpha \\ \beta & \text{w.p.p} \end{cases}$
+        \item $(\vartheta \sigma) [\beta := \phi] = \vartheta [\beta := \phi] \sigma [\beta := \phi]$
+        \item $\forall \alpha \sigma [\beta := \phi]= \begin{cases} \forall \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \forall \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
+        \item $\lambda \alpha \sigma [\beta := \phi]= \begin{cases} \lambda \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \lambda \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
+    \end{itemize}
+\end{definicja}
+
+
+\subsection{Kontrola rodzaju}
+
 W systemie $F_\omega$ każdemu poprawnie zbudowanemu konstruktorowi rodzaju przyporządkowujemy rodzaj.
 Przyporządkowanie to określa relacja $(.\vdash.::.)$ Zdefiniowana następująco.
 
 \begin{definicja}
 	Jeżeli zachodzi $\Gamma \vdash T :: K$, to powiemy, że
 	\emph {konstruktor typowy $T$ jest rodzaju $K$ w~kontekście $\Gamma$}, gdzie
-	relacja określenia rodzaju $(.\vdash.::.) \subseteq \Gamma \times T \times K$
+	relacja określenia rodzaju $(.\vdash.::.)$
 	jest to najmniejsza relacja zamnknięta na reguły:
 	\[
 		\frac{X::K \in \Gamma}{\Gamma \vdash X::K}
 		\qquad
-		\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1 T_2 :: K_{2}}
+		\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1\;T_2 :: K_{2}}
 	\]
 	\[
 		\frac{\Gamma \vdash X :: K_1 \hspace{1em} \Gamma \vdash T :: K_2}{\Gamma \vdash \lambda X::K. T :: K_{1} \Rightarrow K_{2}}
@@ -205,15 +218,77 @@ Przyporządkowanie to określa relacja $(.\vdash.::.)$ Zdefiniowana następując
 
 \subsection{Typowanie}
 
+W systemie $F_\omega$ konstruktory typów reprezentowane są przez $\lambda$-termy, więc może
+się zdażyć, że dwa różne konstruktory typów są sobie równoważne ($\beta\eta$-równe).
+
 \begin{definicja}
-No o podstawieniu konstruktora za zmienną konstruktorową można napisać albo nie. Tutaj można też wrzucić kod.
-    \begin{itemize}
-        \item $\alpha [\beta := \phi]= \begin{cases}  \alpha & \beta=\alpha \\ \beta & \text{w.p.p} \end{cases}$
-        \item $(\vartheta \sigma) [\beta := \phi] = \vartheta [\beta := \phi] \sigma [\beta := \phi]$
-        \item $\forall \alpha \sigma [\beta := \phi]= \begin{cases} \forall \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \forall \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
-        \item $\lambda \alpha \sigma [\beta := \phi]= \begin{cases} \lambda \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \lambda \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
-    \end{itemize}
+	Powiemy, że dwa konstruktory typów są \emph{$\beta\eta$-równe}, jeżeli zachodzi $T =_{\beta\eta} S$,
+	gdzie relacja $=_{\beta\eta}$ jest najmniejszą relacją zamkniętą na regóły:
+	\[
+		\frac{}{T=_{\beta\eta}T}
+		\qquad
+		\frac{S=_{\beta\eta}T}{T=_{\beta\eta}S}
+		\qquad
+		\frac{T=_{\beta\eta}U \quad U=_{\beta\eta}S}{T=_{\beta\eta}S}
+	\]
+	\[
+		\frac{T_1=_{\beta\eta}S_1 \quad T_2=_{\beta\eta}S_2}{T_1 \rightarrow T_2 =_{\beta\eta} S_1 \rightarrow S_2}
+		\qquad
+		\frac{T_1=_{\beta\eta}S_1 \quad T_2=_{\beta\eta}S_2}{T_1\;T_2 =_{\beta\eta} S_1\;S_2}
+	\]
+	\[
+		\frac{T=_{\beta\eta}S}{\forall X::K.T =_{\beta\eta} \forall X::K.S}
+		\qquad
+		\frac{X \notin FV(T)}{\lambda X::K.T\;X =_{\beta\eta} T}
+	\]
+	\[
+		\frac{}{(\lambda X::K.T)S =_{\beta\eta} T[X:=S]}
+	\]	
+	W tych regółach zakładamy konwencję Barendregta.
 \end{definicja}
+
+\begin{definicja}
+	Powiemy, że \emph{Term $t$ jest typu $T$ w kontekście $\Gamma$} jeżeli zachodzi $\Gamma \vdash t : T$, gdzie
+	relacja typowania $(.\vdash.:.)$ jest najmniejszą relacją zamkniętą na regóły:
+	\[
+		\frac{x:T \in \Gamma}{\Gamma \vdash x : T}
+		\qquad
+		\frac{\Gamma\vdash T_1::* \quad \Gamma,x:T_1\vdash t:T_2}{\Gamma\vdash \lambda x:T_1.t : T_1 \rightarrow T_2}
+	\]
+	\[
+		\frac{\Gamma\vdash t_1 : T_1 \rightarrow T_2 \quad \Gamma\vdash t_2 : T_1}{\Gamma\vdash t_1\;t_2 : T_2}
+		\qquad
+		\frac{\Gamma,X::K\vdash t:T}{\Gamma\vdash \lambda X::K.t : \forall X::K.T}
+	\]
+	\[
+		\frac{\Gamma\vdash t : \forall X:K.T' \quad \Gamma\vdash T::K}{\Gamma\vdash t[T]::T'[X := T]}
+		\qquad
+		\frac{\Gamma\vdash t:S \quad S=_{\beta\eta}T \quad \Gamma\vdash T::*}{\Gamma\vdash t:T}
+	\]
+\end{definicja}
+
+\subsection{Wartościowanie}
+
+Wartości:
+
+\begin{tabular}{ l c r }
+  v ::= & & \\
+   & $\lambda x:T.t$ & \textit{wartość abstrakcji} \\
+\end{tabular}
+
+Regóły wartościowania:
+\[
+	\frac{t_1 \longrightarrow_\beta t_1'}{t_1\;t_2 \longrightarrow_\beta t_1'\;t_2}
+	\qquad
+	\frac{t_2 \longrightarrow_\beta t_2'}{v_1\;t_2 \longrightarrow_\beta v_1'\;t_2}
+	\qquad
+	\frac{}{(\lambda x:T.t)v \longrightarrow_\beta t[x:=v]}
+\]
+\[
+	\frac{t \longrightarrow_\beta t'}{t[T] \longrightarrow_\beta t'[T]}
+	\qquad
+	\frac{}{(\lambda X::K.t)[T] \longrightarrow_\beta t[X:=T]}
+\]
 
 no i konstruktory są silnie normalizowalne, własność churcha-rossera zachodzi...
 
