@@ -1,0 +1,335 @@
+\documentclass[11pt,leqno]{article}
+
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+
+\usepackage{a4wide}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage[pdftex]{graphicx}
+\usepackage{caption}
+\usepackage{bm}
+\usepackage{amsthm}
+\usepackage{indentfirst}
+
+ 
+%%%%%%%%%%%%%%%%%%
+% Kropka po numerze paragrafu, podparagrafu itp. 
+
+\makeatletter
+ \renewcommand\@seccntformat[1]{\csname the#1\endcsname.\quad}
+ \renewcommand\numberline[1]{#1.\hskip0.7em}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%
+% Kropka po numerze tablicy, rysunku i ustawienie czcionki dla etykiety. 
+
+\captionsetup{labelfont=sc,labelsep=period}
+
+%%%%%%%%%%%%%%%%%%
+% Inna numeracja wzorów.
+
+\renewcommand{\theequation}{\arabic{section}.\arabic{equation}}
+
+%%%%%%%%%%%%%%%%%%
+
+\title{{\textbf{Rekonstrukcja typów w systemie $F_{\omega}$}}\\[1ex]}
+\date{Wrocław, dnia \today\ r.}
+\author{Piotr Polesiuk \\ \texttt{bassists@o2.pl}}
+
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+
+\pagebreak
+
+\theoremstyle{plain}
+\newtheorem{twierdzenie}{Twierdzenie}
+\newtheorem{lemat}{Lemat}
+
+\theoremstyle{definition}
+\newtheorem{definicja}{Definicja}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Kilka słów o składni.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setcounter{equation}{0}
+
+Rozważmy język o składni:
+
+\begin{tabular}{| l c r |}
+  \hline
+  t ::= &  &  \\
+   & $x$ & \textit{zmienne}  \\
+   & $\lambda x:T.t$ & \textit{abstrakcja (anotowana)} \\
+   & $\lambda x.t$ & \textit{abstrakcja (nieanotowana)} \\
+   & $t\;t$ & \textit{aplikacja} \\
+   & $\Delta X::K.t$ & \textit{abstrakcja typowa (anotowana)} \\
+   & $\Delta X.t$ & \textit{abstrakcja typowa (nieanotowana)} \\
+   & $t[T]$ & \textit{aplikacja typowa} \\
+   & $\textrm{let} \ x = t \ \textrm{in} \ t$ & \textit{zmienna lokalna} \\
+   & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
+   & & \\
+  T ::= &  &  \\
+   & $X$ & \textit{zmienna typowa (kwantyfikowana abstrakcją)} \\
+   & $T \rightarrow T$ & \textit{typ funkcji} \\
+   & $\forall X::K.T$ & \textit{typ uniwersalny (anotowany)} \\
+   & $\forall X.T$ & \textit{typ uniwersalny (nieanotowany)} \\
+   & $\Lambda X::K.T$ & \textit{konstruktor abstrakcji typowej (anotowany)} \\
+   & $\Lambda X.T$ & \textit{konstruktor abstrakcji typowej (nieanotowany)} \\
+   & $T\;T$ & \textit{aplikacja konstruktora typowego} \\
+   & $\bar{X}$ & \textit{zmienna typowa (kwantyfikowana schematem)} \\
+   & & \\
+  K ::= & & \\
+   & $*$ & \textit{rodzaj wszystkich typów} \\
+   & $K \Rightarrow K$ & \textit{rodzaj funkcji typowej} \\
+   & $\widehat{X}$ & \textit{zmienna rodzajowa (kwantyfikowana schematem)} \\
+   & & \\
+  \hline
+\end{tabular} \\
+
+Ważnym założeniem jest to, że $\bar{X}::*$, co nam ułatwi sprawę przy unifikacji, a~zarazem zbytnio nie ograniczy języka.
+  
+Jeżeli chcemy dodać ML-polimorfizm, będą nam portrzebne schematy typów i schematy rodzajów:
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\left<T\right>$ ::= &  & \textit{schemat typu} \\
+   & $T$ & \textit{typ schematu} \\
+   & $\Omega \bar{X}.\left<T\right>$ & \textit{kwantyfikacja zmiennej typowej} \\
+   & $\Omega \widehat{X}.\left<T\right>$ & \textit{kwantyfikacja zmiennej rodzajowej} \\
+   & & \\
+  $\left<K\right>$ ::= &  & \textit{schemat rodzaju} \\
+   & $K$ & \textit{rodzaj schematu}\\
+   & $\Omega \widehat{X}.\left<K\right>$ & \textit{kwantyfikacja zmiennej rodzajowej} \\
+   & & \\
+  \hline
+\end{tabular} \\
+
+Będziemy używać następującego cukru syntaktycznego:
+\[
+\Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m.T \equiv 
+\Omega \bar{X}_1. \dots \Omega \bar{X}_n. \Omega \widehat{X}_1. \dots \Omega \widehat{X}_m.T
+\]
+I analogicznie dla rodzajów.
+
+Teraz sam kontekst typowania ma postać:
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\Gamma$ ::= &  & \\
+   & $\emptyset$ & \\
+   & $\Gamma, x:\left<T\right>$ & \\
+   & $\Gamma, X::\left<K\right>$ & \\
+   & & \\
+  \hline
+\end{tabular} \\
+
+\section{$\beta$-unifikacja}
+
+Podczas rekonstukcji typów pojawiają się równania więzów które należy rozwiązać. Samo rozwiązanie
+sprowadza się do unifikacji pewnych termów, ale tutaj, ze względu na możliwość występowania funkcji
+typowych, termy równoważne nie muszą być równe, więc sama unifikacja powinna sprowadzać termy do
+$\beta$-równych sobie.
+
+Taka unifikacja niesie ze sobą wiele problemów. Po pierwsze, będziemy chcieli używać podstawienia,
+będącego unifikatorem, na innych termach. To zaś grozi uzewnętrznieniem zmiennych związanych. Drugi
+problem to taki, że samo podstawienie nie musi zrównywać termów, które da się zrównać, ale różnią się
+nazwami zmiennych związanych.
+
+Z pierwszym problemem poradzimy sobie, traktując podstawienia jako funkcję częściowe, tzn. samo podstawienie
+oprócz przyporzątkowań postaci $[\bar{X} := T]$, może również zawierać podstawienia postaci $[\bar{X} := fail]$.
+Oraz dodając jeszcze operację anulowania podstawienia:
+\[
+[\bar{X} := T] \setminus X = 
+\begin{cases}
+[\bar{X} := fail] & X \in    Var(T) \\
+[\bar{X} := T]    & X \notin Var(T)
+\end{cases}
+\]
+
+Z drugim problemem poradzimy sobie traktując unifikator jako parę zawierającą podstawienie, które dobrze działa
+na zewnątrz, oraz term będący wynikiem unifikacji.
+
+\begin{definicja}
+\emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieją
+podstawienia $\theta_1$ i $\theta_2$ takie, że:
+\[
+\theta_1 T_1 =_\beta S =_\beta \theta_2 T_2
+\]
+oraz
+\[
+\theta_1 \setminus BTV(T_1) = \sigma = \theta_2 \setminus BTV(T_2)
+\]
+\end{definicja}
+
+\begin{definicja}
+Powiemy, że $\beta$-unifikator $(\sigma, S)$ jest \emph{ogólniejszy} od $\beta$-unifikatora
+$(\theta, T)$, jeżeli istnieje takie podstawienie $\rho$ i przemianowanie $\alpha$, że
+\[
+\rho\alpha S =_\beta T \quad \textrm{oraz} \quad \rho\alpha\sigma = \theta
+\]
+\end{definicja}
+
+\begin{definicja}
+\emph{Najogólniejszym $\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taki $\beta$-unifikator,
+który jest ogólniejszy od wszystkich innych $\beta$-unifikatorów tychże konstruktorów typów.
+\end{definicja}
+
+\subsection{Algorytm $\beta$-unifikacji}
+
+Przy unifikacji wszystkie nieanotowane kwantyfikatory traktujemy jak anotowane unikatową zmienną.
+Funkcja $unify$ to klasyczna unifikacja (na rodzajach).\\
+\begin{tabular}{l}
+$unify_\beta(T_1, T_2) \ \textrm{when} \ T_1 =_\beta T_2 \ = $ \\
+$\qquad ([], T_1)$ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(\bar{X}, T) = $ \\
+$\qquad \textrm{if} \ \bar{X} \in \bar{Var}(T) \ \textrm{then} \ fail $ \\
+$\qquad \textrm{else} \ ([\bar{X} := T], T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T, \bar{X}) = $ \\
+$\qquad \textrm{if} \ \bar{X} \in \bar{Var}(T) \ \textrm{then} \ fail $ \\
+$\qquad \textrm{else} \ ([\bar{X} := T], T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(\forall X_1::K_1.T_1, \forall X_2::K_2.T_2) = $ \\
+$\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 := X_1\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_K K_1.T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(\Lambda X_1::K_1.T_1, \Lambda X_2::K_2.T_2) = $ \\
+$\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 := X_1\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \Lambda X_1::\sigma_K K_1.T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T_1 \rightarrow S_1, T_2 \rightarrow S_2) = $ \\
+$\qquad \textrm{let} \ (\theta, T) = unify_\beta(T_1, T_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma, S) = unify_\beta(\theta S_1, \theta S_2) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma \circ \theta, \sigma T \rightarrow S) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T_1, T_2) \ \textrm{when} \ T_1 \longrightarrow_\beta S_1 \ = $ \\
+$\qquad unify_\beta(S_1, T_2)$ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T_1, T_2) \ \textrm{when} \ T_2 \longrightarrow_\beta S_2 \ = $ \\
+$\qquad unify_\beta(T_1, S_2)$ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(V_1 \; T_1, V_2 \; T_2) = $ \\
+$\qquad \textrm{let} \ (\theta, V) = unify_\beta(V_1, V_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma, T) = unify_\beta(\theta T_1, \theta T_2) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma \circ \theta, \sigma V \; T) $ \\
+\end{tabular} \\
+
+Tu powinno pojawić się kilka dowodów własności.
+
+\section{Rekonstrukcja typów}
+
+\subsection{Algorytm W}
+
+Dla rodzajów: \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash X :: ?) = $ \\
+$\qquad \textrm{let} \ \Omega \widehat{X}_1 \dots \widehat{X}_n.K = \Gamma(X) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \widehat{Y}_1, \dots, \widehat{Y}_n = fresh \ \textrm{in} $ \\
+$\qquad\qquad ([], [\widehat{X}_1 := \widehat{Y}_1, \dots ,\widehat{X}_n := \widehat{Y}_n]K) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash T_1 \rightarrow T_2 :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K_1) = kindof(\Gamma \vdash T_1 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, K_2) = kindof(\sigma_1 \Gamma \vdash \sigma_1 T_1 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \rho_1 = unify(\sigma_2 K_1, *) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \rho_2 = unify(\rho_1 K_2, *) \ \textrm{in} $ \\
+$\qquad\qquad (\rho_2 \circ \rho_1 \circ \sigma_2 \circ \sigma_1, *) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash \forall X::K.T :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma, K_T) = kindof(\Gamma, X::K \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \rho = unify(K_T, *) \ \textrm{in} $ \\
+$\qquad\qquad (\rho \circ \sigma, *) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash \Lambda X::K.T :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma, K_T) = kindof(\Gamma, X::K \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma, K \Rightarrow K_T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash T_1 \; T_2 :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K_1) = kindof(\Gamma \vdash T_1 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, K_2) = kindof(\sigma_1 \Gamma \vdash \sigma_1 T_2 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \widehat{X} = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \sigma_3 = unify(\sigma_2 K_1, K_2 \Rightarrow \widehat{X}) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \sigma_3 \widehat{X}) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash \bar{X} :: ?) = $ \\
+$\qquad\qquad ([], *) $ \\
+\end{tabular} \\
+
+Dla typów:\\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash x : ?) = $ \\
+$\qquad \textrm{let} \ \Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m.T = \Gamma(x) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \bar{Y}_1, \dots, \bar{Y}_n, \widehat{Y}_1, \dots, \widehat{Y}_m = fresh \ \textrm{in} $ \\
+$\qquad\qquad ([], [\bar{X}_1 := \bar{Y}_1, \dots ,\bar{X}_n := \bar{Y}_n,\widehat{X}_1 := \widehat{Y}_1, \dots ,\widehat{X}_m := \widehat{Y}_m]T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \lambda x:T.t : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K) = kindof(\Gamma \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \sigma_2 = unify(K, *) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_3, T_t) = typeof(\sigma_2 \sigma_1(\Gamma, x:T) \vdash \sigma_2 \sigma_1 t : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \sigma_3 \sigma_2 \sigma_1 T \rightarrow T_t) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash t_1 \; t_2 : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, T_1) = typeof(\Gamma \vdash t_1 : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_2) = typeof(\sigma_1 \Gamma \vdash \sigma_1 t_2 : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \bar{X} = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_3, T_3) = unify_\beta(\sigma_2 T_1, T_2 \rightarrow \bar{X}) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \sigma_3 \bar{X}) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \Delta X::K.t : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma, T) = typeof(\Gamma, X::K \vdash t : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma \setminus X, \forall X::\sigma K.T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash t[T] : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, T_t) = typeof(\Gamma \vdash t : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, K) = kindof(\sigma_1 \Gamma \vdash \sigma_1 T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \bar{X} = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ Y = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_3, T'_t) = unify_\beta(\sigma_2 T_t, \forall Y::K.\bar{X}) \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, [Y:=\sigma_3 \sigma_2 \sigma_1 T]\sigma_3\bar{X}) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \textrm{let} \ x=t_1 \ \textrm{in} \ t_2 : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, T_1) = typeof(\Gamma \vdash t_1 : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \bar{X}_1, \dots, \bar{X}_n \right\} = \bar{FTV}(T_1) \setminus \bar{FTV}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{FKV}(T_1) \setminus \widehat{FKV}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_2) = typeof(\sigma_1 \Gamma, x:\Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m. T_2 \vdash \sigma_1 t_2 : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_2 \circ \sigma_1, T_2) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \textrm{tlet} \ X=T \ \textrm{in} \ t : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K) = kindof(\Gamma \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{FKV}(K) \setminus \widehat{FKV}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma, X::\Omega \widehat{X}_1 \dots \widehat{X}_m.K \vdash \sigma_1 t : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_2 \circ \sigma_1, T_t) $ \\
+\end{tabular} \\
+
+Tu można wspomnieć o jego własnościach.
+
+\end{document}
+
