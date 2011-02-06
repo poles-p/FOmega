@@ -93,7 +93,9 @@ No to na razie taki bałagan
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
-Króciutki wstępik o czym rozdział by sie przydał.
+W rozdziale tym chcielibyśmy przedstawić Państwu core $F_\omega$ :-) 
+
+Tylko ładnie i w paru zdaniach to trzeba napisać :D
 
 \subsection {Termy i typy w $F_\omega$}
 
@@ -202,28 +204,6 @@ Definicje pozostałych operacji teoriomnogościowych są na tyle naturalne, że 
 je Czytelnikowi do uzupełnienia.
 
 
-W systemie $F_\omega$ każdemu poprawnie zbudowanemu typowi przyporządkowujemy rodzaj.
-Przyporządkowanie to określa relacja $(.\vdash.::.)$ zdefiniowana następująco.
-
-Jeżeli zachodzi $\mathtt{\Gamma \vdash T :: K}$, to powiemy, że
-\emph {typ $\mathtt{T}$ jest rodzaju $\mathtt{K}$ w~kontekście $\mathtt{\Gamma}$}, gdzie
-relacja określenia rodzaju $(.\vdash.::.) \subseteq \Gamma \times T \times K$
-jest najmniejszą relacją zamkniętą na reguły:
-	\[ \mathtt{
-		\frac{X::K \in \Gamma}{\Gamma \vdash X::K}
-		\qquad
-		\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1 T_2 :: K_{2}}}
-	\]
-	\[ \mathtt{
-		\frac{\Gamma \vdash X :: K_1 \hspace{1em} \Gamma \vdash T :: K_2}{\Gamma \vdash \lambda X::K. T :: K_{1} \Rightarrow K_{2}}
-		\qquad
-		\frac{\Gamma \vdash X :: K \hspace{1em} \Gamma \vdash T :: \ast}{\Gamma \vdash \forall X::K. T :: \ast}}
-	\]
-	\[\mathtt{
-		\frac{\Gamma \vdash T_1 : \ast \hspace{1em} \Gamma \vdash T_2 : \ast}{T_1 \rightarrow T_2 : \ast}}
-	\]	
-
-
 \subsubsection{Podstawienia (może pójdzie gdzie indziej, jeszcze zobaczę)}
 Oprócz zwykłego podstawienia za zmienne, które pozostawiamy Czytelnikowi do uzupełnienia, powinniśmy zdefiniować podstawienie za zmienne typowe.
 
@@ -257,6 +237,30 @@ gwarantują nam równoważność relacji $\equiv$. Pozostałe reguły jak nastę
                 (\lambda X::K.S)T \equiv [X \mapsto T]S}
 	\]
 
+\subsubsection{Reguły rodzajowania :-)}
+
+W systemie $F_\omega$ każdemu poprawnie zbudowanemu typowi przyporządkowujemy rodzaj.
+Przyporządkowanie to określa relacja $(.\vdash.::.)$ zdefiniowana następująco.
+
+Jeżeli zachodzi $\mathtt{\Gamma \vdash T :: K}$, to powiemy, że
+\emph {typ $\mathtt{T}$ jest rodzaju $\mathtt{K}$ w~kontekście $\mathtt{\Gamma}$}, gdzie
+relacja określenia rodzaju $(.\vdash.::.) \subseteq \Gamma \times T \times K$
+jest najmniejszą relacją zamkniętą na reguły:
+	\[ \mathtt{
+		\frac{X::K \in \Gamma}{\Gamma \vdash X::K}
+		\qquad
+		\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1 T_2 :: K_{2}}}
+	\]
+	\[ \mathtt{
+		\frac{\Gamma \vdash X :: K_1 \hspace{1em} \Gamma \vdash T :: K_2}{\Gamma \vdash \lambda X::K. T :: K_{1} \Rightarrow K_{2}}
+		\qquad
+		\frac{\Gamma \vdash X :: K \hspace{1em} \Gamma \vdash T :: \ast}{\Gamma \vdash \forall X::K. T :: \ast}}
+	\]
+	\[\mathtt{
+		\frac{\Gamma \vdash T_1 : \ast \hspace{1em} \Gamma \vdash T_2 : \ast}{T_1 \rightarrow T_2 : \ast}}
+	\]	
+
+
 \subsubsection{Reguły typowania}
 
 Jesteśmy już gotowi przedstawić reguły typowania zdefiniowanego wyżej systemu $F_\omega$.
@@ -274,6 +278,26 @@ Każdemu poprawnie zbudowanemu termowi przyporządkowujemy typ. Przyporządkowan
 	\]
 
 \subsection{Ewaluacja}
+\subsubsection{Wartości}
+Wartości w $F_\omega$ zdefiniujemy dokładnie jak w $\lambda_{\rightarrow}$. \\ \\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{v}$ ::= &  & \textit{wartości}  \\
+   & $\mathtt{\lambda x:T.t}$ & \textit{wartość abstrakcji} \\
+  \hline
+\end{tabular}
+
+\subsubsection{Ewaluacja}
+Ewaluacja w dotychczas zdefiniowanym $F_\omega$ przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się na rozszerzeniach minimalnej wersji $F_\omega$ i pojawią się tam nowe rzeczy. Teraz, dla czytelności, przetoczymy reguły ewaluacji dla wersji minimalnej ($\mathtt{t_1,t_1',t_2,t_2',t}$ to termy, \texttt{v} to wartość, \texttt{x:T} to zmienna \texttt{x} typu \texttt{T}):
+	\[\mathtt{
+		\frac{t_1 \longrightarrow t_1'}{t_1\;t_2 \longrightarrow t_1'\;t_2}
+                \qquad
+                \frac{t_2 \longrightarrow t_2'}{v_1\;t_2 \longrightarrow v_1\;t_2'}}
+	\]
+ 	\[\mathtt{
+		(\lambda x:T.t)v \longrightarrow [x \mapsto v]t}
+	\]
+
 
 \subsection{Inne własności $F_\omega$}
 
@@ -312,39 +336,6 @@ Nierozstzygalne są problemy:
 \setcounter{equation}{0}
 
 
-\subsection{rachunek lambda}
-
-
-
-\begin{tabular}{ l c r }
-  v ::= & $\cdots$ &  \\
-   & $\lambda x:T.t$ & \textit{wartość abstrakcji} \\
-\end{tabular}
-
-
-
-\begin{tabular}{ l c r }
-  $\Gamma$ ::= & $\cdots$ &  \\
-   & $\emptyset$ & \textit{pusty kontekst} \\
-   & $\Gamma,x:T$& \textit{wiązanie zmiennej} \\ 
-\end{tabular}
-
-
-
-\subsection{kinds}
-
-
-
-\begin{tabular}{ l c r }
-  v ::= & $\cdots$ &  \\
-   & $\lambda x::K.t$ & \textit{wartość abstrakcji typowej} \\
-\end{tabular}
-
-\begin{tabular}{ l c r }
-  $\Gamma$ ::= & $\cdots$ &  \\
-   & $\Gamma,X::K$& \textit{wiązanie zmiennej typowej} \\ 
-\end{tabular}
-
 \subsection{wyrażenia arytmetyczne i logiczne}
 
 \subsection{unit i sekwencje}
@@ -354,9 +345,15 @@ Nierozstzygalne są problemy:
 \subsection{punkt stały}
 \subsection{listy}
 \subsection{typy egzystencjalne}
-\subsection{rekonstrukcje typów}
 \subsection{typy rekurencyjne}
 \subsection{dopasowanie wzorca}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Rekonstrukcja typów}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
