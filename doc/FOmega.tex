@@ -88,69 +88,96 @@ No to na razie taki bałagan
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{(Krótki opis) $F_{\omega}$}                                 
+\section{System $F_{\omega}$}                                 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
+Króciutki wstępik o czym rozdział by sie przydał.
+
+\subsection {Termy i typy w $F_\omega$}
 
 System $F_{\omega}$ to rachunek będący rozszerzeniem $\lambda_{\omega}$ oraz systemu $F$.
-Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy($t$) oraz typy($T$) definiujemy w $\lambda_{\rightarrow}$ następująco: \\ \\
+Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy oraz typy definiujemy w $\lambda_{\rightarrow}$ następująco: \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  t ::= &  &  \\
-   & $x$ & \textit{zmienne}  \\
-   & $\lambda x:T.t$ & \textit{abstrakcja} \\
-   & t\;t & \textit{aplikacja} \\
+  $\mathtt{t}$ ::= &  & \textit{termy}  \\
+   & $\mathtt{x}$ & \textit{zmienne}  \\
+   & $\mathtt{\lambda x:T.t}$ & \textit{abstrakcja} \\
+   & $\mathtt{t \hspace{0.2em} t}$ & \textit{aplikacja} \\
    & & \\
-  T ::= &  &  \\
-   & $X$ & \textit{zmienna typowa} \\
-   & $T \rightarrow T$ & \textit{typ funkcji} \\
+  $\mathtt{T}$ ::= &  & \textit{typy} \\
+   & $\mathtt{X}$ & \textit{zmienna typowa} \\
+   & $\mathtt{T \rightarrow T}$ & \textit{typ funkcji} \\
   \hline
 \end{tabular} \\
 
-System F jest systemem, w którym dodatkowo, oprócz termów zależnych od termów, mamy termy zależne od typów. Z systemu F dziedziczymy w $F_{\omega}$ takie własności jak: 
+
+
+\subsubsection{System $\lambda_{\omega}$} 
+
+Główną cechą systemu $\lambda_{\omega}$ jest to, że oprócz termów zależnych od termów mamy typy zależne od typów, czyli możemy mówić o aplikacji i abstrakcji typowej. By nam się nie pomyliło z abstrakcją na termach, zmienne typowe będziemy zaczynać dużą literą. Przykładowo $\mathtt{Tb=\lambda X.X \rightarrow Bool}$ i $\mathtt{\lambda X.X \rightarrow X}$ są abstrakcją typową, ale $\mathtt{\lambda x.x \rightarrow x}$ jest abstrakcją na termach. 
+Do tego typu możemy zaaplikować $\mathtt{Bool}$ i dostaniemy $\mathtt{(\lambda X.X \rightarrow Bool)Bool}$ równoważne $\mathtt{Bool \rightarrow Bool}$. Jak widać użyłam słowa \textit{równoważne}. W rachunku lambda z typami prostymi sposób konstrukcji typów gwarantował nam, że dwa różne typy $\mathtt{T_1}$ i $\mathtt{T_2}$ na pewno są różne (zakładając, że typy bazowe były sobie różne). W $\lambda_{\omega}$ jest inaczej, typy tego systemu możemy podzielić na klasy równoważności. Do klasy $\mathtt{Bool \rightarrow Bool}$ należą również $\mathtt{ (Tb^n) Bool }$ dla $n$ naturalnego, a $\mathtt{T^n}$ oznacza aplikację $n$ typów $\mathtt{T}$.
+Zauważmy, że odpowiednikiem takiej relacji równoważności na termach jest $\beta$-równoważność. W świecie typów nazwiemy taką relację $\equiv_{\beta}$.
+Dodatkowo wprowadzimy następującą regułę:
+$\frac{\Gamma \vdash t:S \hspace{1em} S\equiv_{\beta}T  }{\Gamma \vdash t:T}$
+mówiącą, że jeżeli term jest typu $S$, to jest też typu dowolnego równoważnego z $S$.  
+
+Niestety, w tak zdefiniowanym systemie powstaje jeden problem. Nie chcielibyśmy, aby $\mathtt{Bool \hspace{0.2em} Bool}$ było dozwolone, tak samo, jak w świecie termów nie chcieliśmy, by $\mathtt{true \hspace{0.2em} true}$ było dozwolone. W świecie termów, by rozwiązać ten problem, wprowadziliśmy typy na termach, w świecie typów wprowadzimy \textit{typy} na typach, czyli rodzaje. Piszemy, że $\mathtt{T::K}$, czyli typ $\mathtt{T}$ ma rodzaj $\mathtt{K}$. Wprowadzimy też jeden rodzaj bazowy $\mathtt{\ast}$.
+
+Wszystkie typy, jakie pojawiły się w $\lambda_{\rightarrow}$, są rodzaju $\mathtt{\ast}$. Np. $\mathtt{Bool :: \ast}$, $\mathtt{Nat \rightarrow Nat}$, $\mathtt{(Bool \rightarrow Nat) \rightarrow Nat} :: \ast$, itd. Rodzaj $\mathtt{\ast \Rightarrow \ast}$ będzie dla funkcji z typów w typy, np. $\mathtt{\lambda X.X \rightarrow Bool::\ast \Rightarrow \ast }$. $\mathtt{\ast \Rightarrow \ast \Rightarrow \ast}$ bierze typ i zwraca funkcję typową, np. $\mathtt{\lambda X. \lambda Y. X \rightarrow Y::\ast \Rightarrow \ast \Rightarrow \ast}$, itd. 
+
+Teraz możemy $\lambda_{\rightarrow}$ rozszerzyć o następujące konstrukcje: 
 \begin{itemize}
-    \item abstrakcję i aplikację typową w termach: \\
+    \item rodzaje \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  t ::= & $\cdots$ &  \\
-   & $\lambda x::K.t$ & \textit{abstrakcja typowa} \\
-   & t[T] & \textit{aplikacja typowa} \\
+  $\mathtt{K}$ ::= &  & rodzaje  \\
+   & $\mathtt{\ast}$ & \textit{rodzaj wszystkich typów} \\
+   & $\mathtt{K \Rightarrow K}$ & \textit{rodzaj funkcji typowej} \\
+  \hline
+\end{tabular}
+    \item abstrakcję i aplikację typową na typach \\ \\
+\begin{tabular}{| l c r |}
+   \hline
+   $\mathtt{T}$ ::= & $\cdots$ &  \\
+   & $\mathtt{\lambda X::K.T}$ & \textit{abstrakcja typowa} \\
+   & $\mathtt{T\;T}$ & \textit{aplikacji typowa} \\
+   \hline
+\end{tabular}
+\end{itemize} 
+
+
+\subsubsection{System $F$}
+
+System F jest systemem, w którym dodatkowo, oprócz termów zależnych od termów, mamy termy zależne od typów. Wprowadzimy trzeci już rodzaj abstrakcji i aplikacji, poprzedni był w świecie typów, te będą w świecie termów. Znana jest nam funkcja identycznościowa $\mathtt{\lambda x.x}$, w $\lambda_{\rightarrow}$ możemy ją napisać na wiele sposób: $\mathtt{\lambda x:Bool.x}$, $\mathtt{\lambda x:Nat.x}$, $\mathtt{\lambda x:Bool \rightarrow Nat.x}$. W systemie $F$ możemy wszystkie te funkcje zapisać jako: $\mathtt{\lambda X. \lambda x:X.x}$. Zauważmy, że ten \textit{term} przyjmuje jako pierwszy argument typ, następnie term pierwszego typu i zwraca go. Przykładem użycia takiego termu mogą być: $(\mathtt{\lambda X. \lambda x:X.x)\;[Bool]\;true}$, co daje $\mathtt{true}$, albo $(\mathtt{\lambda X. \lambda x:X.x)\;[Nat]\;1}$, co daje $\mathtt{1}$. W ten sposób powstała nam \textit{uniwersalna} funkcja identycznościowa, której nadamy tzw. uniwersalny typ: $\mathtt{\lambda X. \lambda x:X.x \; : \; \forall X.X \rightarrow X}$. Dodatkowo, jako że dodaliśmy już do systemu rodzaje, napiszemy $\mathtt{\lambda X::\ast. \lambda x:X.x \; : \; \forall X::\ast.X \rightarrow X}$. 
+
+
+Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ własności takie, jak:  
+\begin{itemize}
+    \item abstrakcję i aplikację typową na termach \\ \\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy} \\
+   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa} \\
+   & $\mathtt{t[T]}$ & \textit{aplikacja typowa} \\
   \hline
 \end{tabular}
 
-    \item  oraz typ uniwersalny: \\
+    \item typ uniwersalny \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  T ::= & $\cdots$ &  \\
-   & $\forall X::K$ & \textit{typ uniwersalny} \\
+  $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
+   & $\mathtt{\forall X::K.T}$ & \textit{typ uniwersalny} \\
   \hline
 \end{tabular}
 
 \end{itemize}
 
-Główną cechą systemu $\lambda_{\omega}$ jest to, że typy zależą od innych typów. 
-\begin{itemize}
-    \item kostruktory typowe \\
-\begin{tabular}{| l c r |}
-   \hline
-   T ::= & $\cdots$ &  \\
-   & $\lambda X::K.T$ & \textit{konstruktor abstrakcji typowej} \\
-   & $T\;T$ & \textit{konstruktor aplikacji typowej} \\
-   \hline
-\end{tabular}
-    \item rodzaje \\
-\begin{tabular}{| l c r |}
-  \hline
-  K ::= &  &   \\
-   & $\ast$ & \textit{rodzaj wszystkich typów} \\
-   & $K \Rightarrow K$ & \textit{rodzaj funkcji typowej} \\
-  \hline
-\end{tabular}
-\end{itemize} 
 
-\subsection{Kontrola rodzaju}
+\subsection{Ewaluacja}
+
+\subsubsection{Kontrola rodzaju}
 
 \begin{definicja}
 	\emph{Kontekst typowania} opisany jest składnią abstrakcyjną
@@ -286,6 +313,7 @@ Nierozstzygalne są problemy:
 \end{tabular}
 
 \subsection{wyrażenia arytmetyczne i logiczne}
+
 \subsection{unit i sekwencje}
 \subsection{definicje lokalne}
 \subsection{Rekordy}
@@ -334,13 +362,8 @@ Nierozstzygalne są problemy:
 \thispagestyle{empty}
 \begin{thebibliography}{99}
 
-\bibitem{ChK} W.~Cheney, D.~Kincaid, \textit{Analiza numeryczna\/}, WNT, 2006.
+\bibitem{ChK} Pierce, \textit{} 
 
-\bibitem{L1}   S.~Lewanowicz, \textit{Notatki do wykładu z analizy numerycznej},
-              Wrocław, 2009.
-\bibitem{L2} S.~Lewanowicz, \textit{Naturalna funkcja sklejana interpolacyjna III stopnia },
-              Wrocław, 2009. 
-\bibitem{ChK} http://wazniak.mimuw.edu.pl/.
 
 	  
 \end{thebibliography}
