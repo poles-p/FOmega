@@ -138,6 +138,24 @@ type Typ =
         | TUniwersalny(_,_,t) -> t.ZawieraZmiennaTypowa x
         | TAnotacja(t,_) -> t.ZawieraZmiennaTypowa x
     /// <summary>
+    /// Sprawdza, czy dany konstruktor typu zawiera wystąpienie podanej zmiennej 
+    /// typowej kwantyfikowanej schematem.
+    /// </summary>
+    /// <param name="x"> nazwa szukanej zmiennej schematowej </param>
+    /// <returns> 
+    /// Funkcja zwraca wartość prawdziwą, jeśli istnieje zmienna schematowa o podanej nazwie,
+    /// w przeciwnym wypadku zwraca wartość fałszywą.
+    /// </returns>
+    member this.ZawieraZmiennaTypowaW x =
+        match this with
+        | TWZmienna y -> x = y
+        | TZmienna y -> false
+        | TFunkcja(t1,t2) -> t1.ZawieraZmiennaTypowaW x || t2.ZawieraZmiennaTypowaW x
+        | TLambda(_,_,t) -> t.ZawieraZmiennaTypowaW x
+        | TAplikacja(t1,t2) -> t1.ZawieraZmiennaTypowaW x || t2.ZawieraZmiennaTypowaW x
+        | TUniwersalny(_,_,t) -> t.ZawieraZmiennaTypowaW x
+        | TAnotacja(t,_) -> t.ZawieraZmiennaTypowaW x
+    /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/> kwantyfikowanej abstrakcją
     /// </summary>

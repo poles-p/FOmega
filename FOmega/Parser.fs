@@ -83,7 +83,7 @@ let private atomTypu =
                     | None -> return Fresh.swierzaNazwa() |> KWZmienna
                     | Some _ ->
                         return! rodzaj.Parsor
-                    };
+                };
             do! skipChar '.' >>. ws;
             let! rest = typ.Parsor;
             return TUniwersalny(tvar,kind,rest)
@@ -104,6 +104,7 @@ let private atomTypu =
             return TLambda(tvar,kind,rest)
         }) <|>
     (ident true <!> fun x -> parsor.Return(TZmienna x))
+
 do
     typ.Atom <- atomTypu <??> "type constructor";
     typ.AddInfixOperator (oper "->" (fun a b -> TFunkcja(a, b))) Parsor.Expresion.Assoc.RightAssoc 4
