@@ -391,3 +391,51 @@ type OptionBuilder() =
 /// Monada opt.
 /// </summary>
 let opt = OptionBuilder()
+
+/// <summary>
+/// Schemat typu lub rodzaju.
+/// </summary>
+type Schemat =
+    /// <summary>
+    /// Przesłanka o schemacie typu zmiennej. Zawiera informacje kolejno o nazwie zmiennej,
+    /// wykorzystywanych typowych zmiennych schematowych, wykorzystywanych rodzajowych zmiennych schematowych oraz
+    /// o typie występującym w schemacie.
+    /// </summary>
+    | SchematTypu of string * string list * string list * Typ
+    /// <summary>
+    /// Przesłanka o schemacie rodzaju zmiennej. Zawiero informacje kolejno o nazwie zmiennej,
+    /// wykorzystywanych zmiennych rodzajowych i o rodzjau występującym w schemacie.
+    /// </summary>
+    | SchematRodzaju of string * string list * Rodzaj
+
+/// <summary>
+/// Kontekst typowania.
+/// </summary>
+type KontekstTypowania(kontekst : Schemat list) =
+    /// <summary>
+    /// Znajduje schemat typu dla podanej zmiennej typowej schematowej
+    /// </summary>
+    member this.SchematTypu x =
+        let ok s =
+            match s with
+            | SchematTypu(y, _, _, _) -> x = y
+            | _ -> false
+        match List.tryFind ok kontekst with
+        | Some(SchematTypu(_, tv, kv, t)) -> Some (tv, kv, t)
+        | _ -> None
+    /// <summary>
+    /// Znajduje schemat rodzaju dla podanej zmiennej rodzajowej schematowej
+    /// </summary>
+    member this.SchematRodzaju x =
+        let ok s =
+            match s with
+            | SchematRodzaju(y, _, _) -> x = y
+            | _ -> false
+        match List.tryFind ok kontekst with
+        | Some(SchematRodzaju(_, kv, t)) -> Some (kv, t)
+        | _ -> None
+    /// <summary>
+    /// Rozszerza kontekst typowania o podaną przesłankę.
+    /// </summary>
+    member this.Rozszerz schemat =
+        KontekstTypowania(schemat::kontekst)
