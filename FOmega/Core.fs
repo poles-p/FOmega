@@ -46,6 +46,20 @@ type Rodzaj =
         | _ -> this
 
     /// <summary>
+    /// Sprawdza, czy dany rodzaj zawiera wystąpienie podanej zmiennej rodzajowej.
+    /// </summary>
+    /// <param name="x"> nazwa szukanej zmiennej rodzajowej </param>
+    /// <returns> 
+    /// Funkcja zwraca wartość prawdziwą, jeśli istnieje zmienna rodzajowa o podanej nazwie,
+    /// w przeciwnym wypadku zwraca wartość fałszywą.
+    /// </returns>
+    member this.ZawieraZmiennaRodzajowa x =
+        match this with
+        | KWZmienna y -> x = y
+        | KGwiazdka -> false
+        | KFunkcja(k1, k2) -> k1.ZawieraZmiennaRodzajowa x || k2.ZawieraZmiennaRodzajowa x
+
+    /// <summary>
     /// Zamienia rodzaj na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
     /// </summary>
     /// <param name="prior"> oczekiwany priorytet wyrażenia. Zero jeśli nie chcemy całego wyrażenia w nawiasie </param>
@@ -360,3 +374,20 @@ type Wyrazenie =
     /// <returns> Ciąg znaków reprezentujący rodzaj </returns>
     override this.ToString() =
         this.ToString 0
+
+/// <summary>
+/// Monada opt.
+/// </summary>
+type OptionBuilder() =
+    member this.Bind(x, f) =
+        match x with
+        | None -> None
+        | Some v -> f v
+    member this.Return x = Some x
+    member this.ReturnFrom x = x
+    member this.Zero() = None
+
+/// <summary>
+/// Monada opt.
+/// </summary>
+let opt = OptionBuilder()
