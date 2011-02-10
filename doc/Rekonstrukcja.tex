@@ -206,7 +206,8 @@ niech zachodzi $Var(\rho) \cap A = \emptyset$. Wówczas zachodzi
 
 \begin{lemat}
 Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem,
-niech $\rho$ będzie podstawieniem zawierającym tylko zmienne rodzajowe. Wówczas zachodzie
+niech $\rho$ będzie podstawieniem takim, że $Var(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
+Wówczas zachodzi
 \[
 (\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho
 \]
@@ -240,11 +241,28 @@ oraz z lematu \ref{lsub1}
 \end{proof}
 
 \begin{lemat}
-Niech $\rho$ jest podstawieniem, a $(\sigma, S)$ $\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$.
+Niech $T_1$ i~$T_2$ będą konstrktorami typów, $\rho$ niech będzie podstawieniem takim, że 
+$Var(\rho) \cap BTV(T_1) = \emptyset$ oraz $Var(\rho) \cap BTV(T_2) = \emptyset$, a $(\sigma, S)$ niech będzie 
+$\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$.
 Wówczas $(\sigma \circ \rho, S)$ jest $\beta$-unifikatorem konstruktorów $(T_1, T_2)$.
 \label{lunif2}
 \end{lemat}
 \begin{proof}
+Niech $i \in \left\{1,2\right\}$.\\
+Z tego, że $(\sigma, S)$ jest $\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$ wiemy, że istnieje takie
+$\theta_i$, że
+\[
+\theta_i\rho T_i =_\beta S \quad \textrm{oraz} \quad \theta_i \setminus BTV(\rho T_i) = \sigma
+\]
+A~wtedy
+\[
+(\theta_i \circ \rho) T_i =_\beta S
+\]
+oraz z~lematu \ref{lsub2} i~z~tego że $BTV(\rho) \cap BTV(\theta_i) = \emptyset$ mamy
+\[
+(\theta_i \circ \rho) \setminus BTV(T_i) = (\theta_i \circ BTV(T_i)) \circ \rho = (\theta_i \circ BTV(\rho T_i)) \circ \rho = \sigma \circ \rho
+\]
+Co kończy dowód.
 \end{proof}
 
 \subsection{Algorytm $\beta$-unifikacji}
@@ -347,7 +365,7 @@ $((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T)
 \item $T_1 \equiv \Lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \Lambda X_2::K_2.T'_2$ \\
 Dla tego przypadku dowód przeprowadzamy analogicznie do przypadku poprzedniego.
 \item $T_1 \equiv T'_1 \rightarrow S_1$ oraz $T_2 \equiv T'_2 \rightarrow S_2$ \\
-Teza wynika wprost z załorzenia indukcyjnego o lematów \ref{lunif1} i \ref{lunif2}.
+Teza wynika wprost z załorzenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
 \item $T_1 \longrightarrow_\beta S_1$ lub $T_2 \longrightarrow_\beta S_2$ \\
 Wynika z~załorzenia indukcyjnego i~z~faktu, że $\beta$-redukcja zachowuje $\beta$-równość.
 \item $T_1 \equiv V_1\;S_1$ oraz $T_2 \equiv V_2\;S_2$ \\
