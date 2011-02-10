@@ -30,7 +30,7 @@
 \usepackage{caption}
 \usepackage{bm}
 \usepackage{amsthm}
-\usepackage{indentfirst}
+
 
  
 %%%%%%%%%%%%%%%%%%
@@ -88,214 +88,223 @@ No to na razie taki bałagan
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{(Krótki opis) $F_{\omega}$}                                 
+\section{System $F_{\omega}$}                                 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
+W rozdziale tym chcielibyśmy przedstawić Państwu core $F_\omega$ :-) 
+
+Tylko ładnie i w paru zdaniach to trzeba napisać :D
+
+\subsection {Termy i typy w $F_\omega$}
 
 System $F_{\omega}$ to rachunek będący rozszerzeniem $\lambda_{\omega}$ oraz systemu $F$.
-Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy($t$) oraz typy($T$) definiujemy w $\lambda_{\rightarrow}$ następująco: \\ \\
+Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy oraz typy definiujemy w $\lambda_{\rightarrow}$ następująco: \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  t ::= &  &  \\
-   & $x$ & \textit{zmienne}  \\
-   & $\lambda x:T.t$ & \textit{abstrakcja} \\
-   & t\;t & \textit{aplikacja} \\
+  $\mathtt{t}$ ::= &  & \textit{termy}  \\
+   & $\mathtt{x}$ & \textit{zmienne}  \\
+   & $\mathtt{\lambda x:T.t}$ & \textit{abstrakcja} \\
+   & $\mathtt{t \hspace{0.2em} t}$ & \textit{aplikacja} \\
    & & \\
-  T ::= &  &  \\
-   & $X$ & \textit{zmienna typowa} \\
-   & $T \rightarrow T$ & \textit{typ funkcji} \\
+  $\mathtt{T}$ ::= &  & \textit{typy} \\
+   & $\mathtt{X}$ & \textit{zmienna typowa} \\
+   & $\mathtt{T \rightarrow T}$ & \textit{typ funkcji} \\
   \hline
 \end{tabular} \\
 
-System F jest systemem, w którym dodatkowo, oprócz termów zależnych od termów, mamy termy zależne od typów. Z systemu F dziedziczymy w $F_{\omega}$ takie własności jak: 
+
+
+\subsubsection{System $\lambda_{\omega}$} 
+
+Główną cechą systemu $\lambda_{\omega}$ jest to, że oprócz termów zależnych od termów mamy typy zależne od typów, czyli możemy mówić o aplikacji i abstrakcji typowej\footnote{U Urzyczyna, w \texttt{T::K} \; \texttt{T} to \textit{konstruktor rodzaju}, \texttt{K} \textit{rodzaj}, natomiast \textit{typem} nazywamy konstruktor rodzaju~$\ast$. My, kierowani składnią języka, wszystkie konstruktory rodzaju nazywamy typami.}. By nam się nie pomyliło z abstrakcją na termach, zmienne typowe będziemy zaczynać dużą literą. Przykładowo $\mathtt{Tb=\lambda X.X \rightarrow Bool}$ i $\mathtt{\lambda X.X}$ są abstrakcjami typowymi, ale $\mathtt{\lambda x.x}$ jest abstrakcją na termach. 
+Do typu $\mathtt{Tb}$ możemy zaaplikować $\mathtt{Bool}$ i dostaniemy $\mathtt{(\lambda X.X \rightarrow Bool)Bool}$ równoważne $\mathtt{Bool \rightarrow Bool}$. Jak widać użyłam słowa \textit{równoważne}. W rachunku lambda z typami prostymi sposób konstrukcji typów gwarantował nam, że dwa typy $\mathtt{T_1}$ i $\mathtt{T_2}$ na pewno są różne (zakładając, że typy bazowe były sobie różne). W $\lambda_{\omega}$ jest inaczej -- typy tego systemu możemy podzielić na klasy równoważności. Do klasy $\mathtt{Bool \rightarrow Bool}$ należą również $\mathtt{ (Tb^n) Bool }$ dla $n$ naturalnego, a $\mathtt{T^n}$ oznacza aplikację $n$ typów $\mathtt{T}$.
+Zauważmy, że odpowiednikiem takiej relacji równoważności na termach jest $\beta$-równoważność. W świecie typów nazwiemy taką relację $\equiv$\footnote{formalnie zdefiniujemy tą relację w rozdziale XXX}. Podobnie jak w świecie termów, typy są silnie normalizowalne i zachodzi własność Churcha-Rossera. Przez \texttt{nf(T)} oznaczamy postać normalną typu \texttt{T}.
+Dodatkowo wprowadzimy następującą regułę:
+$\mathtt{\frac{\Gamma \vdash t:S \hspace{1em} S\equiv T  }{\Gamma \vdash t:T}}$
+mówiącą, że jeżeli term jest typu \texttt{S}, to jest też typu dowolnego równoważnego z \texttt{S}.  
+
+Niestety, w tak zdefiniowanym systemie powstaje jeden problem. Nie chcielibyśmy, aby $\mathtt{Bool \hspace{0.2em} Bool}$ było dozwolone, tak samo, jak w świecie termów nie chcieliśmy, by $\mathtt{true \hspace{0.2em} true}$ było dozwolone. W świecie termów, by rozwiązać ten problem, wprowadziliśmy typy na termach, w świecie typów wprowadzimy \textit{typy} na typach, czyli rodzaje. Piszemy, że $\mathtt{T::K}$, czyli typ $\mathtt{T}$ ma rodzaj $\mathtt{K}$. Wprowadzimy też jeden rodzaj bazowy $\mathtt{\ast}$.
+
+Wszystkie typy, jakie pojawiły się w $\lambda_{\rightarrow}$, są rodzaju $\mathtt{\ast}$. Np. $\mathtt{Bool :: \ast}$, $\mathtt{Nat \rightarrow Nat}$, $\mathtt{(Bool \rightarrow Nat) \rightarrow Nat} :: \ast$, itd. Rodzaj $\mathtt{\ast \Rightarrow \ast}$ będzie dla funkcji z typów w typy, np. $\mathtt{\lambda X.X \rightarrow Bool::\ast \Rightarrow \ast }$. $\mathtt{\ast \Rightarrow \ast \Rightarrow \ast}$ bierze typ i zwraca funkcję typową, np. $\mathtt{\lambda X. \lambda Y. X \rightarrow Y::\ast \Rightarrow \ast \Rightarrow \ast}$, itd. 
+
+Teraz możemy $\lambda_{\rightarrow}$ rozszerzyć o następujące konstrukcje: 
 \begin{itemize}
-    \item abstrakcję i aplikację typową w termach: \\
+    \item rodzaje \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  t ::= & $\cdots$ &  \\
-   & $\lambda x::K.t$ & \textit{abstrakcja typowa} \\
-   & t[T] & \textit{aplikacja typowa} \\
+  $\mathtt{K}$ ::= &  & rodzaje  \\
+   & $\mathtt{\ast}$ & \textit{rodzaj wszystkich typów} \\
+   & $\mathtt{K \Rightarrow K}$ & \textit{rodzaj funkcji typowej} \\
+  \hline
+\end{tabular}
+    \item abstrakcję i aplikację typową na typach \\ \\
+\begin{tabular}{| l c r |}
+   \hline
+   $\mathtt{T}$ ::= & $\cdots$ &  \\
+   & $\mathtt{\lambda X::K.T}$ & \textit{abstrakcja typowa} \\
+   & $\mathtt{T\;T}$ & \textit{aplikacji typowa} \\
+   \hline
+\end{tabular}
+\end{itemize} 
+
+
+\subsubsection{System $F$}
+
+System F jest systemem, w którym dodatkowo, oprócz termów zależnych od termów, mamy termy zależne od typów. Wprowadzimy trzeci już rodzaj abstrakcji i aplikacji, poprzedni był w świecie typów, te będą w świecie termów. Znana jest nam funkcja identycznościowa $\mathtt{\lambda x.x}$, w $\lambda_{\rightarrow}$ możemy ją napisać na wiele sposób: $\mathtt{\lambda x:Bool.x}$, $\mathtt{\lambda x:Nat.x}$, $\mathtt{\lambda x:Bool \rightarrow Nat.x}$. W systemie $F$ możemy wszystkie te funkcje zapisać jako: $\mathtt{\lambda X. \lambda x:X.x}$. Zauważmy, że ten \textit{term} przyjmuje jako pierwszy argument typ, następnie term pierwszego typu i zwraca go. Przykładem użycia takiego termu mogą być: $(\mathtt{\lambda X. \lambda x:X.x)\;[Bool]\;true}$, co daje $\mathtt{true}$, albo $(\mathtt{\lambda X. \lambda x:X.x)\;[Nat]\;1}$, co daje $\mathtt{1}$. W ten sposób powstała nam \textit{uniwersalna} funkcja identycznościowa, której nadamy tzw. uniwersalny typ: $\mathtt{\lambda X. \lambda x:X.x \; : \; \forall X.X \rightarrow X}$. Dodatkowo, jako że dodaliśmy już do systemu rodzaje, napiszemy $\mathtt{\lambda X::\ast. \lambda x:X.x \; : \; \forall X::\ast.X \rightarrow X}$. 
+
+
+Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ własności takie, jak:  
+\begin{itemize}
+    \item abstrakcję i aplikację typową na termach \\ \\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy} \\
+   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa} \\
+   & $\mathtt{t[T]}$ & \textit{aplikacja typowa} \\
   \hline
 \end{tabular}
 
-    \item  oraz typ uniwersalny: \\
+    \item typ uniwersalny \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  T ::= & $\cdots$ &  \\
-   & $\forall X::K$ & \textit{typ uniwersalny} \\
+  $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
+   & $\mathtt{\forall X::K.T}$ & \textit{typ uniwersalny} \\
   \hline
 \end{tabular}
 
 \end{itemize}
 
-Główną cechą systemu $\lambda_{\omega}$ jest to, że typy zależą od innych typów. 
-\begin{itemize}
-    \item kostruktory typowe \\
-\begin{tabular}{| l c r |}
-   \hline
-   T ::= & $\cdots$ &  \\
-   & $\lambda X::K.T$ & \textit{konstruktor abstrakcji typowej} \\
-   & $T\;T$ & \textit{konstruktor aplikacji typowej} \\
-   \hline
-\end{tabular}
-    \item rodzaje \\
-\begin{tabular}{| l c r |}
-  \hline
-  K ::= &  &   \\
-   & $\ast$ & \textit{rodzaj wszystkich typów} \\
-   & $K \Rightarrow K$ & \textit{rodzaj funkcji typowej} \\
-  \hline
-\end{tabular}
-\end{itemize} 
-
-\subsection{Podstawowe definicje}
-
-\begin{definicja}
-	\emph{Kontekst typowania} opisany jest składnią abstrakcyjną
-	
-	\begin{tabular}{ | l c r | }
-		\hline
-		$\Gamma$ ::= & & \\
-		& $\emptyset$ & \textit{pusty kontekst} \\
-		& $\Gamma,x:T$& \textit{wiązanie zmiennej} \\ 
-		& $\Gamma,X::K$& \textit{wiązanie rodzaju} \\ 
-		\hline
-	\end{tabular}
-	
-	Konteksty typowania bedziemy często traktować jako skończone zbiory wiązań i będziemy
-	używać teoriomnogościowych symboli na nich. Np. przynależność do kontekstu formalnie
-	definiujemy jako:
-	\[
-		\frac{}{B \in \Gamma,B}
-		\qquad
-		\frac{B \in \Gamma}{B \in \Gamma,B'}
-	\]
-	Definicje pozostałych operacji teoriomnogościowych są na tyle naturalne, że zostawiamy
-	je Czytelnikowi do uzupełnienia.
-\end{definicja}
-
-\begin{definicja}
-Tu należało by zdefiniować zmienne wolne, podstawienia, itp.
-    \begin{itemize}
-        \item $\alpha [\beta := \phi]= \begin{cases}  \alpha & \beta=\alpha \\ \beta & \text{w.p.p} \end{cases}$
-        \item $(\vartheta \sigma) [\beta := \phi] = \vartheta [\beta := \phi] \sigma [\beta := \phi]$
-        \item $\forall \alpha \sigma [\beta := \phi]= \begin{cases} \forall \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \forall \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
-        \item $\lambda \alpha \sigma [\beta := \phi]= \begin{cases} \lambda \alpha \sigma & \beta=\alpha \text{ lub } \beta \notin FV(\sigma)\\ \lambda \alpha \sigma [\beta := \phi] & \alpha \notin FV(\phi)  \text{ i } \beta \in FV(\sigma) \end{cases}$
-    \end{itemize}
-\end{definicja}
-
-
-\subsection{Kontrola rodzaju}
-
-W systemie $F_\omega$ każdemu poprawnie zbudowanemu konstruktorowi rodzaju przyporządkowujemy rodzaj.
-Przyporządkowanie to określa relacja $(.\vdash.::.)$ Zdefiniowana następująco.
-
-\begin{definicja}
-	Jeżeli zachodzi $\Gamma \vdash T :: K$, to powiemy, że
-	\emph {konstruktor typowy $T$ jest rodzaju $K$ w~kontekście $\Gamma$}, gdzie
-	relacja określenia rodzaju $(.\vdash.::.)$
-	jest to najmniejsza relacja zamnknięta na reguły:
-	\[
-		\frac{X::K \in \Gamma}{\Gamma \vdash X::K}
-		\qquad
-		\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1\;T_2 :: K_{2}}
-	\]
-	\[
-		\frac{\Gamma \vdash X :: K_1 \hspace{1em} \Gamma \vdash T :: K_2}{\Gamma \vdash \lambda X::K. T :: K_{1} \Rightarrow K_{2}}
-		\qquad
-		\frac{\Gamma \vdash X :: K \hspace{1em} \Gamma \vdash T :: \ast}{\Gamma \vdash \forall X::K. T :: \ast}
-	\]
-	\[
-		\frac{\Gamma \vdash T_1 : \ast \hspace{1em} \Gamma \vdash T_2 : \ast}{T_1 \rightarrow T_2 : \ast}
-	\]	
-\end{definicja}
-
-\begin{definicja}
-\emph{Typem} nazywamy konstruktor rodzaju $\ast$.
-\end{definicja}
 
 \subsection{Typowanie}
 
-W systemie $F_\omega$ konstruktory typów reprezentowane są przez $\lambda$-termy, więc może
-się zdażyć, że dwa różne konstruktory typów są sobie równoważne ($\beta\eta$-równe).
+\subsubsection{Kontekst}
 
-\begin{definicja}
-	Powiemy, że dwa konstruktory typów są \emph{$\beta\eta$-równe}, jeżeli zachodzi $T =_{\beta\eta} S$,
-	gdzie relacja $=_{\beta\eta}$ jest najmniejszą relacją zamkniętą na regóły:
-	\[
-		\frac{}{T=_{\beta\eta}T}
-		\qquad
-		\frac{S=_{\beta\eta}T}{T=_{\beta\eta}S}
-		\qquad
-		\frac{T=_{\beta\eta}U \quad U=_{\beta\eta}S}{T=_{\beta\eta}S}
+\emph{Kontekst typowania} opisany jest następującą składnią abstrakcyjną \\
+
+\begin{tabular}{ | l c r | }
+	\hline
+	$\mathtt{\Gamma}$ ::= & & \textit{kontekst}\\
+	& $\mathtt{\emptyset}$ & \textit{pusty kontekst} \\
+	& $\mathtt{\Gamma,x:T}$& \textit{wiązanie typu} \\ 
+	& $\mathtt{\Gamma,X::K}$& \textit{wiązanie rodzaju} \\ 
+	\hline
+\end{tabular} \\
+	
+Konteksty typowania bedziemy często traktować jako skończone zbiory wiązań i będziemy
+używać teoriomnogościowych symboli na nich. Np. przynależność do kontekstu formalnie
+definiujemy jako:
+\[
+	\frac{}{B \in \Gamma,B}
+	\qquad
+	\frac{B \in \Gamma}{B \in \Gamma,B'}
+\]
+Definicje pozostałych operacji teoriomnogościowych są na tyle naturalne, że zostawiamy
+je Czytelnikowi do uzupełnienia.
+
+
+\subsubsection{Podstawienia (może pójdzie gdzie indziej, jeszcze zobaczę)}
+Oprócz zwykłego podstawienia za zmienne, które pozostawiamy Czytelnikowi do uzupełnienia, powinniśmy zdefiniować podstawienie za zmienne typowe.
+
+    \begin{itemize}
+        \item $\mathtt{[Y \mapsto T]X = \begin{cases}  \texttt{T} & Y=X \\ \texttt{X} & \text{w.p.p} \end{cases}}$
+        \item $\mathtt{[Y \mapsto T](X_1 \; X_2)  = [Y \mapsto T]X_1 [Y \mapsto T] X_2 }$
+        \item $\mathtt{[Y \mapsto T](S_1 \rightarrow S_2) = [Y \mapsto T]S_1 \rightarrow [Y \mapsto T]S_2} $
+        \item $\mathtt{[Y \mapsto T]\forall X.S}  = \begin{cases} \mathtt{\forall X.S} & Y=X \text{ lub } Y \notin FV(S) \\ \mathtt{[Y \mapsto T]\forall X.S} & X \notin FV(\phi)  \text{ i } Y \in FV(S) \end{cases}$
+        \item $\mathtt{[Y := T]\lambda X.S }= \begin{cases} \mathtt{\lambda X.S} & Y=X \text{ lub } Y \notin FV(S)\\ \mathtt{[Y := T]\lambda X.S}  & X \notin FV(S)  \text{ i } Y \in FV(S) \end{cases}$
+    \end{itemize}
+
+\subsubsection{Relacja $\equiv$}
+
+Jak wspomnieliśmy w rozdziale XXX, definiujemy na typach relację równoważność. $\mathtt{S,S_1,S_2,T,T_1,T_2}$ to typy, \texttt{K} to rodzaj. Następujące trzy reguły:
+	\[\mathtt{
+		\frac{}{T \equiv T}
+                \qquad
+                \frac{S \equiv T}{T \equiv S}}
+                \qquad
+                \frac{S \equiv U \;\; U \equiv T}{S \equiv T}
 	\]
-	\[
-		\frac{T_1=_{\beta\eta}S_1 \quad T_2=_{\beta\eta}S_2}{T_1 \rightarrow T_2 =_{\beta\eta} S_1 \rightarrow S_2}
-		\qquad
-		\frac{T_1=_{\beta\eta}S_1 \quad T_2=_{\beta\eta}S_2}{T_1\;T_2 =_{\beta\eta} S_1\;S_2}
+gwarantują nam równoważność relacji $\equiv$. Pozostałe reguły jak następuje:
+	\[\mathtt{
+		\frac{S_1 \equiv T_1 \;\; S_2 \equiv T_2}{S_1 \rightarrow S_2 \equiv T_1 \rightarrow T_2}
+                \qquad
+                \frac{S_1 \equiv T_1 \;\; S_2 \equiv T_2}{S_1\;S_2 \equiv T_1\;T_2}}
 	\]
-	\[
-		\frac{T=_{\beta\eta}S}{\forall X::K.T =_{\beta\eta} \forall X::K.S}
-		\qquad
-		\frac{X \notin FV(T)}{\lambda X::K.T\;X =_{\beta\eta} T}
+	\[\mathtt{
+		\frac{S \equiv T}{\lambda X::K.S \equiv \lambda X::K.T}
+                \qquad
+                (\lambda X::K.S)T \equiv [X \mapsto T]S}
 	\]
-	\[
-		\frac{}{(\lambda X::K.T)S =_{\beta\eta} T[X:=S]}
+
+\subsubsection{Reguły rodzajowania :-)}
+
+W systemie $F_\omega$ każdemu poprawnie zbudowanemu typowi przyporządkowujemy rodzaj.
+Przyporządkowanie to określa relacja $(.\vdash.::.)$ zdefiniowana następująco.
+
+Jeżeli zachodzi $\mathtt{\Gamma \vdash T :: K}$, to powiemy, że
+\emph {typ $\mathtt{T}$ jest rodzaju $\mathtt{K}$ w~kontekście $\mathtt{\Gamma}$}, gdzie
+relacja określenia rodzaju $(.\vdash.::.) \subseteq \Gamma \times T \times K$
+jest najmniejszą relacją zamkniętą na reguły:
+	\[ \mathtt{
+		\frac{X::K \in \Gamma}{\Gamma \vdash X::K}
+		\qquad
+		\frac{\Gamma \vdash T_1 :: K_{1} \Rightarrow K_{2} \hspace{1em} \Gamma \vdash T_2 :: K_{1}}{\Gamma \vdash T_1 T_2 :: K_{2}}}
+	\]
+	\[ \mathtt{
+		\frac{\Gamma \vdash X :: K_1 \hspace{1em} \Gamma \vdash T :: K_2}{\Gamma \vdash \lambda X::K. T :: K_{1} \Rightarrow K_{2}}
+		\qquad
+		\frac{\Gamma \vdash X :: K \hspace{1em} \Gamma \vdash T :: \ast}{\Gamma \vdash \forall X::K. T :: \ast}}
+	\]
+	\[\mathtt{
+		\frac{\Gamma \vdash T_1 : \ast \hspace{1em} \Gamma \vdash T_2 : \ast}{T_1 \rightarrow T_2 : \ast}}
 	\]	
-	W tych regółach zakładamy konwencję Barendregta.
-\end{definicja}
 
-\begin{definicja}
-	Powiemy, że \emph{Term $t$ jest typu $T$ w kontekście $\Gamma$} jeżeli zachodzi $\Gamma \vdash t : T$, gdzie
-	relacja typowania $(.\vdash.:.)$ jest najmniejszą relacją zamkniętą na regóły:
-	\[
-		\frac{x:T \in \Gamma}{\Gamma \vdash x : T}
-		\qquad
-		\frac{\Gamma\vdash T_1::* \quad \Gamma,x:T_1\vdash t:T_2}{\Gamma\vdash \lambda x:T_1.t : T_1 \rightarrow T_2}
+
+\subsubsection{Reguły typowania}
+
+Jesteśmy już gotowi przedstawić reguły typowania zdefiniowanego wyżej systemu $F_\omega$.
+Każdemu poprawnie zbudowanemu termowi przyporządkowujemy typ. Przyporządkowanie to określa relacja $(.\vdash.:.)$ zdefiniowana następująco.
+
+	\[\mathtt{
+		\frac{x:T \in \Gamma}{\Gamma \vdash x:T}
+                \qquad
+                \frac{\Gamma \vdash T_1::\ast \hspace{1.5em} \Gamma,x:T_1 \vdash t_2:T_2}{\Gamma \vdash \lambda x:T_1.t_2\;:\;T_1 \rightarrow T_2}}
 	\]
-	\[
-		\frac{\Gamma\vdash t_1 : T_1 \rightarrow T_2 \quad \Gamma\vdash t_2 : T_1}{\Gamma\vdash t_1\;t_2 : T_2}
-		\qquad
-		\frac{\Gamma,X::K\vdash t:T}{\Gamma\vdash \lambda X::K.t : \forall X::K.T}
+	\[\mathtt{
+		\frac{\Gamma \vdash t_1:T_1 \rightarrow T_2 \hspace{1.5em} \Gamma \vdash t_2:T_1}{ \Gamma \vdash t_1 \; t_2 : T_2}
+                \qquad
+                \frac{\Gamma \vdash t:S \hspace{1.5em} S \equiv T \hspace{1.5em} \Gamma \vdash T::\ast}{\Gamma \vdash t:T}}
 	\]
-	\[
-		\frac{\Gamma\vdash t : \forall X:K.T' \quad \Gamma\vdash T::K}{\Gamma\vdash t[T]::T'[X := T]}
-		\qquad
-		\frac{\Gamma\vdash t:S \quad S=_{\beta\eta}T \quad \Gamma\vdash T::*}{\Gamma\vdash t:T}
-	\]
-\end{definicja}
 
-\subsection{Wartościowanie}
-
-Wartości:
-
-\begin{tabular}{ l c r }
-  v ::= & & \\
-   & $\lambda x:T.t$ & \textit{wartość abstrakcji} \\
+\subsection{Ewaluacja}
+\subsubsection{Wartości}
+Wartości w $F_\omega$ zdefiniujemy dokładnie jak w $\lambda_{\rightarrow}$. \\ \\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{v}$ ::= &  & \textit{wartości}  \\
+   & $\mathtt{\lambda x:T.t}$ & \textit{wartość abstrakcji} \\
+  \hline
 \end{tabular}
 
-Regóły wartościowania:
-\[
-	\frac{t_1 \longrightarrow_\beta t_1'}{t_1\;t_2 \longrightarrow_\beta t_1'\;t_2}
-	\qquad
-	\frac{t_2 \longrightarrow_\beta t_2'}{v_1\;t_2 \longrightarrow_\beta v_1'\;t_2}
-	\qquad
-	\frac{}{(\lambda x:T.t)v \longrightarrow_\beta t[x:=v]}
-\]
-\[
-	\frac{t \longrightarrow_\beta t'}{t[T] \longrightarrow_\beta t'[T]}
-	\qquad
-	\frac{}{(\lambda X::K.t)[T] \longrightarrow_\beta t[X:=T]}
-\]
+\subsubsection{Ewaluacja}
+Ewaluacja w dotychczas zdefiniowanym $F_\omega$ przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się na rozszerzeniach minimalnej wersji $F_\omega$ i pojawią się tam nowe rzeczy. Teraz, dla czytelności, przetoczymy reguły ewaluacji dla wersji minimalnej ($\mathtt{t_1,t_1',t_2,t_2',t}$ to termy, \texttt{v} to wartość, \texttt{x:T} to zmienna \texttt{x} typu \texttt{T}):
+	\[\mathtt{
+		\frac{t_1 \longrightarrow t_1'}{t_1\;t_2 \longrightarrow t_1'\;t_2}
+                \qquad
+                \frac{t_2 \longrightarrow t_2'}{v_1\;t_2 \longrightarrow v_1\;t_2'}}
+	\]
+ 	\[\mathtt{
+		(\lambda x:T.t)v \longrightarrow [x \mapsto v]t}
+	\]
 
-no i konstruktory są silnie normalizowalne, własność churcha-rossera zachodzi...
+
+\subsection{Inne własności $F_\omega$}
 
 \begin{definicja}
 Reguły przepisywania typów w systemie $F_{\omega}$ w wersji Curry'ego standardowe, oprócz: \\
 
-$\frac{\Gamma \vdash M : \forall \alpha \sigma}{\Gamma \vdash M : nf(\sigma [ \alpha := \tau ])}$
+$\frac{\Gamma \vdash M : \forall X \sigma}{\Gamma \vdash M : nf(\sigma [ X := \tau ])}$
 
 \end{definicja}
 
@@ -338,6 +347,7 @@ $\Gamma\vdash t' : T$.
 
 
 \subsection{wyrażenia arytmetyczne i logiczne}
+
 \subsection{unit i sekwencje}
 \subsection{definicje lokalne}
 \subsection{Rekordy}
@@ -345,9 +355,15 @@ $\Gamma\vdash t' : T$.
 \subsection{punkt stały}
 \subsection{listy}
 \subsection{typy egzystencjalne}
-\subsection{rekonstrukcje typów}
 \subsection{typy rekurencyjne}
 \subsection{dopasowanie wzorca}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Rekonstrukcja typów}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -377,13 +393,8 @@ $\Gamma\vdash t' : T$.
 \thispagestyle{empty}
 \begin{thebibliography}{99}
 
-\bibitem{ChK} W.~Cheney, D.~Kincaid, \textit{Analiza numeryczna\/}, WNT, 2006.
+\bibitem{ChK} Pierce, \textit{} 
 
-\bibitem{L1}   S.~Lewanowicz, \textit{Notatki do wykładu z analizy numerycznej},
-              Wrocław, 2009.
-\bibitem{L2} S.~Lewanowicz, \textit{Naturalna funkcja sklejana interpolacyjna III stopnia },
-              Wrocław, 2009. 
-\bibitem{ChK} http://wazniak.mimuw.edu.pl/.
 
 	  
 \end{thebibliography}
