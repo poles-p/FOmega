@@ -133,5 +133,5 @@ let rec rekTyp (gamma : KontekstTypowania) term =
             let gamma2 = (s1.Aplikuj gamma).Rozszerz(SchematRodzaju(x, kv, k));
             let! (s2, tk) = rekTyp gamma2 (s1.Aplikuj e);
             let s21 = s2 * s1;
-            return (s21, typBetaNormalny (tk.Podstaw x (s21.Aplikuj t))) // może nie trzeba robić beta redukcji typu.
+            return (s21, typBetaNormalny (tk.Podstaw x (s21.Aplikuj t))) // TODO: może nie trzeba robić beta redukcji typu.
         }
