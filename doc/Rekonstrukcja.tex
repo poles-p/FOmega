@@ -484,7 +484,21 @@ $\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma, X::\Omega \wide
 $\qquad\qquad (\sigma_2 \circ \sigma_1, (\{X := \sigma_2 \sigma_1 T\}T_t) \Downarrow_\beta) $ \\
 \end{tabular} \\
 
-Tu można wspomnieć o jego własnościach.
+\subsection{Własności}
+
+\begin{twierdzenie}
+Funkcja $typeof$ zatrzymuje się.
+\end{twierdzenie}
+\begin{proof}
+\end{proof}
+
+\begin{twierdzenie}
+Niech $t$ i~$\Gamma$ zawierą wszystkie anotacje typowe i~rodzajowe. Wówczas $typeof(\Gamma \vdash t : ?) = (\sigma, T)$ wtedy 
+i~tylko wtedy gdy $\Gamma \vdash t : T$ (tzn. gdy program zawiera wszystkie anotacje, algorytm $typeof$ wykonuje zwykłą 
+kontrolę typów w~systemie $F_\omega$).
+\end{twierdzenie}
+\begin{proof}
+\end{proof}
 
 \end{document}
 
