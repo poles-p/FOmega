@@ -413,6 +413,10 @@ type Schemat =
 /// </summary>
 type KontekstTypowania(kontekst : Schemat list) =
     /// <summary>
+    /// Schematy występujące w kontekście.
+    /// </summary>
+    member this.Kontekst = kontekst
+    /// <summary>
     /// Znajduje schemat typu dla podanej zmiennej typowej schematowej
     /// </summary>
     member this.SchematTypu x =

@@ -80,6 +80,20 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | ELet(x, e1, e2) -> ELet(x, this.Aplikuj e1, this.Aplikuj e2)
         | ETLet(x, t, e) -> ETLet(x, this.Aplikuj t, this.Aplikuj e)
 
+    /// <summary>
+    /// Aplikacja podstawienia do kontekstu
+    /// </summary>
+    member this.Aplikuj (gamma : KontekstTypowania) =
+        // TODO: Nie jestem do końca pewien, czy to ma być tak
+        let aplikuj schemat =
+            match schemat with
+            | SchematTypu(x, tv, kv, t) ->
+                SchematTypu(x, tv, kv, this.Aplikuj t)
+            | SchematRodzaju(x, kv, k) ->
+                SchematRodzaju(x, kv, this.Aplikuj k)
+        in
+            KontekstTypowania(List.map aplikuj gamma.Kontekst)
+
     member private this.Przypisania =
         podstawienie
 
