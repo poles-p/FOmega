@@ -98,3 +98,24 @@ let rec betaUnifikuj(t1, t2) =
         | _ ->
             System.Console.WriteLine("Can not unify {0} with {1}.", t1, t2);
             None
+
+/// <summary>
+/// Znajduje postać beta normalną typu.
+/// </summary>
+let rec typBetaNormalny typ = // TODO: zrobić to porządnie
+    match typ with
+    | TWZmienna x
+    | TZmienna x -> typ
+    | TFunkcja(a,b) ->
+        TFunkcja(typBetaNormalny a, typBetaNormalny b)
+    | TLambda(x, k, t) ->
+        TLambda(x, k, typBetaNormalny t)
+    | TAplikacja(a, b) ->
+        match typBetaNormalny a with
+        | TLambda(x, _, a') ->
+            a'.Podstaw x (typBetaNormalny b)
+        | a' -> TAplikacja(a', typBetaNormalny b)
+    | TUniwersalny(x, k, t) ->
+        TUniwersalny(x, k, typBetaNormalny t)
+    | TAnotacja(t, _) -> 
+        typBetaNormalny t

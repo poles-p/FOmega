@@ -175,4 +175,4 @@ do
     wyrazenie.AddSuffixOperator (kw ":" <!> fun () -> parsor{ let! typ = typ.Parsor in return fun x -> EAnotacja(x, typ) }) 8
 
 let parsujText text =
-    parseString (ws >>. typ.Parsor .>> eof) () (OutputConsole()) text
+    parseString (ws >>. wyrazenie.Parsor .>> eof) () (OutputConsole()) text

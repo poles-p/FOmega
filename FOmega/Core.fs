@@ -60,6 +60,18 @@ type Rodzaj =
         | KFunkcja(k1, k2) -> k1.ZawieraZmiennaRodzajowa x || k2.ZawieraZmiennaRodzajowa x
 
     /// <summary>
+    /// Wolne zmienne kwantyfikowane schematem
+    /// </summary>
+    /// <returns>
+    /// Właściwość zwiera zbiór zmiennych wolnych kwantyfikowanych schematem.
+    /// </returns>
+    member this.WolneKWZmienne =
+        match this with
+        | KWZmienna x -> Set.singleton x
+        | KGwiazdka -> Set.empty
+        | KFunkcja(a,b) -> Set.union a.WolneKWZmienne b.WolneKWZmienne
+
+    /// <summary>
     /// Zamienia rodzaj na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
     /// </summary>
     /// <param name="prior"> oczekiwany priorytet wyrażenia. Zero jeśli nie chcemy całego wyrażenia w nawiasie </param>
@@ -196,6 +208,38 @@ type Typ =
                 TUniwersalny(z, k, (t.Podstaw y (TZmienna z)).Podstaw x typ)
             else TUniwersalny(y, k, t.Podstaw x typ)
         | TAnotacja(t,k) -> TAnotacja(t.Podstaw x typ, k)
+
+    /// <summary>
+    /// Wolne zmienne rodzajowe kwantyfikowane schematem
+    /// </summary>
+    /// <returns>
+    /// Właściwość zwiera zbiór rodzajowych zmiennych wolnych kwantyfikowanych schematem.
+    /// </returns>
+    member this.WolneKWZmienne =
+        match this with
+        | TWZmienna _ -> Set.empty
+        | TZmienna _ -> Set.empty
+        | TFunkcja(a, b) -> Set.union a.WolneKWZmienne b.WolneKWZmienne
+        | TLambda(x, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
+        | TAplikacja(a, b) -> Set.union a.WolneKWZmienne b.WolneKWZmienne
+        | TUniwersalny(x, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
+        | TAnotacja(t, k) -> Set.union t.WolneKWZmienne k.WolneKWZmienne
+
+    /// <summary>
+    /// Wolne zmienne typowe kwantyfikowane schematem
+    /// </summary>
+    /// <returns>
+    /// Właściwość zwiera zbiór typowych zmiennych wolnych kwantyfikowanych schematem.
+    /// </returns>
+    member this.WolneTWZmienne =
+        match this with
+        | TWZmienna x -> Set.singleton x
+        | TZmienna _ -> Set.empty
+        | TFunkcja(a, b) -> Set.union a.WolneTWZmienne b.WolneTWZmienne
+        | TLambda(x, k, t) -> t.WolneTWZmienne
+        | TAplikacja(a, b) -> Set.union a.WolneTWZmienne b.WolneTWZmienne
+        | TUniwersalny(x, k, t) -> t.WolneTWZmienne
+        | TAnotacja(t, k) -> t.WolneTWZmienne
 
     /// <summary>
     /// Zamienia typ na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -443,3 +487,37 @@ type KontekstTypowania(kontekst : Schemat list) =
     /// </summary>
     member this.Rozszerz schemat =
         KontekstTypowania(schemat::kontekst)
+
+    /// <summary>
+    /// Wolne zmienne rodzajowe kwantyfikowane schematem
+    /// </summary>
+    /// <returns>
+    /// Właściwość zwiera zbiór rodzajowych zmiennych wolnych kwantyfikowanych schematem.
+    /// </returns>
+    member this.WolneKWZmienne =
+        let fkv s =
+            match s with
+            | SchematTypu(x, tv, kv, t) ->
+                t.WolneKWZmienne - Set.ofList kv
+            | SchematRodzaju(x, kv, k) ->
+                k.WolneKWZmienne - Set.ofList kv
+        in
+            kontekst |>
+            List.fold (fun stat schem -> Set.union stat (fkv schem)) Set.empty
+
+    /// <summary>
+    /// Wolne zmienne typowe kwantyfikowane schematem
+    /// </summary>
+    /// <returns>
+    /// Właściwość zwiera zbiór typowych zmiennych wolnych kwantyfikowanych schematem.
+    /// </returns>
+    member this.WolneTWZmienne =
+        let fkv s =
+            match s with
+            | SchematTypu(x, tv, kv, t) ->
+                t.WolneTWZmienne - Set.ofList tv
+            | SchematRodzaju(x, kv, k) ->
+                Set.empty
+        in
+            kontekst |>
+            List.fold (fun stat schem -> Set.union stat (fkv schem)) Set.empty
