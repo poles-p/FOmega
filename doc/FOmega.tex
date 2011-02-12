@@ -535,36 +535,45 @@ Ewaluacja:
    & $\mathtt{\{^*T,t\}\;as\;T}$ & \textit{pakowanie} \\
    & $\mathtt{let\;\{X,x\}=t\;in\;t}$ & \textit{odpakowanie} \\
   $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
-   & $\mathtt{\{\exists X,T\}}$ & \textit{typ egzystencjalny} \\
+   & $\mathtt{\{\$X,T\}}$ & \textit{typ egzystencjalny} \\
   \hline
 \end{tabular} \\
 
 Teraz możemy sobie zdefiniować te operacje w $F_\omega$: \\
-$\mathtt{\{\exists X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.X \rightarrow Y) \rightarrow Y}$ \\
-$\mathtt{\{^*U::K,t\}\;as\; \{\exists X::K,T\}\; \overset{def}{=} \;let\;x=t\;in\;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;x}$ \\
+$\mathtt{\{\$X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.X \rightarrow Y) \rightarrow Y}$ \\
+$\mathtt{\{^*U::K,t\}\;as\; \{\$X::K,T\}\; \overset{def}{=} \;let\;x=t\;in\;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;x}$ \\
 $\mathtt{let\;\{X::K,x\}=t\;in\;t'\;\overset{def}{=}\;t[T'](\lambda X::K.\lambda x:T.t')\hspace{3em} \text{gdzie $\mathtt{t':T'}$} }$ \\ \\
 
-Na pierwszy rzut oka termy te są niezrozumiałe. Pokażę, że zachodzą podstawowe własności pakowania i odpakowania. \\
-Rozważmy term $\mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\}}$. \\ 
-$ \mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\} }$ \\ 
+Na pierwszy rzut oka termy te są niezrozumiałe. Ależ jak bardzo można się mylić -- są miłe i przyjemne dla swych wielbicieli. Pokażemy, że zachodzą podstawowe własności pakowania i odpakowania. \\
+Rozważmy term $\mathtt{ \{^*U::K,t\}\;as\; \{\$X::K,T\}}$. \\ 
+$ \mathtt{ \{^*U::K,t\}\;as\; \{\$ X::K,T\} }$ \\ 
 $ \mathtt{ = let\;x=t\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x = }$ \\
 $ \mathtt{ = (\lambda x:[X \mapsto U]T.\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x)t = }$ \\
 $ \mathtt{ \overset{t:[X \mapsto U]T}{=} \lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U](t:[X \mapsto U]T)}$ \\
-co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.T \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,T\}}$. \\
+co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.T \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\$X::K,T\}}$. \\
 
-$\mathtt{ \{^*Nat,\{a=0, f:\lambda x:Nat.succ\;x\}\}\;as\;\{\$X, \{a:X, f:X \rightarrow Nat\}\}}$. \\ 
-
-Rozważmy bardziej życiowy przykład: \\ 
+Rozważmy bardziej życiowy przykład. Oto typowanie w systemie $F$ przykładowego termu~\texttt{t}:\\ 
+ 	\[\mathtt{ \frac{\Gamma \vdash \{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X,f:X \rightarrow Nat\}}{\Gamma \{^*X,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\;\{\$X,\{a:X,f:X \rightarrow Nat\}\}}
+		}
+	\]
+Następnie wyprowadzimy ten term w $F_\omega$: \\ \\
 \small{
-$ \mathtt{ \{Nat::K,\{a=0, f:\lambda x:Nat.succ\;x\}\}\;as\; \{\exists X::K,\{a:X, f:X \rightarrow Nat\}\}= }$ \\ 
-$ \mathtt{ = let\;x=\{a=0, f:\lambda x:Nat.succ\;x\}\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x = }$ \\
+$ \mathtt{ \{Nat::K,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\; \{\$ X::K,\{a:X, f:X \rightarrow Nat\}\}= }$ \\ 
+$ \mathtt{ = let\;x=\{a=zero, f:\lambda x:Nat.succ\;x\}\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x = }$ \\
 $ \mathtt{ = (\lambda x:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}.\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x)}$\\
-$ \mathtt{ \{a=0, f:\lambda x:Nat.succ\;x\} \overset{\{a=0, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}}{=}  }$ \\
-$ \mathtt{ = \lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=0, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\})}$ \\
-co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,\{a:X, f:X \rightarrow Nat\}\}}$. \\
+$ \mathtt{ \{a=zero, f:\lambda x:Nat.succ\;x\} \overset{\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}}{=}  }$ \\
+$ \mathtt{ = \lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\})}$ \\ \\
+co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\$X::K,\{a:X, f:X \rightarrow Nat\}\}}$. \\
 }
 
-Odpakowanie otrzymanego termu pozostawiamy Czytelnikowi jako ćwiczenie :-)
+Uważne odpakowanie otrzymanego termu pozostawiamy Czytelnikowi jako ćwiczenie, my pozwolimy sobie przeprowadzać schemat wywodu (po dwie $\beta$-redukcje):\\
+\scriptsize{
+$ \mathtt{let\;\{X,x\}=\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\})\;in\;(x.f\;x.a)=}$
+$ \mathtt{=(\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}))[T'](\lambda X::K.\lambda x:T.(x.f\;x.a))=}$
+}
+$ \mathtt{=((\lambda X::K.\lambda x:T.(x.f\;x.a))[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}))=}$ \\
+$ \mathtt{=(\{a=zero, f:\lambda x:Nat.succ\;x\}.f\;\{a=zero, f:\lambda x:Nat.succ\;x\}.a)=}$ \\
+$ \mathtt{=(\lambda x:Nat.succ\;x)zero=succ\;zero}$
 \subsection{Typy rekurencyjne}
 
 Hmmm, no tu musze się zastanowić, to na dole dla zwykłej wersji. \\
