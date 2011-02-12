@@ -115,7 +115,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
                         | SubstitutionException ex -> PrzypisanieZabronione(x, ex)
                     | PrzypisanieZabronione _ -> p
             ) |>
-            List.append s1.Przypisania
+            List.append s1.Przypisania // TODO: do poprawki; usunąć co trzeba
         )
 
     /// <summary>

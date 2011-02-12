@@ -131,6 +131,97 @@ Teraz sam kontekst typowania ma postać:
   \hline
 \end{tabular} \\
 
+\section{Zbiory zmiennych}
+
+W~dalszej części będziemy używać różnych zbiorów zmiennych występujących w~konstrukcjach w~naszym języku, więc
+to jest dobre miejsce by te zbiory i~operacje zdefiniować.
+
+\subsection{Wszystkie zmienne schematowe}
+
+\begin{definicja}
+\emph{Zbiorem schematowych zmiennych typowych typu/schematu $T$} nazwiemy zbiór $\bar{Var}(T)$ zdefiniowany następująco
+\begin{align*}
+\bar{Var}(X) & = \emptyset \\
+\bar{Var}(T_1 \to T_2) & = \bar{Var}(T_1) \cup \bar{Var}(T_2) \\
+\bar{Var}(\forall X :: K.T) & = \bar{Var}(T) \\
+\bar{Var}(\Lambda X :: K.T) & = \bar{Var}(T) \\
+\bar{Var}(T_1 \; T_2) & = \bar{Var}(T_1) \cup \bar{Var}(T_2) \\
+\bar{Var}(\bar{X}) & = \{ \bar{X} \}
+\end{align*}
+\begin{align*}
+\bar{Var}(\Omega \bar{X}.\left<T\right>) & = \{ \bar{X} \} \cup \bar{Var}(\left<T\right>) \\
+\bar{Var}(\Omega \widehat{X}.\left<T\right>) & = \bar{Var}(\left<T\right>)
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+Anologicznie definijuemy \emph{zbiór zmiennych rodzajowych rodzaju/typu/schematu $T$}.
+\begin{align*}
+\widehat{Var}(*) & = \emptyset \\
+\widehat{Var}(K_1 \Rightarrow K_2) & = \widehat{Var}(K_1) \cup \widehat{Var}(K_2) \\
+\widehat{Var}(\widehat{X}) & = \{ \widehat{X} \}
+\end{align*}
+\begin{align*}
+\widehat{Var}(X) & = \emptyset \\
+\widehat{Var}(T_1 \to T_2) & = \widehat{Var}(T_1) \cup \widehat{Var}(T_2) \\
+\widehat{Var}(\forall X :: K.T) & = \widehat{Var}(K) \cup \widehat{Var}(T) \\
+\widehat{Var}(\Lambda X :: K.T) & = \widehat{Var}(K) \cup \widehat{Var}(T) \\
+\widehat{Var}(T_1 \; T_2) & = \widehat{Var}(T_1) \cup \widehat{Var}(T_2) \\
+\widehat{Var}(\widehat{X}) & = \emptyset
+\end{align*}
+\begin{align*}
+\widehat{Var}(\Omega \bar{X}.\left<T\right>) & = \widehat{Var}(\left<T\right>) \\
+\widehat{Var}(\Omega \widehat{X}.\left<T\right>) & = \{ \widehat{X} \} \cup \widehat{Var}(\left<T\right>)
+\end{align*}
+\end{definicja}
+
+\subsection{Zmienne typowe wolne i~związane}
+
+\begin{definicja}
+\emph{Zbiór zmiennych typowych wolnych termu/typu $T$} nazwiemy zbiór $FTV(T)$ zdefiniowany następująco
+\begin{align*}
+FTV(X) & = X \\
+FTV(T_1 \to T_2) & = FTV(T_1) \cup FTV(T_2) \\
+FTV(\forall X :: K . T) & = FTV(T) \setminus \{ X \} \\
+FTV(\Lambda X :: K . T) & = FTV(T) \setminus \{ X \} \\
+FTV(T_1 \; T_2) & = FTV(T_1) \cup FTV(T_2) \\
+FTV(\bar{X}) & = \emptyset \\
+\end{align*}
+\begin{align*}
+FTV(x) & = \emptyset \\
+FTV(\lambda x : T.t) & = FTV(T) \cup FTV(t) \\
+FTV(t_1 \; t_2) & = FTV(t_1) \cup FTV(t_2) \\
+FTV(\Delta X :: K.t) & = FTV(t) \setminus \{ X \} \\
+FTV(t[T]) & = FTV(t) \cup FTV(T) \\
+FTV(\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = FTV(t_1) \cup FTV(t_2) \\
+FTV(\textrm{tlet} \ X = T \ \textrm{in} \ t) & = FTV(T) \cup (FTV(t) \setminus \{ X \}) \\
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+\emph{Zbiór zmiennych typowych związanych termu/typu $T$} nazwiemy zbiór $BTV(T)$ zdefiniowany następująco
+\begin{align*}
+BTV(X) & = \emptyset \\
+BTV(T_1 \to T_2) & = BTV(T_1) \cup BTV(T_2) \\
+BTV(\forall X :: K . T) & = BTV(T) \cup \{ X \} \\
+BTV(\Lambda X :: K . T) & = BTV(T) \cup \{ X \} \\
+BTV(T_1 \; T_2) & = BTV(T_1) \cup BTV(T_2) \\
+BTV(\bar{X}) & = \emptyset \\
+\end{align*}
+\begin{align*}
+BTV(x) & = \emptyset \\
+BTV(\lambda x : T.t) & = BTV(T) \cup BTV(t) \\
+BTV(t_1 \; t_2) & = BTV(t_1) \cup BTV(t_2) \\
+BTV(\Delta X :: K.t) & = BTV(t) \cup \{ X \} \\
+BTV(t[T]) & = BTV(t) \cup BTV(T) \\
+BTV(\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = BTV(t_1) \cup BTV(t_2) \\
+BTV(\textrm{tlet} \ X = T \ \textrm{in} \ t) & = BTV(T) \cup BTV(t) \cup \{ X \} \\
+\end{align*}
+\end{definicja}
+
+Dla przytoczonych tu definicji później zajdzie potrzeba rozszerzenia ich na konteksty i~podstawienia.
+Rozszerzenia te są na tyle oczywiste i~naturalne, że nie ma potrzeby ich przytaczania.
+
 \section{$\beta$-unifikacja}
 
 Podczas rekonstukcji typów pojawiają się równania więzów które należy rozwiązać. Samo rozwiązanie
@@ -149,13 +240,121 @@ Oraz dodając jeszcze operację anulowania podstawienia:
 \[
 [\bar{X} := T] \setminus X = 
 \begin{cases}
-[\bar{X} := fail] & X \in    Var(T) \\
-[\bar{X} := T]    & X \notin Var(T)
+[\bar{X} := fail] & X \in    FTV(T) \\
+[\bar{X} := T]    & X \notin FTV(T)
 \end{cases}
 \]
 
 Z drugim problemem poradzimy sobie traktując unifikator jako parę zawierającą podstawienie, które dobrze działa
 na zewnątrz, oraz term będący wynikiem unifikacji.
+
+\begin{definicja}
+\emph{Podstawieniem} nazwiemy skończony zbiór par postaci $(\bar{X},T)$, $(\bar{X},fail)$ oraz $(\widehat{X},K)$, takich że
+$\bar{X} \notin \bar{Var}(T)$ oraz $\widehat{X} \notin \widehat{Var}(K)$ (po podstawieniu powinny zniknąć wszystkie zmienne, za 
+które coś podstawiliśmy). 
+\emph{Podstawieniem} pustym nazwiemy podstawienie będące zbiorem pustym i~ będziemy oznaczać przez $[]$.
+Podstawienia, będziemy reprezentować jako listy postaci
+\[
+[\bar{X}_1 := T_1, \dots, \bar{X}_k := T_k, \bar{X}_{k+1} := fail, \dots , \bar{X}_n := fail, \widehat{X}_1 := K_1, \dots, \widehat{X}_m := K_m]
+\]
+\emph{Dziedziną} podstawienia $\sigma$ nazwiemy zbiór takich zmiennych typowych $\bar{X}$ i~rodzajowych $\widehat{X}$, że
+$(\bar{X}, T) \in \sigma$ lub $(\bar{X}, fail) \in \sigma$ oraz $(\widehat{X}, K) \in \sigma$. Dziedzinę podstawienia $\sigma$
+będziemy oznaczać przez $Dom(\sigma)$.
+\end{definicja}
+
+\begin{definicja}
+Podstawienie może działać na rodzajach, typach, termach i~kontekstach. Jeżeli w~podstawieniu występuje
+para $\widehat{X} := K$, to za wszystkie wystąpienia zmiennej $\widehat{X}$ zostanie podstawione $K$. Analogicznie
+się dzieje w~przypadku wystąpienia pary $\bar{X} := T$. Jeżeli w~podstawieniu wystąpi para $\bar{X} := fail$,
+a~w~typie/termie/kontekście do którego podstawienie aplikujemy występuje zmienna $\bar{X}$, to podstawienie jest niemożliwe.
+
+Niech $\sigma$ będzie podstawieniem. Działanie podstawienia formalnie definiujemy jako:
+\begin{align*}
+\sigma * & = * \\
+\sigma (K_1 \Rightarrow K_2) & = \sigma K_1 \Rightarrow \sigma K_2 \\
+\sigma \widehat{X} & = 
+	\begin{cases}
+		K & (\widehat{X},K) \in \sigma \\
+		\widehat{X} & \textrm{wpp}
+	\end{cases} \\
+\end{align*}
+\begin{align*}
+\sigma X & = X \\
+\sigma(T_1 \to T_2) & = \sigma T_1 \to \sigma T_2 \\
+\sigma(\forall X :: K.T) & = \forall X :: \sigma K. \sigma T \\
+\sigma(\Lambda X :: K.T) & = \Lambda X :: \sigma K. \sigma T \\
+\sigma(T_1 \; T_2) & = (\sigma T_1) \; (\sigma T_2) \\
+\sigma \bar{X} & = 
+	\begin{cases}
+		T & (\bar{X},T) \in \sigma \\
+		fail & (\bar{X},fail) \in \sigma \\
+		\bar{X} & \textrm{wpp}
+	\end{cases} \\
+\end{align*}
+\begin{align*}
+\sigma x & = x \\
+\sigma (\lambda x : T.t) & = \lambda x : \sigma T. \sigma t \\
+\sigma (t_1 \; t_2) & = (\sigma t_1) \; (\sigma t_2) \\
+\sigma (\Delta X :: K. t) & = \Delta X :: \sigma X . \sigma t \\
+\sigma (t[T]) & = (\sigma t)[\sigma T] \\
+\sigma (\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = \textrm{let} \ x = \sigma t_1 \ \textrm{in} \ \sigma t_2 \\
+\sigma (\textrm{tlet} \ x = T \ \textrm{in} \ t) & = \textrm{tlet} \ x = \sigma T \ \textrm{in} \ \sigma t \\
+\end{align*}
+\begin{align*}
+\sigma (\Omega\bar{X}.\left<T\right>) & =
+	\begin{cases}
+		\Omega\bar{X}.\sigma\left<T\right> & \bar{X} \notin Dom(\sigma) \\
+		\Omega\bar{Y}.\sigma[\bar{X}:=\bar{Y}]\left<T\right> & \bar{X} \in Dom(\sigma) \land \bar{Y} \notin Dom(\sigma) \land \bar{Y} \notin \bar{Var}(\left<T\right>)
+	\end{cases} \\
+\sigma (\Omega\widehat{X}.\left<T\right>) & =
+	\begin{cases}
+		\Omega\widehat{X}.\sigma\left<T\right> & \widehat{X} \notin Dom(\sigma) \\
+		\Omega\widehat{Y}.\sigma[\widehat{X}:=\widehat{Y}]\left<T\right> & \widehat{X} \in Dom(\sigma) \land \widehat{Y} \notin Dom(\sigma) \land \widehat{Y} \notin \widehat{Var}(\left<T\right>)
+	\end{cases}
+\end{align*}
+\begin{align*}
+\sigma \emptyset & = \emptyset \\
+\sigma (\Gamma, x : \left<T\right>) & = \sigma \Gamma, x : \sigma \left<T\right> \\
+\sigma (\Gamma, X :: \left<K\right>) & = \sigma \Gamma, X :: \sigma \left<K\right> \\
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+Powiemy, że podstawienie $\rho$ jest \emph{złożeniem} podstawień $\sigma$ i~$\theta$, które będziemy oznaczać $\sigma\circ\theta$ jeżeli
+dla każdego rodzaju $K$, typu $T$, termu $t$ i~kontekstu $\Gamma$ zachodzi:
+\begin{align*}
+\rho K & = \sigma(\theta K) \\
+\rho T & = \sigma(\theta T) \\
+\rho t & = \sigma(\theta t) \\
+\rho \Gamma & = \sigma(\theta \Gamma)
+\end{align*}
+\end{definicja}
+
+\begin{lemat}
+Niech $\sigma$ i~$\theta$ będą podstawieniami. Wówczas zachodzi
+\begin{align*}
+\sigma \circ \theta = & \{ (\widehat{X}, \sigma K) | (\widehat{X}, K) \in \theta \} \\
+\cup & \{ (\widehat{X}, K) \in \sigma | \widehat{X} \notin Dom(\theta) \} \\
+\cup & \{ (\bar{X}, \sigma T) | (\bar{X}, T) \in \theta \land \sigma T \neq fail \} \\
+\cup & \{ (\bar{X}, fail) | \exists (\bar{X}, T) \in \theta . \sigma T = fail \} \\
+\cup & \{ (\bar{X}, T) \in \sigma | \bar{X} \notin Dom(\theta) \} \\
+\cup & \{ (\bar{X}, fail) \in \sigma | \bar{X} \notin Dom(\theta) \}
+\end{align*}
+Pozwala nam to algorytmicznie wyliczać złożenia podstawień.
+\end{lemat}
+\begin{proof}
+\end{proof}
+
+\begin{definicja}
+\emph{Anulowaniem zbioru $A$ zmiennych typowych kwantyfikowanych abstrakcją z~podstawienia $\sigma$} nazwiemy operację
+zdefiniowaną następująco:
+\begin{align*}
+\sigma \setminus A = & \{ (\widehat{X}, K) \in \sigma \} \cup \{ (\bar{X}, fail) \in \sigma \} \\
+\cup & \{ (\bar{X}, T) \in \sigma | FTV(T) \cap A = \emptyset \} \\
+\cup & \{ (\bar{X}, fail) | \exists (\bar{X}, T) \in \sigma . FTV(T) \cap A \neq \emptyset \}
+\end{align*}
+\emph{Anulowanie zmiennej $X$ z~podstawienia $\sigma$} oznaczamy przez $\sigma \setminus X$ i~definiujemy jako $\sigma \setminus \{X\}$.
+\end{definicja}
 
 \begin{definicja}
 \emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieją
@@ -195,7 +394,7 @@ Wówczas zachodzi
 
 \begin{lemat}
 Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ i~$\rho$ będą podstawieniami, oraz
-niech zachodzi $Var(\rho) \cap A = \emptyset$. Wówczas zachodzi 
+niech zachodzi $FTV(\rho) \cap A = \emptyset$. Wówczas zachodzi 
 \[
 (\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A)
 \].
@@ -206,7 +405,7 @@ niech zachodzi $Var(\rho) \cap A = \emptyset$. Wówczas zachodzi
 
 \begin{lemat}
 Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem,
-niech $\rho$ będzie podstawieniem takim, że $Var(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
+niech $\rho$ będzie podstawieniem takim, że $FTV(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
 Wówczas zachodzi
 \[
 (\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho
@@ -218,7 +417,7 @@ Wówczas zachodzi
 
 \begin{lemat}
 Niech $(\sigma, S)$ będzie $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$, oraz niech $\rho$ będzie 
-podstawieniem takim, że $Var(\rho) \cap BTV(T_1) = \emptyset$ oraz $Var(\rho) \cap BTV(T_2) = \emptyset$.
+podstawieniem takim, że $FTV(\rho) \cap BTV(T_1) = \emptyset$ oraz $FTV(\rho) \cap BTV(T_2) = \emptyset$.
 Wówczas $(\rho \circ \sigma, \rho S)$ również jest $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$.
 \label{lunif1}
 \end{lemat}
@@ -242,7 +441,7 @@ oraz z lematu \ref{lsub1}
 
 \begin{lemat}
 Niech $T_1$ i~$T_2$ będą konstrktorami typów, $\rho$ niech będzie podstawieniem takim, że 
-$Var(\rho) \cap BTV(T_1) = \emptyset$ oraz $Var(\rho) \cap BTV(T_2) = \emptyset$, a $(\sigma, S)$ niech będzie 
+$FTV(\rho) \cap BTV(T_1) = \emptyset$ oraz $FTV(\rho) \cap BTV(T_2) = \emptyset$, a $(\sigma, S)$ niech będzie 
 $\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$.
 Wówczas $(\sigma \circ \rho, S)$ jest $\beta$-unifikatorem konstruktorów $(T_1, T_2)$.
 \label{lunif2}
@@ -500,5 +699,15 @@ kontrolę typów w~systemie $F_\omega$).
 \begin{proof}
 \end{proof}
 
-\end{document}
+\begin{twierdzenie}
+Niech $t$ i~$\Gamma$ będą takim termem i~kontekstem, że $typeof(\Gamma \vdash t : ?) = (\sigma, T)$. Wówczas
+istnieje takie podstawienie $\theta$, że zachodzą następujące własności:
+\begin{itemize}
+\item $\theta \Gamma \vdash \theta t : T$
+\item $\theta \setminus BTV(t) = \sigma$
+\end{itemize}
+\end{twierdzenie}
+\begin{proof}
+\end{proof}
 
+\end{document}
