@@ -46,6 +46,20 @@ type Rodzaj =
         | _ -> this
 
     /// <summary>
+    /// Wykonuje podstawienie jednocześnie kilku zmiennych
+    /// </summary>
+    /// <param name="sub"> lista par nazwa-wartość, która odpowiada wykonywanemu podstawieniu </param>
+    /// <returns> Funkcja zwraca nowy rodzaj po wykonaniu podstawienia. </returns>
+    member this.WPodstawKilka sub =
+        match this with
+        | KWZmienna x ->
+            match List.tryFind (fun p -> x = fst p) sub with
+            | None -> this
+            | Some(_, kind) -> kind
+        | KFunkcja(k1,k2) -> KFunkcja(k1.WPodstawKilka sub, k2.WPodstawKilka sub)
+        | _ -> this
+
+    /// <summary>
     /// Sprawdza, czy dany rodzaj zawiera wystąpienie podanej zmiennej rodzajowej.
     /// </summary>
     /// <param name="x"> nazwa szukanej zmiennej rodzajowej </param>
@@ -144,6 +158,19 @@ type Typ =
         | TAnotacja(t,k)          -> TAnotacja(t.WPodstawRodzaj x kind, k.WPodstaw x kind)
         | _ -> this
     /// <summary>
+    /// Wykonuje podstawienie jednocześnie kilku zmiennych
+    /// </summary>
+    /// <param name="sub"> lista par nazwa-wartość, która odpowiada wykonywanemu podstawieniu </param>
+    /// <returns> Funkcja zwraca nowy konstruktor typu po wykonaniu podstawienia. </returns>
+    member this.WPodstawKilkaRodzajow sub =
+        match this with
+        | TFunkcja(t1,t2)     -> TFunkcja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
+        | TLambda(y,k,t)      -> TLambda(y, k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
+        | TAplikacja(t1,t2)   -> TAplikacja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
+        | TUniwersalny(y,k,t) -> TUniwersalny(y,k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
+        | TAnotacja(t,k)      -> TAnotacja(t.WPodstawKilkaRodzajow sub, k.WPodstawKilka sub)
+        | _ -> this
+    /// <summary>
     /// Sprawdza, czy dany konstruktor typu zawiera wolne wystąpienie podanej zmiennej 
     /// typowej kwantyfikowanej abstrakcją.
     /// </summary>
@@ -208,6 +235,39 @@ type Typ =
                 TUniwersalny(z, k, (t.Podstaw y (TZmienna z)).Podstaw x typ)
             else TUniwersalny(y, k, t.Podstaw x typ)
         | TAnotacja(t,k) -> TAnotacja(t.Podstaw x typ, k)
+
+    /// <summary>
+    /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
+    /// zmiennej <paramref name="x"/> kwantyfikowanej abstrakcją, w której za zmienne rodzajowe w <paramref name="kv"/>
+    /// podstawiono świerze zmienne
+    /// </summary>
+    /// <param name="x"> nazwa zmiennej za którą należy wykonać podstawienie </param>
+    /// <param name="kv"> zmienne rodzajowe, które powinny mieć własną kopię </param>
+    /// <param name="typ"> konstruktor typu który należy podstawić za zmienną <paramref name="x"/>. </param>
+    /// <returns> Funkcja zwraca nowy konstruktor typu po wykonaniu podstawienia. </returns>
+    member this.PodstawKopie x kv (typ : Typ) =
+        match this with
+        | TWZmienna y -> TWZmienna y
+        | TZmienna y when x = y -> 
+            kv |>
+            List.map (fun x -> (x, KWZmienna(Fresh.swierzaNazwa()))) |>
+            typ.WPodstawKilkaRodzajow
+        | TZmienna y -> TZmienna y
+        | TFunkcja(t1,t2) -> TFunkcja(t1.PodstawKopie x kv typ, t2.PodstawKopie x kv typ)
+        | TLambda(y,k,t) ->
+            if x = y then TLambda(y,k,t)
+            elif typ.ZawieraZmiennaTypowa y then
+                let z = Fresh.swierzaNazwa();
+                TLambda(z, k, (t.Podstaw y (TZmienna z)).PodstawKopie x kv typ)
+            else TLambda(y, k, t.PodstawKopie x kv typ)
+        | TAplikacja(t1,t2) -> TAplikacja(t1.PodstawKopie x kv typ,t2.PodstawKopie x kv typ)
+        | TUniwersalny(y,k,t) ->
+            if x = y then TUniwersalny(y,k,t)
+            elif typ.ZawieraZmiennaTypowa y then
+                let z = Fresh.swierzaNazwa();
+                TUniwersalny(z, k, (t.Podstaw y (TZmienna z)).PodstawKopie x kv typ)
+            else TUniwersalny(y, k, t.PodstawKopie x kv typ)
+        | TAnotacja(t,k) -> TAnotacja(t.PodstawKopie x kv typ, k)
 
     /// <summary>
     /// Wolne zmienne rodzajowe kwantyfikowane schematem
@@ -317,8 +377,29 @@ type Wyrazenie =
         | ETLambda(y,k,e) -> ETLambda(y, k, e.PodstawTyp x typ)
         | ETAplikacja(e,t) -> ETAplikacja(e.PodstawTyp x typ, t.Podstaw x typ)
         | EAnotacja(e,t) -> EAnotacja(e.PodstawTyp x typ, t.Podstaw x typ)
-        | ELet(x,e1,e2) -> ELet(x, e1.PodstawTyp x typ, e2.PodstawTyp x typ)
-        | ETLet(x,t,e) -> ETLet(x, t.Podstaw x typ, e.PodstawTyp x typ)
+        | ELet(y,e1,e2) -> ELet(y, e1.PodstawTyp x typ, e2.PodstawTyp x typ)
+        | ETLet(y,t,e) -> ETLet(y, t.Podstaw x typ, e.PodstawTyp x typ)
+
+    /// <summary>
+    /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
+    /// zmiennej <paramref name="x"/> kwantyfikowanej abstrakcją, w której za zmienne rodzajowe w <paramref name="kv"/>
+    /// podstawiono świerze zmienne
+    /// </summary>
+    /// <param name="x"> nazwa zmiennej za którą należy wykonać podstawienie </param>
+    /// <param name="kv"> zmienne rodzajowe, które powinny mieć własną kopię </param>
+    /// <param name="typ"> konstruktor typu który należy podstawić za zmienną <paramref name="x"/>. </param>
+    /// <returns> Funkcja zwraca nowe wyrazenie po wykonaniu podstawienia. </returns>
+    member this.PodstawKopieTypu x kv typ =
+        match this with
+        | EZmienna y -> EZmienna y
+        | ELambda(y,t,e) -> ELambda(y, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
+        | EAplikacja(e1,e2) -> EAplikacja(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ)
+        | ETLambda(y,k,e) -> ETLambda(y, k, e.PodstawKopieTypu x kv typ)
+        | ETAplikacja(e,t) -> ETAplikacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ)
+        | EAnotacja(e,t) -> EAnotacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ)
+        | ELet(y,e1,e2) -> ELet(y, e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ)
+        | ETLet(y,t,e) -> ETLet(y, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
+
     /// <summary>
     /// Sprawdza, czy dane wyrażenie zawiera wolne wystąpienie podanej zmiennej.
     /// </summary>

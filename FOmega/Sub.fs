@@ -21,7 +21,7 @@ type Przypisanie =
     | PrzypisanieTypu of string * Typ
     /// <summary> Zabronione przypisanie </summary>
     /// <remarks> może się pojawić, gdy używamy przypisania zawierającego zmienne lokalne w obszarze gdzie one nie obowiązują </remarks>
-    | PrzypisanieZabronione of string * string
+    | PrzypisanieZabronione of string * string * Typ
 
 /// <summary>
 /// Podstawienie (za zmienne schematowe).
@@ -53,11 +53,11 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let ok p =
                 match p with
                 | PrzypisanieTypu(y, _)
-                | PrzypisanieZabronione(y, _) -> y = x;
+                | PrzypisanieZabronione(y, _, _) -> y = x;
                 | _ -> false
             match List.tryFind ok podstawienie with
             | Some(PrzypisanieTypu(_, t)) -> t
-            | Some(PrzypisanieZabronione(_, ex)) -> SubstitutionException ex |> raise
+            | Some(PrzypisanieZabronione(_, ex, _)) -> SubstitutionException ex |> raise
             | _ -> typ
         | TZmienna _ -> typ
         | TFunkcja(a, b) -> TFunkcja(this.Aplikuj a, this.Aplikuj b)
@@ -84,15 +84,88 @@ type Podstawienie(podstawienie : Przypisanie list) =
     /// Aplikacja podstawienia do kontekstu
     /// </summary>
     member this.Aplikuj (gamma : KontekstTypowania) =
-        // TODO: Nie jestem do końca pewien, czy to ma być tak
         let aplikuj schemat =
             match schemat with
             | SchematTypu(x, tv, kv, t) ->
-                SchematTypu(x, tv, kv, this.Aplikuj t)
+                let tv2 = List.map (fun _ -> Fresh.swierzaNazwa()) tv;
+                let kv2 = List.map (fun _ -> Fresh.swierzaNazwa()) kv;
+                let pt = Podstawienie( List.map2 (fun x y -> PrzypisanieTypu(x, TWZmienna y)) tv tv2 );
+                let pk = Podstawienie( List.map2 (fun x y -> PrzypisanieRodzaju(x, KWZmienna y)) kv kv2 );
+                SchematTypu(x, tv2, kv2, (this * pk * pt).Aplikuj t)
             | SchematRodzaju(x, kv, k) ->
-                SchematRodzaju(x, kv, this.Aplikuj k)
+                let kv2 = List.map (fun _ -> Fresh.swierzaNazwa()) kv;
+                let pk = Podstawienie( List.map2 (fun x y -> PrzypisanieRodzaju(x, KWZmienna y)) kv kv2 );
+                SchematRodzaju(x, kv, (this * pk).Aplikuj k)
         in
             KontekstTypowania(List.map aplikuj gamma.Kontekst)
+
+    /// <summary>
+    /// Aplikacja podstawienia do typu, ignoruje podstawienia zabronione
+    /// </summary>
+    member this.FAplikuj typ =
+        match typ with
+        | TWZmienna x ->
+            let ok p =
+                match p with
+                | PrzypisanieTypu(y, _)
+                | PrzypisanieZabronione(y, _, _) -> y = x;
+                | _ -> false
+            match List.tryFind ok podstawienie with
+            | Some(PrzypisanieTypu(_, t)) -> (true, System.String.Empty, t)
+            | Some(PrzypisanieZabronione(_, ex, t)) -> (false, ex, t)
+            | _ -> (true, System.String.Empty, typ)
+        | TZmienna _ -> (true, System.String.Empty, typ)
+        | TFunkcja(a, b) -> 
+            let (ra, ex1, a') = this.FAplikuj a;
+            let (rb, ex2, b') = this.FAplikuj b;
+            (ra && rb, (if ra then ex1 else ex2), TFunkcja(a', b'))
+        | TLambda(x,k,t) -> 
+            let (rt, ex, t') = this.FAplikuj t
+            (rt, ex, TLambda(x, this.Aplikuj k, t'))
+        | TAplikacja(t1,t2) -> 
+            let (rt1, ex1, t1') = this.FAplikuj t1;
+            let (rt2, ex2, t2') = this.FAplikuj t2;
+            (rt1 && rt2, (if rt1 then ex1 else ex2), TAplikacja(t1', t2'))
+        | TUniwersalny(x,k,t) -> 
+            let (rt, ex, t') = this.FAplikuj t;
+            (rt, ex, TUniwersalny(x, this.Aplikuj k, t'))
+        | TAnotacja(t, k) -> 
+            let (rt, ex, t') = this.FAplikuj t;
+            (rt, ex, TAnotacja(t', this.Aplikuj k))
+
+    /// <summary>
+    /// Aplikacja podstawienia do termu, ignoruje podstawienia zabronione
+    /// </summary>
+    member this.FAplikuj term =
+        match term with
+        | EZmienna _ -> (true, term)
+        | ELambda(x, t, e) -> 
+            let (rt, _, t') = this.FAplikuj t;
+            let (re, e') = this.FAplikuj e;
+            (rt && re, ELambda(x, t', e'))
+        | EAplikacja(e1, e2) -> 
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            (re1 && re2, EAplikacja(e1', e2'))
+        | ETLambda(x, k, e) -> 
+            let (re, e') = this.FAplikuj e;
+            (re, ETLambda(x, this.Aplikuj k, e'))
+        | ETAplikacja(e, t) ->
+            let (re, e') = this.FAplikuj e;
+            let (rt, _, t') = this.FAplikuj t;
+            (re && rt, ETAplikacja(e', t'))
+        | EAnotacja(e, t) -> 
+            let (re, e') = this.FAplikuj e;
+            let (rt, _, t') = this.FAplikuj t;
+            (re && rt, EAnotacja(e', t'))
+        | ELet(x, e1, e2) ->
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            (re1 && re2, ELet(x, e1', e2'))
+        | ETLet(x, t, e) -> 
+            let (re, e') = this.FAplikuj e;
+            let (rt, _, t') = this.FAplikuj t;
+            (re && rt, ETLet(x, t', e'))
 
     member private this.Przypisania =
         podstawienie
@@ -109,13 +182,28 @@ type Podstawienie(podstawienie : Przypisanie list) =
                     | PrzypisanieRodzaju(x, k) ->
                         PrzypisanieRodzaju(x, s1.Aplikuj k)
                     | PrzypisanieTypu(x, t) ->
-                        try
-                            PrzypisanieTypu(x, s1.Aplikuj t)
-                        with
-                        | SubstitutionException ex -> PrzypisanieZabronione(x, ex)
-                    | PrzypisanieZabronione _ -> p
+                        let (ok, ex, t') = s1.FAplikuj t;
+                        if ok then
+                            PrzypisanieTypu(x, t')
+                        else
+                            PrzypisanieZabronione(x, ex, t')
+                    | PrzypisanieZabronione(x, ex, t) -> 
+                        let (_, _, t') = s1.FAplikuj t;
+                        PrzypisanieZabronione(x, ex, t') 
             ) |>
-            List.append s1.Przypisania // TODO: do poprawki; usunąć co trzeba
+            List.append(
+                let (domT, domK) = s2.Dziedzina in
+                s1.Przypisania |>
+                List.filter (
+                    fun p ->
+                        match p with
+                        | PrzypisanieTypu(x, _)
+                        | PrzypisanieZabronione(x, _, _) ->
+                            List.forall (fun y -> x <> y) domT
+                        | PrzypisanieRodzaju(x, _) ->         
+                            List.forall (fun y -> x <> y) domK    
+                )
+            )
         )
 
     /// <summary>
@@ -128,7 +216,21 @@ type Podstawienie(podstawienie : Przypisanie list) =
                 fun p ->
                     match p with
                     | PrzypisanieTypu(y, t) when t.ZawieraZmiennaTypowa x ->
-                        PrzypisanieZabronione(y, "Invalid use of bound variable " + x + " ouside the definition.")
+                        PrzypisanieZabronione(y, "Invalid use of bound variable " + x + " ouside the definition.", t)
                     | _ -> p
             )
         )
+
+    /// <summary>
+    /// Zmienne typowe i rodzajowe z dziedziny podstawienia
+    /// </summary>
+    member private this.Dziedzina =
+        let rec dziedzina acct acck l =
+            match l with
+            | [] -> (acct, acck)
+            | (PrzypisanieTypu(x, _))::xs
+            | (PrzypisanieZabronione(x, _, _))::xs ->
+                dziedzina (x::acct) acck xs
+            | (PrzypisanieRodzaju(x, _))::xs ->
+                dziedzina acct (x::acck) xs
+        in dziedzina [] [] podstawienie

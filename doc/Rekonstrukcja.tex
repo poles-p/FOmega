@@ -670,17 +670,16 @@ $\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \{Y:=\sigma_3 \sigma_2 \s
 \begin{tabular}{l}
 $typeof(\Gamma \vdash \textrm{let} \ x=t_1 \ \textrm{in} \ t_2 : ?) = $ \\
 $\qquad \textrm{let} \ (\sigma_1, T_1) = typeof(\Gamma \vdash t_1 : ?) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ \left\{ \bar{X}_1, \dots, \bar{X}_n \right\} = \bar{FTV}(T_1) \setminus \bar{FTV}(\Gamma) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{FKV}(T_1) \setminus \widehat{FKV}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \bar{X}_1, \dots, \bar{X}_n \right\} = \bar{Var}(T_1) \setminus \bar{Var}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{Var}(T_1) \setminus \widehat{Var}(\Gamma) \ \textrm{in} $ \\
 $\qquad \textrm{let} \ (\sigma_2, T_2) = typeof(\sigma_1 \Gamma, x:\Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m. T_2 \vdash \sigma_1 t_2 : ?) \ \textrm{in} $ \\
 $\qquad\qquad (\sigma_2 \circ \sigma_1, T_2) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $typeof(\Gamma \vdash \textrm{tlet} \ X=T \ \textrm{in} \ t : ?) = $ \\
 $\qquad \textrm{let} \ (\sigma_1, K) = kindof(\Gamma \vdash T :: ?) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{FKV}(K) \setminus \widehat{FKV}(\Gamma) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma, X::\Omega \widehat{X}_1 \dots \widehat{X}_m.K \vdash \sigma_1 t : ?) \ \textrm{in} $ \\
-$\qquad\qquad (\sigma_2 \circ \sigma_1, (\{X := \sigma_2 \sigma_1 T\}T_t) \Downarrow_\beta) $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma \vdash \{ X(\widehat{Var}(K) \setminus \widehat{Var}(\Gamma)) := \sigma_1 T \} \sigma_1 t : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_2 \circ \sigma_1, T_t) $ \\
 \end{tabular} \\
 
 \subsection{Własności}

@@ -128,10 +128,15 @@ let rec rekTyp (gamma : KontekstTypowania) term =
         }
     | ETLet(x, t, e) ->
         opt{
-            let! (s1, k) = rekRodzaj gamma t;
+            // TODO: wykomentowałem stare złe rozwiązanie, mam zamiar je przerobić na dobre tak, by drukować ładne komunikaty
+            (* let! (s1, k) = rekRodzaj gamma t;
             let kv = Set.toList (k.WolneKWZmienne - gamma.WolneKWZmienne);
             let gamma2 = (s1.Aplikuj gamma).Rozszerz(SchematRodzaju(x, kv, k));
             let! (s2, tk) = rekTyp gamma2 (s1.Aplikuj e);
             let s21 = s2 * s1;
-            return (s21, typBetaNormalny (tk.Podstaw x (s21.Aplikuj t))) // TODO: może nie trzeba robić beta redukcji typu.
+            return (s21, typBetaNormalny (tk.Podstaw x (s21.Aplikuj t))) // TODO: może nie trzeba robić beta redukcji typu. *)
+            let! (s1, k) = rekRodzaj gamma t;
+            let kv = Set.toList (k.WolneKWZmienne - gamma.WolneKWZmienne);
+            let! (s2, tk) = rekTyp (s1.Aplikuj gamma) ((s1.Aplikuj e).PodstawKopieTypu x kv (s1.Aplikuj t));
+            return (s2 * s1, tk)
         }

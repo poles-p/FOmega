@@ -13,7 +13,7 @@ let main =
                     opt{
                         let! (s, typ) = AlgorytmW.rekTyp (KontekstTypowania[]) term;
                         let! (_, kind) = AlgorytmW.rekRodzaj (KontekstTypowania[]) typ;
-                        System.Console.WriteLine("{0}  :  {1}  ::  {2}", s.Aplikuj term, typ, kind);
+                        System.Console.WriteLine("{0}  :  {1}  ::  {2}", snd (s.FAplikuj term), typ, kind);
                         return ()
                     } |> ignore                
                 | Parsor.Core.Error -> ()
