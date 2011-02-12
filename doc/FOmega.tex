@@ -144,7 +144,7 @@ Teraz możemy $\lambda_{\rightarrow}$ rozszerzyć o następujące konstrukcje:
     \item abstrakcję i aplikację typową na typach \\ \\
 \begin{tabular}{| l c r |}
    \hline
-   $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
+   $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
    & $\mathtt{\lambda X::K.T}$ & \textit{abstrakcja konstruktorowa} \\
    & $\mathtt{T\;T}$ & \textit{aplikacji konstruktorowa} \\
    \hline
@@ -164,7 +164,7 @@ Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ w
     \item abstrakcję i aplikację typową na termach \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy} \\
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy} \\
    & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa} \\
    & $\mathtt{t[T]}$ & \textit{aplikacja typowa} \\
   \hline
@@ -173,7 +173,7 @@ Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ w
     \item typ uniwersalny \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
    & $\mathtt{\forall X::K.T}$ & \textit{typ uniwersalny} \\
   \hline
 \end{tabular}
@@ -304,6 +304,263 @@ Ewaluacja przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się n
 	\]
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Rozszerzenia $F_\omega$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setcounter{equation}{0}
+Ważne!!! Zaoszczędza dużo pisania i pozwala w zasanie na przepisanie regułek z innych systemów ;)
+ 	\[\mathtt{ \frac{\Gamma \vdash t:T \;\;\; S\equiv T \;\;\; \Gamma \vdash S::\ast}{\Gamma \vdash t:S}
+		}
+	\]
+
+\subsection{wyrażenia arytmetyczne i logiczne}
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{true}$ & \textit{prawda}  \\
+   & $\mathtt{false}$ & \textit{fałsz} \\
+   & $\mathtt{zero}$ & \textit{zero} \\
+   & $\mathtt{succ\;t}$ & \textit{następnik}  \\
+   & $\mathtt{pred\;t}$ & \textit{poprzednik} \\
+   & $\mathtt{iszero}$ & \textit{test na zero} \\
+   & $\mathtt{if\;t\;then\;t\;else\;t}$ & \textit{warunek} \\
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy} \\
+   & $\mathtt{Nat}$ & \textit{typ liczbowy} \\
+   & $\mathtt{Bool}$ & \textit{typ boolowski} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{typy} \\
+   & $\mathtt{true}$ & \textit{wartość prawdy} \\
+   & $\mathtt{false}$ & \textit{wartość fałszu} \\
+   & $\mathtt{nv}$ & \textit{wartość liczbowa} \\
+   & & \\
+  $\mathtt{nv}$ ::= & $\dots$ & \textit{wartość liczbowa} \\
+   & $\mathtt{zero}$ & \textit{wartość zera} \\
+   & $\mathtt{succ\;nv}$ & \textit{wartość następnika} \\
+  \hline
+\end{tabular} \\
+Kinding:
+ 	\[\mathtt{ \frac{}{\Gamma \vdash Bool::\ast} \qquad \frac{}{\Gamma \vdash Nat::\ast}
+		}
+	\]
+Typowanie:
+ 	\[\mathtt{ \frac{}{\Gamma \vdash true:Bool} \qquad \frac{}{\Gamma \vdash false:Bool} \quad \frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T \;\;\; \Gamma \vdash T::\ast}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T}
+		}
+	\]
+ 	\[\mathtt{ \frac{}{\Gamma \vdash zero:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash succ\;t:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash pred\;t:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash iszero\;t:Bool}
+		}
+	\]
+Ewaluacja:
+ 	\[\mathtt{ ał ał ał
+		}
+	\]
+
+\subsection{unit i sekwencje}
+
+W zasadzie unita można nie wprowadzać: \\
+$\mathtt{unit = \lambda X::\ast.\lambda x:X.x}$ \\
+$\mathtt{Unit = \forall X::\ast.X \rightarrow X}$ \\
+
+zamiast: \\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{unit}$ & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{Unit}$ & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
+   & $\mathtt{unit}$ & \\
+  \hline
+\end{tabular} \\
+Kinding:
+ 	\[\mathtt{ \frac{}{\Gamma \vdash Unit::\ast}
+		}
+	\]
+Typowanie:
+ 	\[\mathtt{ \frac{}{\Gamma \vdash unit:Unit}
+		}
+	\]
+ 	\[\mathtt{ t_1;t_2 = (\lambda x:Unit.t_2)t_1 \hspace{3em} \text{gdzie x $\notin$ FV($t_2$)}
+		}
+	\]
+
+
+\subsection{Definicje lokalne}
+
+ 	\[\mathtt{let\;x=t_1\;in\;t_2 \longrightarrow (\lambda x:T.t_2)t_1 \hspace{3em}\text{gdzie}\; t_1:T 
+		}
+	\]
+
+\subsection{Rekordy}
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{\{l_i=t_i^{\;\;\;i \in 1..n}\}}$ & \textit{rekord} \\
+   & $\mathtt{t.l}$ & \textit{projekcja} \\ 
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{\{l_i:T_i^{\;\;\;i \in 1..n}\}}$ & \textit{typ rekordu} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
+   & $\mathtt{\{l_i=v_i^{\;\;\;i \in 1..n}\}}$ & \textit{wartość rekordu} \\
+  \hline
+\end{tabular} \\
+Ewaluacja: \\
+ 	\[\mathtt{
+                \{l_i=v_i^{\;\;\;i \in 1..n}\}.i \longrightarrow v_i
+                \qquad
+                \frac{e \longrightarrow e'}{e.i \longrightarrow e'.i}
+		}
+	\]
+ 	\[\mathtt{
+                \frac{t_i \longrightarrow t_i'}{\{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i, \dots, l_n=t_n\} \longrightarrow \{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i', \dots, l_n=t_n\}}
+		}
+	\]
+Rodzajowanie: \\
+ 	\[\mathtt{
+             \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}
+		}
+	\]
+Typowanie:
+ 	\[\mathtt{
+             \frac{\Gamma \vdash t_1:T_1 \;\dots\;\Gamma \vdash t_n:T_n \;\;\; \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash \{l_i=t_i^{\;\;\;i \in 1..n}\}:\{l_i:T_i^{\;\;\;i \in 1..n}\}}
+           \qquad
+           \frac{\Gamma \vdash t : \{l_i:T_i^{\;\;\;i \in 1..n}\} \;\;\; \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash t.i : T_i} 
+            }
+	\]
+
+\subsection{Warianty}
+
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{<l=t>\;as\;T}$ & \textit{tagowanie} \\
+   & $\mathtt{case\;t\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n}}$ & \textit{case}\\
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{<l_i:T_i^{\;\;\;i \in 1..n}>}$ & \textit{typ wariantu}\\
+  \hline
+\end{tabular} \\
+Kinding:
+ 	\[\mathtt{
+             \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash <l_i:T_i^{\;\;\;i \in 1..n}>::\ast}
+		}
+	\]
+Typowanie:
+ 	\[\mathtt{ \frac{\Gamma \vdash t_0:<l_i:T_i^{\;\;\;i \in 1..n}> \hspace{2em} \Gamma,x_1:T_1 \vdash t_1:T \;\dots\; \Gamma,x_n:T_n \vdash t_n:T}{\Gamma \vdash case\;t_0\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n}\; : T}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t_j : T_j \hspace{2em} \Gamma \vdash <l_i:T_i^{\;\;\;i \in 1..n}>::\ast}{\Gamma \vdash <l_j=t_j> as <l_i:T_i^{\;\;\;i \in 1..n}> \;: <l_i:\;T_i^{\;\;\;i \in 1..n}>}
+		}
+	\]
+Ewaluacja:
+ 	\[\mathtt{
+		}
+	\]
+
+\subsection{Punkt stały}
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{fix \;t.v}$ & \textit{punkt stały}\\
+  \hline
+\end{tabular} \\
+Ewaluacja \\
+ 	\[\mathtt{ fix\;f.v \longrightarrow [f \mapsto fix\;f.v]v
+		}
+	\]
+Typowanie \\
+ 	\[\mathtt{\frac{\Gamma, f:T \vdash v:S \hspace{2em} \Gamma \vdash T::\ast\hspace{2em} \Gamma \vdash S::\ast \hspace{2em} S\equiv T}{\Gamma \vdash fix\;f.v:T}}
+	\]
+
+
+\subsection{listy}
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{nil[T]}$ & \textit{lista pusta}  \\
+   & $\mathtt{cons[T]\;t\;t}$ & \textit{konstruktor listy} \\
+   & $\mathtt{isnil[T]\;t}$ & \textit{test na pustość listy} \\
+   & $\mathtt{head[T]\;t\;t}$ & \textit{głowa listy} \\
+   & $\mathtt{tail[T]\;t}$ & \textit{ogon listy} \\
+   & & \\
+  $\mathtt{T}$ ::= &  & \textit{typy} \\
+   & $\mathtt{List\;T}$ & \textit{typ listy} \\
+   & & \\
+  $\mathtt{v}$ ::= &  & \textit{typy} \\
+   & $\mathtt{nil\;[T]}$ & \textit{wartość pustej listy} \\
+   & $\mathtt{cons\;[T]\;v\;v}$ & \textit{wartość listy niepustej} \\
+  \hline
+\end{tabular} \\
+Kinding:
+ 	\[\mathtt{ \frac{\Gamma \vdash T::\ast}{\Gamma \vdash List\;T::\ast}
+		}
+	\]
+Typowanie:
+ 	\[\mathtt{ \frac{\Gamma \vdash List\;T :: \ast}{\Gamma \vdash nil[T] : List\;T } \qquad \frac{\Gamma \vdash t_1:T \;\;\;\Gamma \vdash t_2:List\;T}{\Gamma \vdash List[T]\;t_1\;t_2:List\;T}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t:List\;T }{\Gamma \vdash head[T]\;t : T } \qquad \frac{\Gamma \vdash t:List\;T }{\Gamma \vdash tail[T]\;t : List\;T }
+		}
+	\]
+Ewaluacja:
+ 	\[\mathtt{ aaa
+		}
+	\]
+\subsection{Typy egzystencjalne}
+
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy}  \\
+   & $\mathtt{\{*T,t\}\;as\;T}$ & \textit{pakowanie} \\
+   & $\mathtt{let\;\{X,x\}=t\;in\;t}$ & \textit{odpakowanie} \\
+  \hline
+\end{tabular} \\
+
+Teraz możemy sobie zdefiniować te operacje w $F_\omega$: \\
+$\mathtt{\{\exists X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.X \rightarrow Y) \rightarrow Y}$ \\
+$\mathtt{\{^*U::K,t\}\;as\; \{\exists X::K,T\}\; \overset{def}{=} \;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;t}$ \\
+$\mathtt{let\;\{X,x\}=t\;in\;t'\;\overset{def}{=}\;t[T'](\lambda X::K.\lambda x:T.t')}\hspace{3em} \text{gdzie $\mathtt{t':T'}$} $
+
+\subsection{Typy rekurencyjne}
+
+Hmmm, no tu musze się zastanowić, to na dole dla zwykłej wersji. \\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{fold[T]\;t}$ & \textit{folding} \\
+   & $\mathtt{unfold[T]\;t}$ & \textit{unfolding}\\
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{\mu X.T}$ & \textit{typ rekursywny} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
+   & $\mathtt{fold[T]\;v}$ & \textit{folding} \\
+  \hline  
+\end{tabular} \\
+Kinding:
+ 	\[\mathtt{\frac{}{\Gamma \vdash \mu X.T::\ast}
+		}
+	\]
+Typowanie:
+ 	\[\mathtt{ \frac{ U=\mu X.T \hspace{2em} \Gamma \vdash t:[X\mapsto U]U}{\Gamma \vdash fold[U]\;t\; : U}
+		}
+	\]
+Ewaluacja:
+ 	\[\mathtt{
+		}
+	\]
+
+\subsection{dopasowanie wzorca}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -321,18 +578,6 @@ Ewaluacja przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się n
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
-
-\subsection{wyrażenia arytmetyczne i logiczne}
-
-\subsection{unit i sekwencje}
-\subsection{definicje lokalne}
-\subsection{Rekordy}
-\subsection{warianty}
-\subsection{punkt stały}
-\subsection{listy}
-\subsection{typy egzystencjalne}
-\subsection{typy rekurencyjne}
-\subsection{dopasowanie wzorca}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
