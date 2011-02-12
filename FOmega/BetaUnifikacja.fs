@@ -43,6 +43,10 @@ let rec betaRedukuj t =
             let! t1' = betaRedukuj t1;
             return TAplikacja(t1', t2)
         }
+    | TWartosc(x, t2) ->
+        match betaRedukuj t2 with
+        | None -> Some t2
+        | Some t2' -> Some( TWartosc(x, t2') )
     | _ -> None
 
 /// <summary>
@@ -81,6 +85,12 @@ let rec betaUnifikuj(t1, t2) =
             let! (ss, s) = betaUnifikuj(st.Aplikuj s1, st.Aplikuj s2);
             return (ss * st, TFunkcja(ss.Aplikuj t, s))
         }
+    | (TWartosc(x, t1), t2)
+    | (t1, TWartosc(x, t2)) ->
+        opt{
+            let! (st, t) = betaUnifikuj(t1, t2);
+            return (st, TWartosc(x, t))
+        }
     | _ ->
         match betaRedukuj t1 with
         | Some t1' -> betaUnifikuj(t1', t2)
@@ -106,6 +116,7 @@ let rec typBetaNormalny typ = // TODO: zrobić to porządnie
     match typ with
     | TWZmienna x
     | TZmienna x -> typ
+    | TWartosc(x, t) -> typBetaNormalny t
     | TFunkcja(a,b) ->
         TFunkcja(typBetaNormalny a, typBetaNormalny b)
     | TLambda(x, k, t) ->

@@ -112,6 +112,9 @@ type Rodzaj =
 type Typ =
     /// <summary> zmienna typowa kwantyfikowana schematem typowy </summary>
     | TWZmienna        of string
+    /// <summary> zmienna typowa kwantyfikowana abstrakcja po wykonaniu podstawienia </summary>
+    /// <remarks> Jest to to samo co typ, jest to wprowadzone po to by ładnie drukować typy </remarks>
+    | TWartosc        of string * Typ
     /// <summary> zmienna typowa kwantyfikowana abstrakcją </summary>
     | TZmienna         of string
     /// <summary> typ funkcji (T -> T) </summary>
@@ -136,6 +139,7 @@ type Typ =
         // tych kwantyfikowanych schematem, i tych kwantyfikowanych abstrakcją
         match this with
         | TWZmienna y when x = y  -> typ
+        | TWartosc(y,t)          -> TWartosc(y, t.Podstaw x typ)
         | TFunkcja(t1,t2)         -> TFunkcja(t1.WPodstaw x typ, t2.WPodstaw x typ)
         | TLambda(y,k,t)          -> TLambda(y, k, t.WPodstaw x typ) 
         | TAplikacja(t1,t2)       -> TAplikacja(t1.WPodstaw x typ, t2.WPodstaw x typ)
@@ -151,6 +155,7 @@ type Typ =
     /// <returns> Funkcja zwraca nowy konstruktor typu po wykonaniu podstawienia. </returns>
     member this.WPodstawRodzaj x kind =
         match this with
+        | TWartosc(y,t)           -> TWartosc(y,t.WPodstawRodzaj x kind)
         | TFunkcja(t1,t2)         -> TFunkcja(t1.WPodstawRodzaj x kind, t2.WPodstawRodzaj x kind)
         | TLambda(y,k,t)          -> TLambda(y, k.WPodstaw x kind, t.WPodstawRodzaj x kind)
         | TAplikacja(t1,t2)       -> TAplikacja(t1.WPodstawRodzaj x kind, t2.WPodstawRodzaj x kind)
@@ -164,6 +169,7 @@ type Typ =
     /// <returns> Funkcja zwraca nowy konstruktor typu po wykonaniu podstawienia. </returns>
     member this.WPodstawKilkaRodzajow sub =
         match this with
+        | TWartosc(y,t)       -> TWartosc(y, t.WPodstawKilkaRodzajow sub)
         | TFunkcja(t1,t2)     -> TFunkcja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
         | TLambda(y,k,t)      -> TLambda(y, k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
         | TAplikacja(t1,t2)   -> TAplikacja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
@@ -182,6 +188,7 @@ type Typ =
     member this.ZawieraZmiennaTypowa x =
         match this with
         | TWZmienna _ -> false
+        | TWartosc(_, t) -> t.ZawieraZmiennaTypowa x
         | TZmienna y -> x = y
         | TFunkcja(t1,t2) -> t1.ZawieraZmiennaTypowa x || t2.ZawieraZmiennaTypowa x
         | TLambda(y,_,_) when x = y -> false
@@ -202,6 +209,7 @@ type Typ =
     member this.ZawieraZmiennaTypowaW x =
         match this with
         | TWZmienna y -> x = y
+        | TWartosc(_, t) -> t.ZawieraZmiennaTypowaW x
         | TZmienna y -> false
         | TFunkcja(t1,t2) -> t1.ZawieraZmiennaTypowaW x || t2.ZawieraZmiennaTypowaW x
         | TLambda(_,_,t) -> t.ZawieraZmiennaTypowaW x
@@ -218,6 +226,7 @@ type Typ =
     member this.Podstaw x typ =
         match this with
         | TWZmienna y -> TWZmienna y
+        | TWartosc(y, t) -> TWartosc(y, t.Podstaw x typ)
         | TZmienna y when x = y -> typ
         | TZmienna y -> TZmienna y
         | TFunkcja(t1,t2) -> TFunkcja(t1.Podstaw x typ, t2.Podstaw x typ)
@@ -248,10 +257,13 @@ type Typ =
     member this.PodstawKopie x kv (typ : Typ) =
         match this with
         | TWZmienna y -> TWZmienna y
+        | TWartosc(y,t) -> TWartosc(y, t.PodstawKopie x kv typ)
         | TZmienna y when x = y -> 
-            kv |>
-            List.map (fun x -> (x, KWZmienna(Fresh.swierzaNazwa()))) |>
-            typ.WPodstawKilkaRodzajow
+            let t =
+                kv |>
+                List.map (fun x -> (x, KWZmienna(Fresh.swierzaNazwa()))) |>
+                typ.WPodstawKilkaRodzajow
+            in TWartosc(y, t)
         | TZmienna y -> TZmienna y
         | TFunkcja(t1,t2) -> TFunkcja(t1.PodstawKopie x kv typ, t2.PodstawKopie x kv typ)
         | TLambda(y,k,t) ->
@@ -278,6 +290,7 @@ type Typ =
     member this.WolneKWZmienne =
         match this with
         | TWZmienna _ -> Set.empty
+        | TWartosc(_, t) -> t.WolneKWZmienne
         | TZmienna _ -> Set.empty
         | TFunkcja(a, b) -> Set.union a.WolneKWZmienne b.WolneKWZmienne
         | TLambda(x, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
@@ -294,6 +307,7 @@ type Typ =
     member this.WolneTWZmienne =
         match this with
         | TWZmienna x -> Set.singleton x
+        | TWartosc(_, t) -> t.WolneTWZmienne
         | TZmienna _ -> Set.empty
         | TFunkcja(a, b) -> Set.union a.WolneTWZmienne b.WolneTWZmienne
         | TLambda(x, k, t) -> t.WolneTWZmienne
@@ -309,6 +323,7 @@ type Typ =
     member this.ToString prior =
         match this with
         | TWZmienna x -> x
+        | TWartosc(x, _) -> x
         | TZmienna x -> x
         | TFunkcja(a,b) ->
             let res = a.ToString 1 + " -> " + b.ToString 0;

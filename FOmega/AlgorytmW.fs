@@ -14,6 +14,8 @@ let rec rekRodzaj (gamma : KontekstTypowania) typ =
     match typ with
     | TWZmienna _ ->
         Some(Podstawienie [], KGwiazdka)
+    | TWartosc(_, t) ->
+        rekRodzaj gamma t
     | TZmienna x ->
         match gamma.SchematRodzaju x with
         | None ->

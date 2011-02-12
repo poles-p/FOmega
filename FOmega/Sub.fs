@@ -59,6 +59,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
             | Some(PrzypisanieTypu(_, t)) -> t
             | Some(PrzypisanieZabronione(_, ex, _)) -> SubstitutionException ex |> raise
             | _ -> typ
+        | TWartosc(x, t) -> TWartosc(x, this.Aplikuj t)
         | TZmienna _ -> typ
         | TFunkcja(a, b) -> TFunkcja(this.Aplikuj a, this.Aplikuj b)
         | TLambda(x,k,t) -> TLambda(x, this.Aplikuj k, this.Aplikuj t)
@@ -114,18 +115,21 @@ type Podstawienie(podstawienie : Przypisanie list) =
             | Some(PrzypisanieTypu(_, t)) -> (true, System.String.Empty, t)
             | Some(PrzypisanieZabronione(_, ex, t)) -> (false, ex, t)
             | _ -> (true, System.String.Empty, typ)
+        | TWartosc(x, t) ->
+            let (rt, ex, t') = this.FAplikuj t;
+            (rt, ex, TWartosc(x, t'))
         | TZmienna _ -> (true, System.String.Empty, typ)
         | TFunkcja(a, b) -> 
             let (ra, ex1, a') = this.FAplikuj a;
             let (rb, ex2, b') = this.FAplikuj b;
-            (ra && rb, (if ra then ex1 else ex2), TFunkcja(a', b'))
+            (ra && rb, (if not ra then ex1 else ex2), TFunkcja(a', b'))
         | TLambda(x,k,t) -> 
             let (rt, ex, t') = this.FAplikuj t
             (rt, ex, TLambda(x, this.Aplikuj k, t'))
         | TAplikacja(t1,t2) -> 
             let (rt1, ex1, t1') = this.FAplikuj t1;
             let (rt2, ex2, t2') = this.FAplikuj t2;
-            (rt1 && rt2, (if rt1 then ex1 else ex2), TAplikacja(t1', t2'))
+            (rt1 && rt2, (if not rt1 then ex1 else ex2), TAplikacja(t1', t2'))
         | TUniwersalny(x,k,t) -> 
             let (rt, ex, t') = this.FAplikuj t;
             (rt, ex, TUniwersalny(x, this.Aplikuj k, t'))
