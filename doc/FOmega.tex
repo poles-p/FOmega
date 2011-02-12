@@ -528,52 +528,86 @@ Ewaluacja:
 	\]
 \subsection{Typy egzystencjalne}
 
+System $F_\omega$ jest już w stanie zakodować typy egzystencjalne, choć wbudowane typy egzystencjalne niczemu nie szkodzą. Pokażemy oba podejścia do tego problemu, zaczynając od przedstawienia składni: \\
 
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\cdots$ & \textit{termy}  \\
-   & $\mathtt{\{^*T,t\}\;as\;T}$ & \textit{pakowanie} \\
+   & $\mathtt{\{^*T::K,t\}\;as\;T}$ & \textit{pakowanie} \\
    & $\mathtt{let\;\{X,x\}=t\;in\;t}$ & \textit{odpakowanie} \\
+   & & \\
   $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
-   & $\mathtt{\{\$X,T\}}$ & \textit{typ egzystencjalny} \\
+   & $\mathtt{\{\exists X::K,T\}}$ & \textit{typ egzystencjalny} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\cdots$ & \textit{wartości}  \\
+   & $\mathtt{\{^*T,v\}\;as\;T}$ & \textit{pakowanie} \\
   \hline
 \end{tabular} \\
 
-Teraz możemy sobie zdefiniować te operacje w $F_\omega$: \\
-$\mathtt{\{\$X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.X \rightarrow Y) \rightarrow Y}$ \\
-$\mathtt{\{^*U::K,t\}\;as\; \{\$X::K,T\}\; \overset{def}{=} \;let\;x=t\;in\;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;x}$ \\
+W systemie $F_\omega$ powyższe elementy języka możemy zdefiniować następująco: \\
+$\mathtt{\{\exists X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.T \rightarrow Y) \rightarrow Y}$ \\
+$\mathtt{\{^*U::K,t\}\;as\; \{\exists X::K,T\}\; \overset{def}{=} \;let\;x=t\;in\;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;x}$ \\
 $\mathtt{let\;\{X::K,x\}=t\;in\;t'\;\overset{def}{=}\;t[T'](\lambda X::K.\lambda x:T.t')\hspace{3em} \text{gdzie $\mathtt{t':T'}$} }$ \\ \\
 
+Zauważmy, że dopiero obecność rodzajów pozwoliła nam na tego rodzaju sztuczki. W~systemie $F$ nie umiemy tak zrobić.
+
 Na pierwszy rzut oka termy te są niezrozumiałe. Ależ jak bardzo można się mylić -- są miłe i przyjemne dla swych wielbicieli. Pokażemy, że zachodzą podstawowe własności pakowania i odpakowania. \\
-Rozważmy term $\mathtt{ \{^*U::K,t\}\;as\; \{\$X::K,T\}}$. \\ 
-$ \mathtt{ \{^*U::K,t\}\;as\; \{\$ X::K,T\} }$ \\ 
+Rozważmy term $\mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\}}$. \\ 
+$ \mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\} }$ \\ 
 $ \mathtt{ = let\;x=t\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x = }$ \\
 $ \mathtt{ = (\lambda x:[X \mapsto U]T.\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x)t = }$ \\
 $ \mathtt{ \overset{t:[X \mapsto U]T}{=} \lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U](t:[X \mapsto U]T)}$ \\
-co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.T \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\$X::K,T\}}$. \\
+co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.T \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,T\}}$. \\
 
-Rozważmy bardziej życiowy przykład. Oto typowanie w systemie $F$ przykładowego termu~\texttt{t}:\\ 
- 	\[\mathtt{ \frac{\Gamma \vdash \{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X,f:X \rightarrow Nat\}}{\Gamma \{^*X,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\;\{\$X,\{a:X,f:X \rightarrow Nat\}\}}
+Rozważmy bardziej życiowy przykład, aby Czytelnik mógł jeszcze raz przeanalizować pakowanie. Oto typowanie w systemie $F$ przykładowego termu:\\ 
+ 	\[\mathtt{ \frac{\Gamma \vdash \{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X,f:X \rightarrow Nat\}}{\Gamma \{^*X,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\;\{\exists X,\{a:X,f:X \rightarrow Nat\}\}}
 		}
 	\]
 Następnie wyprowadzimy ten term w $F_\omega$: \\ \\
 \small{
-$ \mathtt{ \{Nat::K,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\; \{\$ X::K,\{a:X, f:X \rightarrow Nat\}\}= }$ \\ 
+$ \mathtt{ \{Nat::K,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\; \{\exists X::K,\{a:X, f:X \rightarrow Nat\}\}= }$ \\ 
 $ \mathtt{ = let\;x=\{a=zero, f:\lambda x:Nat.succ\;x\}\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x = }$ \\
 $ \mathtt{ = (\lambda x:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}.\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x)}$\\
 $ \mathtt{ \{a=zero, f:\lambda x:Nat.succ\;x\} \overset{\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}}{=}  }$ \\
 $ \mathtt{ = \lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\})}$ \\ \\
-co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\$X::K,\{a:X, f:X \rightarrow Nat\}\}}$. \\
+co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,\{a:X, f:X \rightarrow Nat\}\}}$. \\
 }
 
-Uważne odpakowanie otrzymanego termu pozostawiamy Czytelnikowi jako ćwiczenie, my pozwolimy sobie przeprowadzać schemat wywodu (po dwie $\beta$-redukcje):\\
+\normalsize{Uważne odpakowanie otrzymanego termu pozostawiamy Czytelnikowi jako ćwiczenie, my pozwolimy sobie przeprowadzać schemat wywodu:}\\
 \scriptsize{
 $ \mathtt{let\;\{X,x\}=\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\})\;in\;(x.f\;x.a)=}$
 $ \mathtt{=(\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}))[T'](\lambda X::K.\lambda x:T.(x.f\;x.a))=}$
 }
 $ \mathtt{=((\lambda X::K.\lambda x:T.(x.f\;x.a))[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}))=}$ \\
 $ \mathtt{=(\{a=zero, f:\lambda x:Nat.succ\;x\}.f\;\{a=zero, f:\lambda x:Nat.succ\;x\}.a)=}$ \\
-$ \mathtt{=(\lambda x:Nat.succ\;x)zero=succ\;zero}$
+$ \mathtt{=(\lambda x:Nat.succ\;x)zero=succ\;zero}$ \\ 
+
+
+\normalsize{
+Przykłady powyższe obrazują działanie zakodowanych typów rekurencyjnych. Teraz zdefiniujemy wbudowane w język konstrukcje typów rekurencyjnych dla systemu $F_\omega$. Do definicji termów, typów i wartości dodaliśmy już elementy w tabelce na początku rozdziału. Pokażemy, w jaki sposób przebiega typowanie i ewaluacja. \\
+}
+
+
+Kinding:
+ 	\[\mathtt{ \frac{a\;tutaj\;co?}{\Gamma \vdash \{\exists X::K,T\}::K}
+		}
+	\]
+Typowanie:
+ 	\[\mathtt{ \frac{\Gamma \vdash t:[X \mapsto U]T\hspace{2em}\Gamma \vdash U::K \hspace{2em}\Gamma \vdash \{\exists X::K,T\}::\ast}{\Gamma \vdash \{^*U::K,t\}\;as\;\{\exists X::K,T\} \; : \; \{\exists X::K,T\}}
+                   \qquad
+                   \frac{\Gamma \vdash t_1:\{\exists X::K,T_1\}\hspace{2em}\Gamma,X::K,x:T_1 \vdash t_2:T_2}{\Gamma \vdash let\;\{X,x\}=t_1\;in\;t_2:T_2}
+		}
+	\]
+Ewaluacja:
+ 	\[\mathtt{ let\;\{X,x\}=(\{^*U::K,v\}\;as\;T)\;\;in\;t \longrightarrow [X \mapsto U][x \mapsto v]t
+		}
+	\]
+ 	\[\mathtt{ \frac{t \longrightarrow t'}{\{^*U::K,t\}\;as\;T \longrightarrow \{^*U::K,t'\}\;as\;T}
+		}
+	\]
+ 	\[\mathtt{ \frac{t_1\longrightarrow t_1'}{let\;\{X,x\}=t_1\;\;in\;t_2 \longrightarrow let\;\{X,x\}=t_1'\;\;in\;t_2}
+		}
+	\]
 \subsection{Typy rekurencyjne}
 
 Hmmm, no tu musze się zastanowić, to na dole dla zwykłej wersji. \\
