@@ -310,7 +310,8 @@ Ewaluacja przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się n
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
-Ważne!!! Zaoszczędza dużo pisania i pozwala w zasanie na przepisanie regułek z innych systemów ;)
+Ważne!!! Zaoszczędza dużo pisania i pozwala w zasanie na przepisanie regułek z innych systemów ;) \\
+Typowanie:
  	\[\mathtt{ \frac{\Gamma \vdash t:T \;\;\; S\equiv T \;\;\; \Gamma \vdash S::\ast}{\Gamma \vdash t:S}
 		}
 	\]
@@ -363,8 +364,16 @@ Ewaluacja:
 W zasadzie unita można nie wprowadzać: \\
 $\mathtt{unit = \lambda X::\ast.\lambda x:X.x}$ \\
 $\mathtt{Unit = \forall X::\ast.X \rightarrow X}$ \\
+Typowanie:
+ 	\[\mathtt{ \frac{}{\Gamma \vdash unit:Unit}
+		}
+	\]
+ 	\[\mathtt{ t_1;t_2 = (\lambda x:Unit.t_2)t_1 \hspace{3em} \text{gdzie x $\notin$ FV($t_2$)}
+		}
+	\]
 
-zamiast: \\
+
+a to stare, może się przyda: \\
 
 \begin{tabular}{| l c r |}
   \hline
@@ -387,11 +396,14 @@ Typowanie:
  	\[\mathtt{ t_1;t_2 = (\lambda x:Unit.t_2)t_1 \hspace{3em} \text{gdzie x $\notin$ FV($t_2$)}
 		}
 	\]
-
+Ewaluacja:
+ 	\[\mathtt{ aaa
+		}
+	\]
 
 \subsection{Definicje lokalne}
 
- 	\[\mathtt{let\;x=t_1\;in\;t_2 \longrightarrow (\lambda x:T.t_2)t_1 \hspace{3em}\text{gdzie}\; t_1:T 
+ 	\[\mathtt{let\;x=t_1\;in\;t_2 \;\overset{def}{=}\;(\lambda x:T.t_2)t_1 \hspace{3em}\text{gdzie}\; t_1:T 
 		}
 	\]
 
@@ -410,17 +422,6 @@ Typowanie:
    & $\mathtt{\{l_i=v_i^{\;\;\;i \in 1..n}\}}$ & \textit{wartość rekordu} \\
   \hline
 \end{tabular} \\
-Ewaluacja: \\
- 	\[\mathtt{
-                \{l_i=v_i^{\;\;\;i \in 1..n}\}.i \longrightarrow v_i
-                \qquad
-                \frac{e \longrightarrow e'}{e.i \longrightarrow e'.i}
-		}
-	\]
- 	\[\mathtt{
-                \frac{t_i \longrightarrow t_i'}{\{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i, \dots, l_n=t_n\} \longrightarrow \{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i', \dots, l_n=t_n\}}
-		}
-	\]
 Rodzajowanie: \\
  	\[\mathtt{
              \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}
@@ -433,9 +434,19 @@ Typowanie:
            \frac{\Gamma \vdash t : \{l_i:T_i^{\;\;\;i \in 1..n}\} \;\;\; \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash t.i : T_i} 
             }
 	\]
+Ewaluacja: \\
+ 	\[\mathtt{
+                \{l_i=v_i^{\;\;\;i \in 1..n}\}.i \longrightarrow v_i
+                \qquad
+                \frac{e \longrightarrow e'}{e.i \longrightarrow e'.i}
+		}
+	\]
+ 	\[\mathtt{
+                \frac{t_i \longrightarrow t_i'}{\{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i, \dots, l_n=t_n\} \longrightarrow \{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i', \dots, l_n=t_n\}}
+		}
+	\]
 
 \subsection{Warianty}
-
 
 \begin{tabular}{| l c r |}
   \hline
@@ -460,7 +471,7 @@ Typowanie:
 		}
 	\]
 Ewaluacja:
- 	\[\mathtt{
+ 	\[\mathtt{ aaa
 		}
 	\]
 
@@ -472,14 +483,14 @@ Ewaluacja:
    & $\mathtt{fix \;t.v}$ & \textit{punkt stały}\\
   \hline
 \end{tabular} \\
+
+Typowanie \\
+ 	\[\mathtt{\frac{\Gamma, f:T \vdash v:S \hspace{2em} \Gamma \vdash T::\ast\hspace{2em} \Gamma \vdash S::\ast \hspace{2em} S\equiv T}{\Gamma \vdash fix\;f.v:T}}
+	\]
 Ewaluacja \\
  	\[\mathtt{ fix\;f.v \longrightarrow [f \mapsto fix\;f.v]v
 		}
 	\]
-Typowanie \\
- 	\[\mathtt{\frac{\Gamma, f:T \vdash v:S \hspace{2em} \Gamma \vdash T::\ast\hspace{2em} \Gamma \vdash S::\ast \hspace{2em} S\equiv T}{\Gamma \vdash fix\;f.v:T}}
-	\]
-
 
 \subsection{listy}
 
@@ -521,15 +532,30 @@ Ewaluacja:
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\cdots$ & \textit{termy}  \\
-   & $\mathtt{\{*T,t\}\;as\;T}$ & \textit{pakowanie} \\
+   & $\mathtt{\{^*T,t\}\;as\;T}$ & \textit{pakowanie} \\
    & $\mathtt{let\;\{X,x\}=t\;in\;t}$ & \textit{odpakowanie} \\
+  $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
+   & $\mathtt{\{\exists X,T\}}$ & \textit{typ egzystencjonalny} \\
   \hline
 \end{tabular} \\
 
 Teraz możemy sobie zdefiniować te operacje w $F_\omega$: \\
 $\mathtt{\{\exists X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.X \rightarrow Y) \rightarrow Y}$ \\
-$\mathtt{\{^*U::K,t\}\;as\; \{\exists X::K,T\}\; \overset{def}{=} \;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;t}$ \\
-$\mathtt{let\;\{X,x\}=t\;in\;t'\;\overset{def}{=}\;t[T'](\lambda X::K.\lambda x:T.t')}\hspace{3em} \text{gdzie $\mathtt{t':T'}$} $
+$\mathtt{\{^*U::K,t\}\;as\; \{\exists X::K,T\}\; \overset{def}{=} \;let\;x=t\;in\;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;x}$ \\
+$\mathtt{let\;\{X::K,x\}=t\;in\;t'\;\overset{def}{=}\;t[T'](\lambda X::K.\lambda x:T.t')\hspace{3em} \text{gdzie $\mathtt{t':T'}$} }$ \\ \\
+
+Przykład: \\
+Rozważmy term $\mathtt{ t=\{^*U::K,t\}\;as\; \{\exists X::K,T\}}$. \\ 
+$ \mathtt{ t=\{^*Nat,\{a=0, f:\lambda:Nat.succ\;x\}\}\;as\;\{\$X, \{a:X, f:X \rightarrow Nat\}\} }$ \\ 
+$ \mathtt{ = let\;x=t\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x = }$ \\
+$ \mathtt{ = (\lambda x:[X \mapsto U]T.\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x)t = }$ \\
+$ \mathtt{ \overset{t:[X \mapsto U]T}{=} \lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U](t:[X \mapsto U]T)}$ \\
+co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.X \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,T\}}$. \\
+
+Mogę napisać bardziej życiowy przykład, np: \\ 
+$\mathtt{ t=\{^*Nat,\{a=0, f:\lambda x:Nat.succ\;x\}\}\;as\;\{\$X, \{a:X, f:X \rightarrow Nat\}\}}$. \\ 
+
+
 
 \subsection{Typy rekurencyjne}
 
