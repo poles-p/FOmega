@@ -400,11 +400,11 @@ W rachunku lambda z typami prostymi dodaliśmy do składnię języka rozszerzali
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
-   & $\mathtt{unit}$ \textit{term unit}& \\
+   & $\mathtt{unit}$ & \textit{term unit} \\
   $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
-   & $\mathtt{Unit}$ \textit{typ unit}& \\
+   & $\mathtt{Unit}$ & \textit{typ unit} \\
   $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
-   & $\mathtt{unit}$ \textit{wartość unit}& \\
+   & $\mathtt{unit}$ & \textit{wartość unit} \\
   \hline
 \end{tabular} \\
 
@@ -443,6 +443,8 @@ Ewaluacja i typowanie nie zmieniają się.
 
 \subsection{Rekordy}
 
+Składnię rekorów zdefiniujemy następująco:\\
+
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
@@ -456,21 +458,20 @@ Ewaluacja i typowanie nie zmieniają się.
    & $\mathtt{\{l_i=v_i^{\;\;\;i \in 1..n}\}}$ & \textit{wartość rekordu} \\
   \hline
 \end{tabular} \\
-Tworzenie rodzaju: \\
- 	\[\mathtt{
+
+Do relacji tworzenia rodzaju dodamy regułę nadającą rodzaj typowi $\mathtt{\{l_i:T_i^{\;\;\;i \in 1..n}\}}$:~\[\mathtt{
              \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}
 		}
 	\]
-Typowanie:
- 	\[\mathtt{
-             \frac{\Gamma \vdash t_1:T_1 \;\dots\;\Gamma \vdash t_n:T_n \;\;\; \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash \{l_i=t_i^{\;\;\;i \in 1..n}\}:\{l_i:T_i^{\;\;\;i \in 1..n}\}}
+oraz wprowadzimy niewielkie zmiany w regułach typowania:~\[\mathtt{
+             \frac{\Gamma \vdash t_1:T_1 \;\dots\;\Gamma \vdash t_n:T_n \hspace{2em} \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash \{l_i=t_i^{\;\;\;i \in 1..n}\}:\{l_i:T_i^{\;\;\;i \in 1..n}\}}
             }
 	\]
  	\[\mathtt{
-           \frac{\Gamma \vdash t : \{l_i:T_i^{\;\;\;i \in 1..n}\} \;\;\; \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash t.i : T_i} 
+           \frac{\Gamma \vdash t : \{l_i:T_i^{\;\;\;i \in 1..n}\}}{\Gamma \vdash t.i : T_i} 
             }
 	\]
-Ewaluacja: \\
+a ewaluację pozostawimy bez zmian: \\
  	\[\mathtt{
                 \{l_i=v_i^{\;\;\;i \in 1..n}\}.i \longrightarrow v_i
                 \qquad
@@ -485,6 +486,8 @@ Ewaluacja: \\
 }
 \subsection{Warianty}
 
+Składnię wariantów zdefiniujemy następująco:\\
+
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
@@ -495,20 +498,27 @@ Ewaluacja: \\
    & $\mathtt{<l_i:T_i^{\;\;\;i \in 1..n}>}$ & \textit{typ wariantu}\\
   \hline
 \end{tabular} \\
-Tworzenie rodzaju:
+
+Podobnie jak przy rekordach, typ wariantu dostanie rodzaj $\mathtt{\ast}$:
  	\[\mathtt{
              \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash <l_i:T_i^{\;\;\;i \in 1..n}>::\ast}
 		}
 	\]
-Typowanie:
+a w regułąch typowania wprowadzimy małe zmiany:
  	\[\mathtt{ \frac{\Gamma \vdash t_0:<l_i:T_i^{\;\;\;i \in 1..n}> \hspace{2em} \Gamma,x_1:T_1 \vdash t_1:T \;\dots\; \Gamma,x_n:T_n \vdash t_n:T}{\Gamma \vdash case\;t_0\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n}\; : T}
 		}
 	\]
  	\[\mathtt{ \frac{\Gamma \vdash t_j : T_j \hspace{2em} \Gamma \vdash <l_i:T_i^{\;\;\;i \in 1..n}>::\ast}{\Gamma \vdash <l_j=t_j> as <l_i:T_i^{\;\;\;i \in 1..n}> \;: <l_i:\;T_i^{\;\;\;i \in 1..n}>}
 		}
 	\]
-Ewaluacja:
- 	\[\mathtt{ aaa
+natomiast ewaluacja pozostanie bez zmian:
+ 	\[\mathtt{ case\;(<l_j=t_j>\;as\;T)\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n} \longrightarrow [x_j \mapsto v_j]t_j
+		}
+	\]
+ 	\[\mathtt{ \frac{t \longrightarrow t'}{case\;t\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n} \longrightarrow case\;t'\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n} }
+		}
+	\]
+ 	\[\mathtt{ \frac{t_j \longrightarrow t_j'}{<l_j=t_j>\;as\;T \longrightarrow <l_j=t_j'>\;as\;T }
 		}
 	\]
 
@@ -529,7 +539,7 @@ Ewaluacja \\
 		}
 	\]
 
-\subsection{listy}
+\subsection{Listy}
 
 Jako przykład wbudowanych typów danych wybraliśmy listy. Podobne rekursywne struktury, jak na przykład drzewa, możemy dodać do języka w analogiczny sposób, jednak rekurencyjne typy danych odwiodą nas od tej konieczności. \\
   
