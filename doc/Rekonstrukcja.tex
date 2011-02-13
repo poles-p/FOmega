@@ -699,11 +699,26 @@ Funkcja $typeof$ zatrzymuje się.
 \end{proof}
 
 \begin{twierdzenie}
-Niech $t$ i~$\Gamma$ zawierą wszystkie anotacje typowe i~rodzajowe. Wówczas $typeof(\Gamma \vdash t : ?) = (\sigma, T)$ wtedy 
-i~tylko wtedy gdy $\Gamma \vdash t : T$ (tzn. gdy program zawiera wszystkie anotacje, algorytm $typeof$ wykonuje zwykłą 
+Niech $t$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas $typeof(\Gamma \vdash t : ?) = (\sigma, T)$ wtedy 
+i~tylko wtedy gdy $\Gamma \vdash t : T'$, gdzie $T' =_\beta T$ oraz $\sigma = []$ (tzn. gdy program zawiera wszystkie anotacje, algorytm $typeof$ wykonuje zwykłą 
 kontrolę typów w~systemie $F_\omega$).
+\label{twtypecheck}
 \end{twierdzenie}
 \begin{proof}
+Szkic dowodu:
+\begin{enumerate}
+\item Indukcyjnie po strukturze typu pokazujemy analogiczne twierdzenie dla rodzajów i~funkcji $kindof$:\\
+Niech $T$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas $kindof(\Gamma \vdash t :: ?) = (\sigma, K)$ wtedy
+i~tylko wtedy gdy $\Gamma \vdash T :: K$ oraz $\sigma = []$.
+\item Indukcyjnie po strukturze wyrażenia $t$ pokażemy tezę implikację tezy w~jedną stronę.
+\item Pokazujemy indukcyjnie, że drzewa wyprowadzenia $\Gamma \vdash t : T$ można zawsze przebudować tak, by
+z~regóły
+\[
+\frac{\Gamma \vdash t : S \quad S \equiv T \quad \Gamma \vdash T :: *}{\Gamma \vdash t : T}
+\]
+korzystać jedynie nad argumentem aplikacji i~w~kożeniu drzewa wyprowadzenia.
+\item Indukcyjnie po tak przebudowanym drzewie pokażemy implikację tezy w~drugą stronę.
+\end{enumerate}
 \end{proof}
 
 \begin{twierdzenie}
@@ -715,6 +730,14 @@ istnieje takie podstawienie $\theta$, że zachodzą następujące własności:
 \end{itemize}
 \end{twierdzenie}
 \begin{proof}
+Szkic dowodu:
+\begin{enumerate}
+\item Podobnie jak w~dowodzie twierdzenia \ref{twtypecheck} najpierw indukcyjnie dowodzimy alaogicznego twierdzenia
+dla funkcji $kindod$ i~relacji rodzajowania.
+\item Indukcyjnie po strukturze termu $t$ pokazujemy tezę. Podstawienie $\theta$ konstruujemy tak jak podstawienie
+$\sigma$ tyle, że z~pominięciem alnulowania zmiennych związanych. W~miejscach w~których korzystamy z~$\beta$-unifikacji
+korzystamy z~definicji $\beta$-unifikatora by zkonstruować podstawienie $\theta$.
+\end{enumerate}
 \end{proof}
 
 \end{document}
