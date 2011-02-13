@@ -673,12 +673,11 @@ Ewaluacja nieznacznie się zmieni:
 
 \subsection{Kilka słów o składni.}
 
-
-Rozważmy język o składni z drugiego rozdziału rozszerzony o następujące konstrukcje: \\
+Rozważmy język z rozdziału drugiego rozszerzony o następujące konstrukcje: \\
 
 \begin{tabular}{| l c r |}
   \hline
-  t ::= & $\dots$ &  \\
+  t ::= &  &  \\
    & $\textrm{let} \ x = t \ \textrm{in} \ t$ & \textit{zmienna lokalna} \\
    & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
    & & \\
@@ -691,9 +690,13 @@ Rozważmy język o składni z drugiego rozdziału rozszerzony o następujące ko
   \hline
 \end{tabular} \\
 
+W dodatku zakładamy, że wszystkie zmienne związane kwantyfikowane abstrakcją są unikatowe (tzn. zmienna $X$ może
+występować za conajwyżej jednym kwantyfikatorem).
+
 Ważnym założeniem jest to, że $\bar{X}::*$, co nam ułatwi sprawę przy unifikacji, a~zarazem zbytnio nie ograniczy języka.
   
 Jeżeli chcemy dodać ML-polimorfizm, będą nam portrzebne schematy typów i schematy rodzajów:\\
+
 \begin{tabular}{| l c r |}
   \hline
   $\left<T\right>$ ::= &  & \textit{schemat typu} \\
@@ -727,26 +730,157 @@ Teraz sam kontekst typowania ma postać:
   \hline
 \end{tabular} \\
 
+Jeżeli chcemy spojrzeć na ten język, jak na język programowania z~rekonstrukcją typów, można
+dopuścić nieanotowane kwantyfikatory, które parser będzie zamieniać na anotowane świeżą zmienną schematową 
+(typową albo rodzajową w~zależności od kwantyfikatora). Z~drugiej strony nie ma potrzeby pozwalać programiście
+jawnie korzystać ze zmiennych schematowych.
+
+\subsection{Zbiory zmiennych i~podstawienia}
+
+W~dalszej części będziemy używać różnych zbiorów zmiennych występujących w~konstrukcjach w~naszym języku, więc
+to jest dobre miejsce by te zbiory i~operacje zdefiniować.
+
+\subsubsection{Wszystkie zmienne schematowe}
+
+\begin{definicja}
+\emph{Zbiorem schematowych zmiennych typowych typu/schematu $T$} nazwiemy zbiór $\bar{Var}(T)$ zdefiniowany następująco
+\begin{align*}
+\bar{Var}(X) & = \emptyset \\
+\bar{Var}(T_1 \to T_2) & = \bar{Var}(T_1) \cup \bar{Var}(T_2) \\
+\bar{Var}(\forall X :: K.T) & = \bar{Var}(T) \\
+\bar{Var}(\lambda X :: K.T) & = \bar{Var}(T) \\
+\bar{Var}(T_1 \; T_2) & = \bar{Var}(T_1) \cup \bar{Var}(T_2) \\
+\bar{Var}(\bar{X}) & = \{ \bar{X} \}
+\end{align*}
+\begin{align*}
+\bar{Var}(\Omega \bar{X}.\left<T\right>) & = \{ \bar{X} \} \cup \bar{Var}(\left<T\right>) \\
+\bar{Var}(\Omega \widehat{X}.\left<T\right>) & = \bar{Var}(\left<T\right>)
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+Anologicznie definijuemy \emph{zbiór zmiennych rodzajowych rodzaju/typu/schematu $T$}.
+\begin{align*}
+\widehat{Var}(*) & = \emptyset \\
+\widehat{Var}(K_1 \Rightarrow K_2) & = \widehat{Var}(K_1) \cup \widehat{Var}(K_2) \\
+\widehat{Var}(\widehat{X}) & = \{ \widehat{X} \}
+\end{align*}
+\begin{align*}
+\widehat{Var}(X) & = \emptyset \\
+\widehat{Var}(T_1 \to T_2) & = \widehat{Var}(T_1) \cup \widehat{Var}(T_2) \\
+\widehat{Var}(\forall X :: K.T) & = \widehat{Var}(K) \cup \widehat{Var}(T) \\
+\widehat{Var}(\lambda X :: K.T) & = \widehat{Var}(K) \cup \widehat{Var}(T) \\
+\widehat{Var}(T_1 \; T_2) & = \widehat{Var}(T_1) \cup \widehat{Var}(T_2) \\
+\widehat{Var}(\widehat{X}) & = \emptyset
+\end{align*}
+\begin{align*}
+\widehat{Var}(\Omega \bar{X}.\left<T\right>) & = \widehat{Var}(\left<T\right>) \\
+\widehat{Var}(\Omega \widehat{X}.\left<T\right>) & = \{ \widehat{X} \} \cup \widehat{Var}(\left<T\right>)
+\end{align*}
+\end{definicja}
+
+\subsubsection{Zmienne typowe wolne i~związane}
+
+\begin{definicja}
+\emph{Zbiór zmiennych typowych wolnych termu/typu $T$} nazwiemy zbiór $FTV(T)$ zdefiniowany następująco
+\begin{align*}
+FTV(X) & = X \\
+FTV(T_1 \to T_2) & = FTV(T_1) \cup FTV(T_2) \\
+FTV(\forall X :: K . T) & = FTV(T) \setminus \{ X \} \\
+FTV(\lambda X :: K . T) & = FTV(T) \setminus \{ X \} \\
+FTV(T_1 \; T_2) & = FTV(T_1) \cup FTV(T_2) \\
+FTV(\bar{X}) & = \emptyset \\
+\end{align*}
+\begin{align*}
+FTV(x) & = \emptyset \\
+FTV(\lambda x : T.t) & = FTV(T) \cup FTV(t) \\
+FTV(t_1 \; t_2) & = FTV(t_1) \cup FTV(t_2) \\
+FTV(\lambda X :: K.t) & = FTV(t) \setminus \{ X \} \\
+FTV(t[T]) & = FTV(t) \cup FTV(T) \\
+FTV(\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = FTV(t_1) \cup FTV(t_2) \\
+FTV(\textrm{tlet} \ X = T \ \textrm{in} \ t) & = FTV(T) \cup (FTV(t) \setminus \{ X \}) \\
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+\emph{Zbiór zmiennych typowych związanych termu/typu $T$} nazwiemy zbiór $BTV(T)$ zdefiniowany następująco
+\begin{align*}
+BTV(X) & = \emptyset \\
+BTV(T_1 \to T_2) & = BTV(T_1) \cup BTV(T_2) \\
+BTV(\forall X :: K . T) & = BTV(T) \cup \{ X \} \\
+BTV(\lambda X :: K . T) & = BTV(T) \cup \{ X \} \\
+BTV(T_1 \; T_2) & = BTV(T_1) \cup BTV(T_2) \\
+BTV(\bar{X}) & = \emptyset \\
+\end{align*}
+\begin{align*}
+BTV(x) & = \emptyset \\
+BTV(\lambda x : T.t) & = BTV(T) \cup BTV(t) \\
+BTV(t_1 \; t_2) & = BTV(t_1) \cup BTV(t_2) \\
+BTV(\lambda X :: K.t) & = BTV(t) \cup \{ X \} \\
+BTV(t[T]) & = BTV(t) \cup BTV(T) \\
+BTV(\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = BTV(t_1) \cup BTV(t_2) \\
+BTV(\textrm{tlet} \ X = T \ \textrm{in} \ t) & = BTV(T) \cup BTV(t) \cup \{ X \} \\
+\end{align*}
+\end{definicja}
+
+\subsubsection{Podstawienia}
+
+Założenie o~unikalności zwmiennych związanych wiąże się z~niewielką modyfkacją podstawienia.
+\[
+\{X := T\} Y = 
+	\begin{cases}
+		\alpha T & X=Y, \alpha \ \textrm{jest przemianowaniem zmiennych} \\
+		& \textrm{związanych w~$T$ na świeże} \\
+		Y & X \neq Y
+	\end{cases} \\
+\]
+Reszta definicji pozostaje bez zmian.
+
+Przy rekonstrukcji typów będziemy dodatkowo używać podstawienia, które dodatkowo wstawia świeże zmienne rodzajowe.
+Zdefiniujemy je podobnie:
+\[
+\{X(\{\widehat{X}_1, \dots, \widehat{X}_n\}) := T\} Y = 
+	\begin{cases}
+		\alpha \sigma T & X=Y, \alpha \ \textrm{jest przemianowaniem zmiennych} \\
+		& \textrm{związanych w~$T$ na świeże}, \\
+		& \sigma = [\widehat{X}_1 := fresh, \dots, \widehat{X}_n := fresh] \\
+		Y & X \neq Y
+	\end{cases} \\
+\]
+\[
+\ldots
+\]
+$\sigma$ jest podstawieniem schematowym, definicja jego działania pojawi się później.
+
+Purystów matematycznych może przerażać pojawiająca się w~definicji ,,świeża zmienna'', oznaczana
+jako $fresh$. Jest to zmienna która dotychczas nigdzie się nie pojawiła, i~nie będzie wprowadzona więcej niż raz.
+Można ją formalnie zdefiniować pamiętając cały czas zbiór użytych zmiennych i~przekazując go jako dodatkowy argument do prawie
+wszystkich operacji, ale spowodowało by to znaczne pogorszenie czytelności tego dokumentu, dlatego tak nie robimy.
+Zainteresowany Czytelnik może samodzielnie poprawić przytoczone tu definicje i~twierdzenia formalnie definiując świeżą zmienną.
+
+Dla przytoczonych tu definicji później zajdzie potrzeba rozszerzenia ich na konteksty i~podstawienia.
+Rozszerzenia te są na tyle oczywiste i~naturalne, że nie ma potrzeby ich przytaczania.
+
 \subsection{$\beta$-unifikacja}
 
-Podczas rekonstukcji typów pojawiają się równania więzów, które należy rozwiązać. Samo rozwiązanie
+Podczas rekonstukcji typów pojawiają się równania więzów które należy rozwiązać. Samo rozwiązanie
 sprowadza się do unifikacji pewnych termów, ale tutaj, ze względu na możliwość występowania funkcji
 typowych, termy równoważne nie muszą być równe, więc sama unifikacja powinna sprowadzać termy do
 $\beta$-równych sobie.
 
-Taka unifikacja niesie ze sobą wiele problemów. Po pierwsze, będziemy chcieli używać podstawienia,
+Taka unifikacja niesie ze sobą wiele problemów. Po pierwsze, będziemy chcieli używać podstawienia (za zmienne schematowe),
 będącego unifikatorem, na innych termach. To zaś grozi uzewnętrznieniem zmiennych związanych. Drugi
-problem jest taki, że samo podstawienie nie musi zrównywać termów, które da się zrównać, ale różnią się
+problem to taki, że samo podstawienie nie musi zrównywać termów, które da się zrównać, ale różnią się
 nazwami zmiennych związanych.
 
-Z pierwszym problemem poradzimy sobie, traktując podstawienia jako funkcję częściową, tzn. samo podstawienie
-oprócz przyporządkowań postaci $[\bar{X} := T]$, może również zawierać podstawienia postaci $[\bar{X} := fail]$.
-Dodając operację anulowania podstawienia dostajemy:
+Z pierwszym problemem poradzimy sobie, traktując podstawienia jako funkcję częściowe, tzn. samo podstawienie
+oprócz przyporzątkowań postaci $[\bar{X} := T]$, może również zawierać podstawienia postaci $[\bar{X} := fail]$.
+Oraz dodając jeszcze operację anulowania podstawienia:
 \[
 [\bar{X} := T] \setminus X = 
 \begin{cases}
-[\bar{X} := fail] & X \in    Var(T) \\
-[\bar{X} := T]    & X \notin Var(T)
+[\bar{X} := fail] & X \in    FTV(T) \\
+[\bar{X} := T]    & X \notin FTV(T)
 \end{cases}
 \]
 
@@ -754,20 +888,130 @@ Z drugim problemem poradzimy sobie traktując unifikator jako parę zawierając�
 na zewnątrz, oraz term będący wynikiem unifikacji.
 
 \begin{definicja}
-\emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieją
-podstawienia $\theta_1$ i $\theta_2$ takie, że:
+\emph{Podstawieniem schematowym} nazwiemy skończony zbiór par postaci $(\bar{X},T)$, $(\bar{X},fail)$ oraz $(\widehat{X},K)$, takich że
+$\bar{X} \notin \bar{Var}(T)$ oraz $\widehat{X} \notin \widehat{Var}(K)$ (po podstawieniu powinny zniknąć wszystkie zmienne, za 
+które coś podstawiliśmy). 
+\emph{Podstawieniem schematowym pustym} nazwiemy podstawienie schematowe będące zbiorem pustym i~będziemy oznaczać przez $[]$.
+Podstawienia schematowe, będziemy reprezentować jako listy postaci
 \[
-\theta_1 T_1 =_\beta S =_\beta \theta_2 T_2
+[\bar{X}_1 := T_1, \dots, \bar{X}_k := T_k, \bar{X}_{k+1} := fail, \dots , \bar{X}_n := fail, \widehat{X}_1 := K_1, \dots, \widehat{X}_m := K_m]
+\]
+\emph{Dziedziną} podstawienia schematowego $\sigma$ nazwiemy zbiór takich zmiennych typowych $\bar{X}$ i~rodzajowych $\widehat{X}$, że
+$(\bar{X}, T) \in \sigma$ lub $(\bar{X}, fail) \in \sigma$ oraz $(\widehat{X}, K) \in \sigma$. Dziedzinę podstawienia schematowego $\sigma$
+będziemy oznaczać przez $Dom(\sigma)$.
+\end{definicja}
+
+\begin{definicja}
+Podstawienie schematowe może działać na rodzajach, typach, termach i~kontekstach. Jeżeli w~podstawieniu występuje
+para $\widehat{X} := K$, to za wszystkie wystąpienia zmiennej~$\widehat{X}$ zostanie podstawione $K$. Analogicznie
+się dzieje w~przypadku wystąpienia pary $\bar{X} := T$. Jeżeli w~podstawieniu schematowym wystąpi para $\bar{X} := fail$,
+a~w~typie/termie/kontekście do którego podstawienie aplikujemy występuje zmienna $\bar{X}$, to podstawienie jest niemożliwe.
+
+Niech $\sigma$ będzie podstawieniem schematowym. Działanie podstawienia formalnie definiujemy jako:
+\begin{align*}
+\sigma * & = * \\
+\sigma (K_1 \Rightarrow K_2) & = \sigma K_1 \Rightarrow \sigma K_2 \\
+\sigma \widehat{X} & = 
+	\begin{cases}
+		K & (\widehat{X},K) \in \sigma \\
+		\widehat{X} & \textrm{wpp}
+	\end{cases} \\
+\end{align*}
+\begin{align*}
+\sigma X & = X \\
+\sigma(T_1 \to T_2) & = \sigma T_1 \to \sigma T_2 \\
+\sigma(\forall X :: K.T) & = \forall X :: \sigma K. \sigma T \\
+\sigma(\lambda X :: K.T) & = \lambda X :: \sigma K. \sigma T \\
+\sigma(T_1 \; T_2) & = (\sigma T_1) \; (\sigma T_2) \\
+\sigma \bar{X} & = 
+	\begin{cases}
+		\alpha T & (\bar{X},T) \in \sigma, \alpha \ \textrm{jest przemianowaniem} \\
+		& \textrm{wprowadzającym świeże zmienne związane} \\
+		fail & (\bar{X},fail) \in \sigma \\
+		\bar{X} & \textrm{wpp}
+	\end{cases} \\
+\end{align*}
+\begin{align*}
+\sigma x & = x \\
+\sigma (\lambda x : T.t) & = \lambda x : \sigma T. \sigma t \\
+\sigma (t_1 \; t_2) & = (\sigma t_1) \; (\sigma t_2) \\
+\sigma (\lambda X :: K. t) & = \lambda X :: \sigma X . \sigma t \\
+\sigma (t[T]) & = (\sigma t)[\sigma T] \\
+\sigma (\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = \textrm{let} \ x = \sigma t_1 \ \textrm{in} \ \sigma t_2 \\
+\sigma (\textrm{tlet} \ x = T \ \textrm{in} \ t) & = \textrm{tlet} \ x = \sigma T \ \textrm{in} \ \sigma t \\
+\end{align*}
+\begin{align*}
+\sigma (\Omega\bar{X}.\left<T\right>) & =
+	\begin{cases}
+		\Omega\bar{X}.\sigma\left<T\right> & \bar{X} \notin Dom(\sigma) \\
+		\Omega\bar{Y}.\sigma[\bar{X}:=\bar{Y}]\left<T\right> & \bar{X} \in Dom(\sigma) \land \bar{Y} \notin Dom(\sigma) \land \bar{Y} \notin \bar{Var}(\left<T\right>)
+	\end{cases} \\
+\sigma (\Omega\widehat{X}.\left<T\right>) & =
+	\begin{cases}
+		\Omega\widehat{X}.\sigma\left<T\right> & \widehat{X} \notin Dom(\sigma) \\
+		\Omega\widehat{Y}.\sigma[\widehat{X}:=\widehat{Y}]\left<T\right> & \widehat{X} \in Dom(\sigma) \land \widehat{Y} \notin Dom(\sigma) \land \widehat{Y} \notin \widehat{Var}(\left<T\right>)
+	\end{cases}
+\end{align*}
+\begin{align*}
+\sigma \emptyset & = \emptyset \\
+\sigma (\Gamma, x : \left<T\right>) & = \sigma \Gamma, x : \sigma \left<T\right> \\
+\sigma (\Gamma, X :: \left<K\right>) & = \sigma \Gamma, X :: \sigma \left<K\right> \\
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+Powiemy, że podstawienie schematowe $\rho$ jest \emph{złożeniem} podstawień schematowych $\sigma$ i~$\theta$, 
+które będziemy oznaczać $\sigma\circ\theta$ jeżeli
+dla każdego rodzaju $K$, typu $T$, termu $t$ i~kontekstu $\Gamma$ zachodzi:
+\begin{align*}
+\rho K & = \sigma(\theta K) \\
+\rho T & = \sigma(\theta T) \\
+\rho t & = \sigma(\theta t) \\
+\rho \Gamma & = \sigma(\theta \Gamma)
+\end{align*}
+\end{definicja}
+
+\begin{lemat}
+Niech $\sigma$ i~$\theta$ będą podstawieniami schematowymi. Wówczas zachodzi
+\begin{align*}
+\sigma \circ \theta = & \{ (\widehat{X}, \sigma K) | (\widehat{X}, K) \in \theta \} \\
+\cup & \{ (\widehat{X}, K) \in \sigma | \widehat{X} \notin Dom(\theta) \} \\
+\cup & \{ (\bar{X}, \sigma T) | (\bar{X}, T) \in \theta \land \sigma T \neq fail \} \\
+\cup & \{ (\bar{X}, fail) | \exists (\bar{X}, T) \in \theta . \sigma T = fail \} \\
+\cup & \{ (\bar{X}, T) \in \sigma | \bar{X} \notin Dom(\theta) \} \\
+\cup & \{ (\bar{X}, fail) \in \sigma | \bar{X} \notin Dom(\theta) \}
+\end{align*}
+Pozwala nam to algorytmicznie wyliczać złożenia podstawień schematowych.
+\end{lemat}
+\begin{proof}
+\end{proof}
+
+\begin{definicja}
+\emph{Anulowaniem zbioru $A$ zmiennych typowych kwantyfikowanych abstrakcją z~podstawienia schematowego $\sigma$} nazwiemy operację
+zdefiniowaną następująco:
+\begin{align*}
+\sigma \setminus A = & \{ (\widehat{X}, K) \in \sigma \} \cup \{ (\bar{X}, fail) \in \sigma \} \\
+\cup & \{ (\bar{X}, T) \in \sigma | FTV(T) \cap A = \emptyset \} \\
+\cup & \{ (\bar{X}, fail) | \exists (\bar{X}, T) \in \sigma . FTV(T) \cap A \neq \emptyset \}
+\end{align*}
+\emph{Anulowanie zmiennej $X$ z~podstawienia schematowego $\sigma$} oznaczamy przez $\sigma \setminus X$ i~definiujemy jako $\sigma \setminus \{X\}$.
+\end{definicja}
+
+\begin{definicja}
+\emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieje
+podstawienie schematowe $\theta$ i~przemianowania zmiennych związanych $\alpha_1$ i~$\alpha_2$ takie, że:
+\[
+\theta \alpha_1 T_1 =_\beta S =_\beta \theta \alpha_2 T_2
 \]
 oraz
 \[
-\theta_1 \setminus BTV(T_1) = \sigma = \theta_2 \setminus BTV(T_2)
+\theta \setminus BTV(S) = \sigma
 \]
 \end{definicja}
 
 \begin{definicja}
 Powiemy, że $\beta$-unifikator $(\sigma, S)$ jest \emph{ogólniejszy} od $\beta$-unifikatora
-$(\theta, T)$, jeżeli istnieje takie podstawienie $\rho$ i przemianowanie $\alpha$, że
+$(\theta, T)$, jeżeli istnieje takie podstawienie schematowe $\rho$ i~przemianowanie $\alpha$, że
 \[
 \rho\alpha S =_\beta T \quad \textrm{oraz} \quad \rho\alpha\sigma = \theta
 \]
@@ -779,83 +1023,83 @@ który jest ogólniejszy od wszystkich innych $\beta$-unifikatorów tychże kons
 \end{definicja}
 
 \begin{lemat}
-Niech $A$ i $B$ będą podzbiorami zbioru zmiennych konstruktorowych, niech $\theta$ będzie podstawieniem.
+Niech $A$ i $B$ będą podzbiorami zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie podstawieniem schematowym.
 Wówczas zachodzi
 \[
 (\theta \setminus A) \setminus B = \theta \setminus (A \cup B).
 \]
 \label{lsub0}
 \end{lemat}
-
+\begin{proof}
+\end{proof}
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych konstruktorowych, niech $\theta$ i~$\rho$ będą podstawieniami, oraz
-niech zachodzi $Var(\rho) \cap A = \emptyset$. Wówczas zachodzi 
+Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ i~$\rho$ będą podstawieniami schematowymi, oraz
+niech zachodzi $FTV(\rho) \cap A = \emptyset$. Wówczas zachodzi 
 \[
-(\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A).
-\]
+(\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A)
+\].
 \label{lsub1}
 \end{lemat}
-
+\begin{proof}
+\end{proof}
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych konstruktorowych, niech $\theta$ będzie dowolnym podstawieniem,
-niech $\rho$ będzie podstawieniem takim, że $Var(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
+Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem schematowym,
+niech $\rho$ będzie podstawieniem schematowym takim, że $FTV(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
 Wówczas zachodzi
 \[
-(\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho.
+(\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho
 \]
 \label{lsub2}
 \end{lemat}
-
+\begin{proof}
+\end{proof}
 
 \begin{lemat}
 Niech $(\sigma, S)$ będzie $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$, oraz niech $\rho$ będzie 
-podstawieniem takim, że $Var(\rho) \cap BTV(T_1) = \emptyset$ oraz $Var(\rho) \cap BTV(T_2) = \emptyset$.
+podstawieniem schematowym takim, że \mbox{$FTV(\rho) \cap BTV(S) = \emptyset$}.
 Wówczas $(\rho \circ \sigma, \rho S)$ również jest $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$.
 \label{lunif1}
 \end{lemat}
 \begin{proof}
-Wiemy, że istnieją takie $\theta_1$ i~$\theta_2$, że
+Wiemy, że istnieją takie $\theta$, $\alpha_1$ i~$\alpha_2$, że
 \[
-\theta_1 T_1 =_\beta S =_\beta \theta_2 T_2 \quad \textrm{oraz} \quad \theta_1 \setminus BTV(T_1) = \sigma = \theta_2 \setminus BTV(T_2)
+\theta \alpha_1 T_1 =_\beta S =_\beta \theta \alpha_2 T_2 \quad \textrm{oraz} \quad \theta \setminus BTV(S) = \sigma
 \]
 A wtedy zachodzi
 \[
-(\rho \circ \theta_1)T_1 = \rho(\theta_1 T_1) =_\beta \rho S =_\beta \rho(\theta_2 T_2) = (\rho \circ \theta_2)T_2
+(\rho \circ \theta) \alpha_1 T_1 = \rho(\theta \alpha_1 T_1) =_\beta \rho S =_\beta \rho(\theta \alpha_2 T_2) = (\rho \circ \theta_2) \alpha_2 T_2
 \]
 oraz z lematu \ref{lsub1}
 \[
-(\rho \circ \theta_1) \setminus BTV(T_1) = \rho \circ (\theta_1 \setminus BTV(T_1)) = \rho \circ \sigma
-\]
-\[
-(\rho \circ \theta_2) \setminus BTV(T_2) = \rho \circ (\theta_2 \setminus BTV(T_2)) = \rho \circ \sigma
+(\rho \circ \theta) \setminus BTV(S) = \rho \circ (\theta \setminus BTV(S)) = \rho \circ \sigma
 \]
 \end{proof}
 
 \begin{lemat}
-Niech $T_1$ i~$T_2$ będą konstrktorami typów, $\rho$ niech będzie podstawieniem takim, że 
-$Var(\rho) \cap BTV(T_1) = \emptyset$ oraz $Var(\rho) \cap BTV(T_2) = \emptyset$, a $(\sigma, S)$ niech będzie 
-$\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$.
+Niech $T_1$ i~$T_2$ będą konstrktorami typów, $\rho$ niech będzie podstawieniem schematowym takim, że 
+$FTV(\rho) \cap BTV(T_1) = \emptyset$ oraz $FTV(\rho) \cap BTV(T_2) = \emptyset$, a $(\sigma, S)$ niech będzie 
+\mbox{$\beta$-unifikatorem} konstruktorów $(\rho T_1, \rho T_2)$.
 Wówczas $(\sigma \circ \rho, S)$ jest $\beta$-unifikatorem konstruktorów $(T_1, T_2)$.
 \label{lunif2}
 \end{lemat}
 \begin{proof}
 Niech $i \in \left\{1,2\right\}$.\\
 Z tego, że $(\sigma, S)$ jest $\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$ wiemy, że istnieje takie
-$\theta_i$, że
+$\theta$ oraz $\alpha_i$, że
 \[
-\theta_i\rho T_i =_\beta S \quad \textrm{oraz} \quad \theta_i \setminus BTV(\rho T_i) = \sigma
+\theta \alpha_i \rho T_i =_\beta S \quad \textrm{oraz} \quad \theta \setminus BTV(S) = \sigma
 \]
-A~wtedy
+A~wtedy z~tego, że $FTV(\rho) \cap BTV(T_i) = \emptyset$
 \[
-(\theta_i \circ \rho) T_i =_\beta S
+(\theta \circ \rho) \alpha_i T_i = \theta \alpha_i \rho T_i =_\beta S
 \]
-oraz z~lematu \ref{lsub2} i~z~tego że $BTV(\rho) \cap BTV(\theta_i) = \emptyset$ mamy
+oraz z~lematu \ref{lsub2} mamy
 \[
-(\theta_i \circ \rho) \setminus BTV(T_i) = (\theta_i \circ BTV(T_i)) \circ \rho = (\theta_i \circ BTV(\rho T_i)) \circ \rho = \sigma \circ \rho
+(\theta \circ \rho) \setminus BTV(S) = (\theta \circ BTV(S)) \circ \rho = \sigma \circ \rho
 \]
-co kończy dowód.
+Co kończy dowód.
 \end{proof}
 
 \subsubsection{Algorytm $\beta$-unifikacji}
@@ -879,14 +1123,16 @@ $\qquad \textrm{else} \ ([\bar{X} := T], T) $ \\
 \begin{tabular}{l}
 $unify_\beta(\forall X_1::K_1.T_1, \forall X_2::K_2.T_2) = $ \\
 $\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 := X_1\}T_2) \ \textrm{in} $ \\
-$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T) $ \\
+$\qquad \textrm{let} \ X_3 = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K \sigma_K \{X_1 := X_3\}T_1, \sigma_K \{X_2 := X_3\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_3) \circ \sigma_K, \forall X_3::\sigma_T \sigma_K K_1.T) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $unify_\beta(\lambda X_1::K_1.T_1, \lambda X_2::K_2.T_2) = $ \\
 $\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 := X_1\}T_2) \ \textrm{in} $ \\
-$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \lambda X_1::\sigma_T \sigma_K K_1.T) $ \\
+$\qquad \textrm{let} \ X_3 = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K \{X_1 := X_3\}T_1, \sigma_K \{X_2 := X_3\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_3) \circ \sigma_K, \lambda X_3::\sigma_T \sigma_K K_1.T) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $unify_\beta(T_1 \rightarrow S_1, T_2 \rightarrow S_2) = $ \\
@@ -915,12 +1161,12 @@ $\qquad\qquad (\sigma \circ \theta, \sigma V \; T) $ \\
 Algorytm $unify_\beta$ dla konstruktorów typów, dla których daje się określić rodzaj, zatrzymuje się.
 \end{fakt}
 \begin{proof}
-Trywialne. Wynika z~tego, że algorytm jest sterowany składnią, oraz z~silnej normalizowalności konstruktorów typów.
+Trywialne. Wynika z~tego, że algorytm jest sterowany składnią, oraz z~silnej normalizowalności kostruktorów typów.
 \end{proof}
 \begin{twierdzenie}
 Niech $T_1$ oraz $T_2$ będą konstruktorami typów, które daje się orodzajować. Wówczas jeśli
 $unify_\beta(T_1, T_2) = (\sigma, S)$, to $(\sigma, S)$ jest $\beta$-unifikatorem konstruktorów typów
-$T_1$ i~$T_2$
+$T_1$ i~$T_2$.
 \end{twierdzenie}
 \begin{proof}
 Indukcja po głebokości rekursji.
@@ -930,37 +1176,37 @@ Możliwe są następujące przypadki:
 \item $T_1 =_\beta T_2$ lub $T_1 \equiv \bar{X}$ lub $T_2 \equiv \bar{X}$ \\
 dla tych przypadków teza zachodzi trywialnie.
 \item $T_1 \equiv \forall X_1::K_1.T'_1$ oraz $T_2 \equiv \forall X_2::K_2.T'_2$ \\
-Wtedy z założenia indukcyjnego $(\sigma_T, T)$ jest $\beta$-unifikatorem konstruktorów typów
-$\sigma_K T'_1$ oraz $\sigma_K\{X_2:=X_1\}T'_2$, gdzie $\sigma_K$ jest unifikatorem rodzajów $K_1$ i~$K_2$.
-Istnieją więc takie podstawienia $\theta_1$ i~$\theta_2$, że zachodzą równości
+Wtedy z załorzenia indukcyjnego $(\sigma_T, T)$ jest $\beta$-unifikatorem konstruktorów typów
+$\sigma_K \{X_1:=X_3\}T'_1$ oraz $\sigma_K\{X_2:=X_3\}T'_2$, gdzie $\sigma_K$ jest unifikatorem rodzajów $K_1$ i~$K_2$.
+Istnieje więc takie podstawienie schematowe $\theta$ oraz przemianowania $\alpha_1$ i~$\alpha_2$, że zachodzą równości
 \[
-\theta_1 \sigma_K T'_1 =_\beta T =_\beta \theta_2 \sigma_K \{X_2:=X_1\} T'_2
+\theta \alpha_1 \sigma_K \{X_1:=X_3\}T'_1 =_\beta T =_\beta \theta \alpha_2 \sigma_K \{X_2:=X_3\} T'_2
 \]
 \[
-\theta_1 \setminus BTV(\sigma_K T'_1) = \sigma_T = \theta_2 \setminus BTV(\sigma_K \{X_2:=X_1\} T'_2)
+\theta \setminus BTV(T) = \sigma_T
 \]
 A wtedy
 \[
-(\theta_1 \circ \sigma_K)\forall X_1::K_1.T'_1 = \forall X_1::\theta_1\sigma_K K_1. \theta_1\sigma_K T'_1 =_\beta
+(\theta \circ \sigma_K)\alpha_1\{X_1:=X_3\} \forall X_1::K_1.T'_1 = \forall X_3::\theta\sigma_K K_1. \theta\sigma_K\alpha_1 \{X_1 := X_3\} T'_1 =
 \]
 \[
-=_\beta \forall X_1::(\theta_1 \setminus BTV(\sigma_K T'_1))\sigma_K K_1.T = \forall X_1::\sigma_T\sigma_K K_1.T
+= \forall X_3::(\theta \setminus BTV(T))\sigma_K K_1.\theta \alpha_1 \sigma_K \{X_1 := X_3\}T'_1 =_\beta \forall X_3::\sigma_T\sigma_K K_1.T
 \]
 oraz
 \[
-(\theta_1 \circ \sigma_K) \setminus BTV(\forall X_1::K_1.T'_1) = (\theta_1 \setminus (\{X_1\} \cup BTV(\sigma_K T'_1))) \circ \sigma_K =
+(\theta \circ \sigma_K) \setminus BTV(\forall X_3::\sigma_T\sigma_K K_1.T) = (\theta \setminus (\{X_3\} \cup BTV(T))) \circ \sigma_K =
 \]
 \[
-= (\sigma_T \setminus X_1) \circ \sigma_K
+= (\sigma_T \setminus X_3) \circ \sigma_K
 \]
-Analogicznie pokażemy pozostałe dwie równości dla konstruktora $T_2$. Zatem 
-$((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T)$ jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
+Analogicznie pokarzemy pozostałe dwie równości dla konstruktora $T_2$. Zatem 
+\mbox{$((\sigma_T \setminus X_3) \circ \sigma_K, \forall X_3::\sigma_T \sigma_K K_1.T)$} jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
 \item $T_1 \equiv \lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \lambda X_2::K_2.T'_2$ \\
 Dla tego przypadku dowód przeprowadzamy analogicznie do przypadku poprzedniego.
 \item $T_1 \equiv T'_1 \rightarrow S_1$ oraz $T_2 \equiv T'_2 \rightarrow S_2$ \\
-Teza wynika wprost z założenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
+Teza wynika wprost z~załorzenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
 \item $T_1 \longrightarrow_\beta S_1$ lub $T_2 \longrightarrow_\beta S_2$ \\
-Wynika z~założenia indukcyjnego i~z~faktu, że $\beta$-redukcja zachowuje $\beta$-równość.
+Wynika z~załorzenia indukcyjnego i~z~faktu, że $\beta$-redukcja zachowuje $\beta$-równość.
 \item $T_1 \equiv V_1\;S_1$ oraz $T_2 \equiv V_2\;S_2$ \\
 Dowód przeprowadzamy analogicznie do przypadku z typem funkcji.
 \end{itemize}
@@ -970,12 +1216,18 @@ Dowód przeprowadzamy analogicznie do przypadku z typem funkcji.
 Algorytm $unify_\beta$ działający na konstruktorach typów nie zawierających zmiennych schematowych
 zwraca pusty unifikator jeśli konstruktory są $\beta$ równe, w~przeciwnym przypadku zawodzi (zawraca $fail$).
 \end{fakt}
+\begin{proof}
+\end{proof}
 
 \begin{fakt}
-Jeżeli z~algorytmu usuniemy pierwszy przypadek sprawdzający $\beta$-równość konstruktorów, otrzymamy algorytm
+Jeżeli w~algorytmie pierwszy przypadek sprawdzający $\beta$-równość konstruktorów zamienimy na analogiczy 
+sprawdzający tożsamość zmiennych typowych (a~przy rozszerzeniach jeszcze typów bazowych), otrzymamy algorytm
 równoważny.
 \end{fakt}
+\begin{proof}
+\end{proof}
 
+Tu powinno pojawić się jeszcze kilka dowodów własności.
 
 \subsection{Rekonstrukcja typów}
 
@@ -1005,7 +1257,7 @@ $\qquad\qquad (\rho \circ \sigma, *) $ \\
 \begin{tabular}{l}
 $kindof(\Gamma \vdash \lambda X::K.T :: ?) = $ \\
 $\qquad \textrm{let} \ (\sigma, K_T) = kindof(\Gamma, X::K \vdash T :: ?) \ \textrm{in} $ \\
-$\qquad\qquad (\sigma, K \Rightarrow K_T) $ \\
+$\qquad\qquad (\sigma, \sigma K \Rightarrow K_T) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $kindof(\Gamma \vdash T_1 \; T_2 :: ?) = $ \\
@@ -1039,8 +1291,8 @@ $typeof(\Gamma \vdash t_1 \; t_2 : ?) = $ \\
 $\qquad \textrm{let} \ (\sigma_1, T_1) = typeof(\Gamma \vdash t_1 : ?) \ \textrm{in} $ \\
 $\qquad \textrm{let} \ (\sigma_2, T_2) = typeof(\sigma_1 \Gamma \vdash \sigma_1 t_2 : ?) \ \textrm{in} $ \\
 $\qquad \textrm{let} \ \bar{X} = fresh \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_3, T_3) = unify_\beta(\sigma_2 T_1, T_2 \rightarrow \bar{X}) \ \textrm{in} $ \\
-$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \sigma_3 \bar{X}) $ \\
+$\qquad \textrm{let} \ (\sigma_3, T'_2 \to T_3) = unify_\beta(\sigma_2 T_1, T_2 \rightarrow \bar{X}) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, T_3) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $typeof(\Gamma \vdash \lambda X::K.t : ?) = $ \\
@@ -1053,24 +1305,73 @@ $\qquad \textrm{let} \ (\sigma_1, T_t) = typeof(\Gamma \vdash t : ?) \ \textrm{i
 $\qquad \textrm{let} \ (\sigma_2, K) = kindof(\sigma_1 \Gamma \vdash \sigma_1 T :: ?) \ \textrm{in} $ \\
 $\qquad \textrm{let} \ \bar{X} = fresh \ \textrm{in} $ \\
 $\qquad \textrm{let} \ Y = fresh \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_3, T'_t) = unify_\beta(\sigma_2 T_t, \forall Y::K.\bar{X}) \textrm{in} $ \\
-$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, [Y:=\sigma_3 \sigma_2 \sigma_1 T]\sigma_3\bar{X}) $ \\
+$\qquad \textrm{let} \ (\sigma_3, \forall Z :: K' . T') = unify_\beta(\sigma_2 T_t, \forall Y::K.\bar{X}) \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \{Y:=\sigma_3 \sigma_2 \sigma_1 T\} T') $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $typeof(\Gamma \vdash \textrm{let} \ x=t_1 \ \textrm{in} \ t_2 : ?) = $ \\
 $\qquad \textrm{let} \ (\sigma_1, T_1) = typeof(\Gamma \vdash t_1 : ?) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ \left\{ \bar{X}_1, \dots, \bar{X}_n \right\} = \bar{FTV}(T_1) \setminus \bar{FTV}(\Gamma) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{FKV}(T_1) \setminus \widehat{FKV}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \bar{X}_1, \dots, \bar{X}_n \right\} = \bar{Var}(T_1) \setminus \bar{Var}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{Var}(T_1) \setminus \widehat{Var}(\Gamma) \ \textrm{in} $ \\
 $\qquad \textrm{let} \ (\sigma_2, T_2) = typeof(\sigma_1 \Gamma, x:\Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m. T_2 \vdash \sigma_1 t_2 : ?) \ \textrm{in} $ \\
 $\qquad\qquad (\sigma_2 \circ \sigma_1, T_2) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $typeof(\Gamma \vdash \textrm{tlet} \ X=T \ \textrm{in} \ t : ?) = $ \\
 $\qquad \textrm{let} \ (\sigma_1, K) = kindof(\Gamma \vdash T :: ?) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{FKV}(K) \setminus \widehat{FKV}(\Gamma) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma, X::\Omega \widehat{X}_1 \dots \widehat{X}_m.K \vdash \sigma_1 t : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma \vdash \{ X(\widehat{Var}(K) \setminus \widehat{Var}(\Gamma)) := \sigma_1 T \} \sigma_1 t : ?) \ \textrm{in} $ \\
 $\qquad\qquad (\sigma_2 \circ \sigma_1, T_t) $ \\
 \end{tabular} \\
+
+\subsubsection{Własności}
+
+\begin{twierdzenie}
+Funkcja $typeof$ zatrzymuje się.
+\end{twierdzenie}
+\begin{proof}
+\end{proof}
+
+\begin{twierdzenie}
+Niech $t$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas \mbox{$typeof(\Gamma \vdash t : ?) = (\sigma, T)$} wtedy 
+i~tylko wtedy gdy $\Gamma \vdash t : T'$, gdzie $T' =_\beta T$ oraz $\sigma = []$ (tzn. gdy program zawiera wszystkie anotacje, algorytm $typeof$ wykonuje zwykłą 
+kontrolę typów w~systemie $F_\omega$).
+\label{twtypecheck}
+\end{twierdzenie}
+\begin{proof}
+Szkic dowodu:
+\begin{enumerate}
+\item Indukcyjnie po strukturze typu pokazujemy analogiczne twierdzenie dla rodzajów i~funkcji $kindof$:\\
+Niech $T$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas \mbox{$kindof(\Gamma \vdash t :: ?) = (\sigma, K)$} wtedy
+i~tylko wtedy gdy $\Gamma \vdash T :: K$ oraz $\sigma = []$.
+\item Indukcyjnie po strukturze wyrażenia $t$ pokażemy tezę implikację tezy w~jedną stronę.
+\item Pokazujemy indukcyjnie, że drzewa wyprowadzenia $\Gamma \vdash t : T$ można zawsze przebudować tak, by
+z~regóły
+\[
+\frac{\Gamma \vdash t : S \quad S \equiv T \quad \Gamma \vdash T :: *}{\Gamma \vdash t : T}
+\]
+korzystać jedynie nad argumentem aplikacji i~w~kożeniu drzewa wyprowadzenia.
+\item Indukcyjnie po tak przebudowanym drzewie pokażemy implikację tezy w~drugą stronę.
+\end{enumerate}
+\end{proof}
+
+\begin{twierdzenie}
+Niech $t$ i~$\Gamma$ będą takim termem i~kontekstem, że $typeof(\Gamma \vdash t : ?) = (\sigma, T)$. Wówczas
+istnieje takie podstawienie schematowe $\theta$, że zachodzą następujące własności:
+\begin{itemize}
+\item $\theta \Gamma \vdash \theta t : T$
+\item $\theta \setminus BTV(t) = \sigma$
+\end{itemize}
+\end{twierdzenie}
+\begin{proof}
+Szkic dowodu:
+\begin{enumerate}
+\item Podobnie jak w~dowodzie twierdzenia \ref{twtypecheck} najpierw indukcyjnie dowodzimy analogicznego twierdzenia
+dla funkcji $kindod$ i~relacji rodzajowania.
+\item Indukcyjnie po strukturze termu $t$ pokazujemy tezę. Podstawienie schematowe $\theta$ konstruujemy tak jak podstawienie schematowe
+$\sigma$ tyle, że z~pominięciem alnulowania zmiennych związanych. W~miejscach w~których korzystamy z~$\beta$-unifikacji
+korzystamy z~definicji \mbox{$\beta$-unifikatora} by zkonstruować podstawienie schematowe $\theta$.
+\end{enumerate}
+\end{proof}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
