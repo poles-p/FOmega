@@ -472,6 +472,56 @@ i ewaluacja:
  	\[\mathtt{ \frac{t \longrightarrow t'}{tlet\;X=T\;in\;t \longrightarrow tlet\;X=T\;in\;t'}
 		}
 	\]
+
+\subsection{Pary}
+
+Składnię par zdefiniujemy następująco:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{(t,t)}$ & \textit{para} \\
+   & $\mathtt{t.1}$ & \textit{projekcja na pierwszy element} \\ 
+   & $\mathtt{t.2}$ & \textit{projekcja na drugi element} \\ 
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{T_1\times T_2}$ & \textit{typ pary} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
+   & $\mathtt{(v,v)}$ & \textit{wartość pary} \\
+  \hline
+\end{tabular} \\
+
+Do relacji tworzenia rodzaju dodamy regułę nadającą rodzaj typowi $\mathtt{\{l_i:T_i^{\;\;\;i \in 1..n}\}}$:~\[\mathtt{
+             \frac{\Gamma \vdash T_1::\ast \hspace{2em} \Gamma \vdash T_2::\ast}{\Gamma \vdash T_1\times T_2::\ast}
+		}
+	\]
+oraz wprowadzimy niewielkie zmiany w regułach typowania:~\[\mathtt{
+             \frac{\Gamma \vdash t_1:T_1 \Gamma \vdash t_2:T_2 \hspace{2em}\Gamma \vdash T_1\times T_2::\ast}{\Gamma \vdash (t_1,t_2):T_1\times T_2}
+            }
+	\]
+ 	\[\mathtt{
+           \frac{\Gamma \vdash t : T_1\times T_2}{\Gamma \vdash t.1 : T_1} 
+           \qquad
+           \frac{\Gamma \vdash t : T_1\times T_2}{\Gamma \vdash t.2 : T_2} 
+            }
+	\]
+a ewaluację pozostawimy bez zmian: \\
+ 	\[\mathtt{
+                \frac{t \longrightarrow t'}{t.i \longrightarrow t'.i} \hspace{3em} \text{gdzie } i\in\{1,2\}
+		}
+	\]
+ 	\[\mathtt{
+                \frac{t_1 \longrightarrow t_1'}{(t_1,t_2) \longrightarrow (t_1',t_2)} 
+                \qquad
+                \frac{t_2 \longrightarrow t_2'}{(v_1,t_2) \longrightarrow (v_1,t_2')} 
+		}
+	\]
+ 	\[\mathtt{
+                (v_1,v_2).i \longrightarrow v_i \hspace{3em} \text{gdzie } i\in\{1,2\}
+		}
+	\]
+
 \subsection{Rekordy}
 
 Składnię rekordów zdefiniujemy następująco:\\
@@ -506,7 +556,7 @@ a ewaluację pozostawimy bez zmian: \\
  	\[\mathtt{
                 \{l_i=v_i^{\;\;\;i \in 1..n}\}.i \longrightarrow v_i
                 \qquad
-                \frac{e \longrightarrow e'}{e.i \longrightarrow e'.i}
+                \frac{t \longrightarrow t'}{t.i \longrightarrow t'.i}
 		}
 	\]
 \small{
