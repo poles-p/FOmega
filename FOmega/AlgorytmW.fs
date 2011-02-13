@@ -57,6 +57,7 @@ let rec rekRodzaj (gamma : KontekstTypowania) typ =
             let! (s2, rk) = unifikuj(kt, s1.Aplikuj k);
             return (s2 * s1, rk)
         }
+    | TNat | TBool -> Some(Podstawienie[], KGwiazdka)
 
 /// <summary>
 /// Rekonstrukcja typów
@@ -134,4 +135,32 @@ let rec rekTyp (gamma : KontekstTypowania) term =
             let kv = Set.toList (k.WolneKWZmienne - gamma.WolneKWZmienne);
             let! (s2, tk) = rekTyp (s1.Aplikuj gamma) ((s1.Aplikuj e).PodstawKopieTypu x2 kv (s1.Aplikuj t));
             return (s2 * s1, tk)
+        }
+    | ENat _ -> Some(Podstawienie[], TNat)
+    | ETrue | EFalse -> Some(Podstawienie[], TBool)
+    | EOpArytmetyczny(e1, e2, s, f) ->
+        opt{
+            let! (s1, t1) = rekTyp gamma e1;
+            let! (s2, t2) = rekTyp (s1.Aplikuj gamma) (s1.Aplikuj e2);
+            let! (s3, _) = betaUnifikuj(s2.Aplikuj t1, TNat);
+            let! (s4, _) = betaUnifikuj(s3.Aplikuj t2, TNat);
+            return (s4 * s3 * s2 * s1, TNat)
+        }
+    | EOpPorownania(e1, e2, s, f) ->
+        opt{
+            let! (s1, t1) = rekTyp gamma e1;
+            let! (s2, t2) = rekTyp (s1.Aplikuj gamma) (s1.Aplikuj e2);
+            let! (s3, _) = betaUnifikuj(s2.Aplikuj t1, TNat);
+            let! (s4, _) = betaUnifikuj(s3.Aplikuj t2, TNat);
+            return (s4 * s3 * s2 * s1, TBool)
+        }
+    | EIf(e1, e2, e3) ->
+        opt{
+            let! (s1, t1) = rekTyp gamma e1;
+            let! (s2, t2) = rekTyp (s1.Aplikuj gamma) (s1.Aplikuj e2);
+            let s21 = s2 * s1;
+            let! (s3, t3) = rekTyp (s21.Aplikuj gamma) (s21.Aplikuj e3);
+            let! (s4, _) = betaUnifikuj((s3*s2).Aplikuj t1, TBool);
+            let! (s5, rt) = betaUnifikuj((s4*s3).Aplikuj t2, s4.Aplikuj t3);
+            return (s5 * s4 * s3 * s21, rt)
         }

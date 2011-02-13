@@ -60,6 +60,8 @@ let rec betaUnifikuj(t1, t2) =
         else
             System.Console.WriteLine("Can not unify {0} with {1}.", t1, t2);
             None
+    | (TNat, TNat) -> Some(Podstawienie[], TNat)
+    | (TBool, TBool) -> Some(Podstawienie[], TBool)
     | (TWZmienna x, t)
     | (t, TWZmienna x) ->
         if t.ZawieraZmiennaTypowaW x then
@@ -132,3 +134,4 @@ let rec typBetaNormalny typ = // TODO: zrobić to porządnie
         TUniwersalny(x, x2, k, typBetaNormalny t)
     | TAnotacja(t, _) -> 
         typBetaNormalny t
+    | TNat | TBool -> typ

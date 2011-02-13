@@ -66,6 +66,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | TAplikacja(t1,t2) -> TAplikacja(this.Aplikuj t1, this.Aplikuj t2)
         | TUniwersalny(x,x2,k,t) -> TUniwersalny(x, x2, this.Aplikuj k, this.Aplikuj t)
         | TAnotacja(t, k) -> TAnotacja(this.Aplikuj t, this.Aplikuj k)
+        | TNat | TBool -> typ
 
     /// <summary>
     /// Aplikacja podstawienia do termu
@@ -80,6 +81,10 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | EAnotacja(e, t) -> EAnotacja(this.Aplikuj e, this.Aplikuj t)
         | ELet(x, e1, e2) -> ELet(x, this.Aplikuj e1, this.Aplikuj e2)
         | ETLet(x, x2, t, e) -> ETLet(x, x2, this.Aplikuj t, this.Aplikuj e)
+        | ENat _ | ETrue | EFalse -> term
+        | EOpArytmetyczny(e1, e2, s, f) -> EOpArytmetyczny(this.Aplikuj e1, this.Aplikuj e2, s, f)
+        | EOpPorownania(e1, e2, s, f) -> EOpPorownania(this.Aplikuj e1, this.Aplikuj e2, s, f)
+        | EIf(e1, e2, e3) -> EIf(this.Aplikuj e1, this.Aplikuj e2, this.Aplikuj e3)
 
     /// <summary>
     /// Aplikacja podstawienia do kontekstu
@@ -136,6 +141,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | TAnotacja(t, k) -> 
             let (rt, ex, t') = this.FAplikuj t;
             (rt, ex, TAnotacja(t', this.Aplikuj k))
+        | TNat | TBool -> (true, System.String.Empty, typ)
 
     /// <summary>
     /// Aplikacja podstawienia do termu, ignoruje podstawienia zabronione
@@ -170,6 +176,20 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let (re, e') = this.FAplikuj e;
             let (rt, _, t') = this.FAplikuj t;
             (re && rt, ETLet(x, x2, t', e'))
+        | ENat _ | ETrue | EFalse -> (true, term)
+        | EOpArytmetyczny(e1, e2, s, f) -> 
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            (re1 && re2, EOpArytmetyczny(e1', e2', s, f))
+        | EOpPorownania(e1, e2, s, f) -> 
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            (re1 && re2, EOpPorownania(e1', e2', s, f))
+        | EIf(e1, e2, e3) ->
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            let (re3, e3') = this.FAplikuj e3;
+            (re1 && re2 && re3, EIf(e1', e2', e3'))
 
     member private this.Przypisania =
         podstawienie

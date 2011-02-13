@@ -128,6 +128,11 @@ type Typ =
     | TUniwersalny     of string * string * Rodzaj * Typ
     /// <summary> anotacja rodzajowa (T :: K) </summary>
     | TAnotacja        of Typ * Rodzaj
+    /// <summary> typ całkowitoliczbowy </summary>
+    | TNat
+    /// <summary> typ logiczny </summary>
+    | TBool
+
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/> kwantyfikowanej schematem
@@ -198,6 +203,8 @@ type Typ =
         | TUniwersalny(_,y,_,_) when x = y -> false
         | TUniwersalny(_,_,_,t) -> t.ZawieraZmiennaTypowa x
         | TAnotacja(t,_) -> t.ZawieraZmiennaTypowa x
+        | TNat
+        | TBool -> false
     /// <summary>
     /// Sprawdza, czy dany konstruktor typu zawiera wystąpienie podanej zmiennej 
     /// typowej kwantyfikowanej schematem.
@@ -217,6 +224,8 @@ type Typ =
         | TAplikacja(t1,t2) -> t1.ZawieraZmiennaTypowaW x || t2.ZawieraZmiennaTypowaW x
         | TUniwersalny(_,_,_,t) -> t.ZawieraZmiennaTypowaW x
         | TAnotacja(t,_) -> t.ZawieraZmiennaTypowaW x
+        | TNat
+        | TBool -> false
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/> kwantyfikowanej abstrakcją
@@ -238,6 +247,8 @@ type Typ =
         | TUniwersalny(y,y2,k,t) ->
             TUniwersalny(y,y2, k, t.Podstaw x typ)
         | TAnotacja(t,k) -> TAnotacja(t.Podstaw x typ, k)
+        | TNat -> TNat
+        | TBool -> TBool
 
     /// <summary>
     /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -266,6 +277,8 @@ type Typ =
         | TUniwersalny(y,y2,k,t) ->
             TUniwersalny(y,y2, k, t.PodstawKopie x kv typ)
         | TAnotacja(t,k) -> TAnotacja(t.PodstawKopie x kv typ, k)
+        | TNat -> TNat
+        | TBool -> TBool
 
     /// <summary>
     /// Wolne zmienne rodzajowe kwantyfikowane schematem
@@ -283,6 +296,8 @@ type Typ =
         | TAplikacja(a, b) -> Set.union a.WolneKWZmienne b.WolneKWZmienne
         | TUniwersalny(_, _, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
         | TAnotacja(t, k) -> Set.union t.WolneKWZmienne k.WolneKWZmienne
+        | TNat
+        | TBool -> Set.empty
 
     /// <summary>
     /// Wolne zmienne typowe kwantyfikowane schematem
@@ -300,6 +315,8 @@ type Typ =
         | TAplikacja(a, b) -> Set.union a.WolneTWZmienne b.WolneTWZmienne
         | TUniwersalny(_, _, k, t) -> t.WolneTWZmienne
         | TAnotacja(t, k) -> t.WolneTWZmienne
+        | TNat
+        | TBool -> Set.empty
 
     /// <summary>
     /// Typ po alfa-konwersji wprowadzającej świeże zmienne typowe
@@ -320,7 +337,8 @@ type Typ =
             let t' = t.Podstaw x2 (TZmienna(x, x2'));
             TUniwersalny(x, x2', k, t'.AlfaKopia)
         | TAnotacja(t, k) -> TAnotacja(t.AlfaKopia, k)
-    
+        | TNat -> TNat
+        | TBool -> TBool
 
     /// <summary>
     /// Zamienia typ na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -357,6 +375,8 @@ type Typ =
             if prior >= 2 then
                 "(" + res + ")"
             else res
+        | TNat -> "Nat"
+        | TBool -> "Bool"
     /// <summary>
     /// Zamienia rodzaj na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
     /// </summary>
@@ -384,6 +404,19 @@ type Wyrazenie =
     | ELet         of string * Wyrazenie * Wyrazenie
     /// <summary> typ lokalny </summary>
     | ETLet        of string * string * Typ * Wyrazenie
+    /// <summary> wartść calkowitoliczbowa </summary>
+    | ENat of int
+    /// <summary> prawdziwa wartość logiczna </summary>
+    | ETrue
+    /// <summary> fałszywa wartość logiczna </summary>
+    | EFalse
+    /// <summary> operator arytmetyczny </summary>
+    | EOpArytmetyczny of Wyrazenie * Wyrazenie * string * (int -> int -> int)
+    /// <summary> operator porównania </summary>
+    | EOpPorownania   of Wyrazenie * Wyrazenie * string * (int -> int -> bool)
+    /// <summary> instrukcja warunkowa </summary>
+    | EIf of Wyrazenie * Wyrazenie * Wyrazenie
+
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/> kwantyfikowanej abstrakcją
@@ -401,6 +434,12 @@ type Wyrazenie =
         | EAnotacja(e,t) -> EAnotacja(e.PodstawTyp x typ, t.Podstaw x typ)
         | ELet(y,e1,e2) -> ELet(y, e1.PodstawTyp x typ, e2.PodstawTyp x typ)
         | ETLet(y,y2,t,e) -> ETLet(y, y2, t.Podstaw x typ, e.PodstawTyp x typ)
+        | ENat _ | ETrue | EFalse -> this
+        | EOpArytmetyczny(e1, e2, s, f) -> 
+            EOpArytmetyczny(e1.PodstawTyp x typ, e2.PodstawTyp x typ, s, f)
+        | EOpPorownania(e1, e2, s, f) ->
+            EOpPorownania(e1.PodstawTyp x typ, e2.PodstawTyp x typ, s, f)
+        | EIf(e1,e2,e3) -> EIf(e1.PodstawTyp x typ, e2.PodstawTyp x typ, e3.PodstawTyp x typ)
 
     /// <summary>
     /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -421,6 +460,13 @@ type Wyrazenie =
         | EAnotacja(e,t) -> EAnotacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ)
         | ELet(y,e1,e2) -> ELet(y, e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ)
         | ETLet(y,y2,t,e) -> ETLet(y, y2, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
+        | ENat _ | ETrue | EFalse -> this
+        | EOpArytmetyczny(e1, e2, s, f) -> 
+            EOpArytmetyczny(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, s, f)
+        | EOpPorownania(e1, e2, s, f) ->
+            EOpPorownania(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, s, f)
+        | EIf(e1,e2,e3) -> 
+            EIf(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, e3.PodstawKopieTypu x kv typ)
 
     /// <summary>
     /// Sprawdza, czy dane wyrażenie zawiera wolne wystąpienie podanej zmiennej.
@@ -442,6 +488,10 @@ type Wyrazenie =
         | ELet(y,e1,e2) when x = y -> e1.ZawieraZmienna x
         | ELet(y,e1,e2) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
         | ETLet(_,_,_,e) -> e.ZawieraZmienna x
+        | ENat _ | ETrue | EFalse -> false
+        | EOpArytmetyczny(e1, e2, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
+        | EOpPorownania(e1, e2, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
+        | EIf(e1,e2,e3) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x || e3.ZawieraZmienna x
     /// <summary>
     /// Wykonuje podstawienie wyrażenie <paramref name="expr"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/>.
@@ -471,6 +521,10 @@ type Wyrazenie =
             else ELet(y, e1.Podstaw x expr, e2.Podstaw x expr)
         | ETLet(y,y2,t,e) ->
             ETLet(y,y2,t,e.Podstaw x expr)
+        | ENat _ | ETrue | EFalse -> this
+        | EOpArytmetyczny(e1, e2, s, f) -> EOpArytmetyczny(e1.Podstaw x expr, e2.Podstaw x expr, s, f)
+        | EOpPorownania(e1, e2, s, f) -> EOpPorownania(e1.Podstaw x expr, e2.Podstaw x expr, s, f)
+        | EIf(e1, e2, e3) -> EIf(e1.Podstaw x expr, e2.Podstaw x expr, e3.Podstaw x expr)
 
     /// <summary>
     /// Zamienia term na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -482,37 +536,56 @@ type Wyrazenie =
         | EZmienna x -> x
         | ELambda(x,t,e) ->
             let res = "\\" + x + ":" + t.ToString() + "." + e.ToString 0;
-            if prior >= 1 then
+            if prior > 8 then
                 "(" + res + ")"
             else res
         | EAplikacja(a,b) ->
-            let res = a.ToString 1 + " " + b.ToString 2
-            if prior >= 2 then
+            let res = a.ToString 8 + " " + b.ToString 9
+            if prior > 8 then
                 "(" + res + ")"
             else res
         | ETLambda(x,_,k,e) ->
             let res = "\\\\" + x + "::" + k.ToString() + "." + e.ToString 0;
-            if prior >= 1 then
+            if prior > 0 then
                 "(" + res + ")"
             else res
         | ETAplikacja(a,b) ->
-            let res = a.ToString 1 + "[" + b.ToString() + "]"
-            if prior >= 2 then
+            let res = a.ToString 8 + "[" + b.ToString() + "]"
+            if prior > 8 then
                 "(" + res + ")"
             else res
         | EAnotacja(e,t) ->
-            let res = e.ToString 2 + " :: " + t.ToString();
-            if prior >= 2 then
+            let res = e.ToString 9 + " :: " + t.ToString();
+            if prior > 8 then
                 "(" + res + ")"
             else res
         | ELet(x,e1,e2) ->
             let res = "let " + x + " = " + e1.ToString() + " in " + e2.ToString()
-            if prior >= 1 then
+            if prior > 0 then
                 "(" + res + ")"
             else res
         | ETLet(x,_,t,e) ->
             let res = "tlet " + x + " = " + t.ToString() + " in " + e.ToString()
-            if prior >= 1 then
+            if prior > 0 then
+                "(" + res + ")"
+            else res
+        | ENat n -> n.ToString()
+        | ETrue -> "true"
+        | EFalse -> "false"
+        | EOpArytmetyczny(e1, e2, s, _) ->
+            let p = if s = "+" || s = "-" then 4 else 5;
+            let res = e1.ToString p + s + e2.ToString(p+1);
+            if prior > p then
+                "(" + res + ")"
+            else res
+        | EOpPorownania(e1, e2, s, _) ->
+            let res = e1.ToString 3 + s + e2.ToString 3;
+            if prior > 2 then
+                "(" + res + ")"
+            else res
+        | EIf(e1,e2,e3) ->
+            let res = "if " + e1.ToString() + " then " + e2.ToString() + " else " + e3.ToString();
+            if prior > 0 then
                 "(" + res + ")"
             else res
     /// <summary>

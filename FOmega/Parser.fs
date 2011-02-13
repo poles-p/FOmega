@@ -25,8 +25,8 @@ let private oper str f =
 
 let private slowoKluczowe s =
     match s with
-    | "All"
-    | "in" | "let" | "tlet" -> true
+    | "All" | "Bool" | "Nat"
+    | "else" | "false" | "if" | "in" | "let" | "then" | "tlet" | "true" -> true
     | _ -> false
 
 let private ident upper =
@@ -50,7 +50,7 @@ let private ident upper =
         }
 
 let kw k =
-    skipString k >>. ws
+    (skipString k >>. ws) <?> k
 
 /// <summary>
 /// Parser rodzajów
@@ -106,6 +106,8 @@ let private atomTypu =
             let! rest = localStateUpdateV (fun s -> (tvar, tvar2)::s) typ.Parsor;
             return TLambda(tvar,tvar2,kind,rest)
         }) <|>
+    (kw "Nat" <!> fun () -> parsor.Return TNat) <|>
+    (kw "Bool" <!> fun () -> parsor.Return TBool) <|>
     (ident true <!> fun x -> 
         parsor{
             let! var = getState;
@@ -177,7 +179,19 @@ let private atom =
             let! e = localStateUpdateV (fun s -> (x,x2)::s) wyrazenie.Parsor;
             return ETLet(x, x2, t, e)
         }) <|>
-    (ident false <!> fun x -> parsor{ return EZmienna x })
+    (kw "true" <!> fun () -> parsor.Return ETrue) <|>
+    (kw "false" <!> fun () -> parsor.Return EFalse) <|>
+    (kw "if" <!> fun () ->
+        parsor{
+            let! e1 = wyrazenie.Parsor;
+            do! kw "then"
+            let! e2 = wyrazenie.Parsor;
+            do! kw "else"
+            let! e3 = wyrazenie.Parsor;
+            return EIf(e1, e2, e3)
+        }) <|>
+    (ident false <!> fun x -> parsor{ return EZmienna x }) <|>
+    ((localStateV () pnumber .>> ws) <!> fun n -> parsor.Return( ENat n ))
 do
     wyrazenie.Atom <- atom <??> "expresion"
     wyrazenie.AddSuffixOperator (parsor{ let! arg = atom in return fun x -> EAplikacja(x, arg) }) 8
@@ -187,6 +201,18 @@ do
             return fun x -> ETAplikacja(x, arg) 
         }) 8
     wyrazenie.AddSuffixOperator (kw ":" <!> fun () -> parsor{ let! typ = typ.Parsor in return fun x -> EAnotacja(x, typ) }) 8
+    let aoper s f = kw s >>. parsor.Return(fun a b -> EOpArytmetyczny(a, b, s, f))
+    wyrazenie.AddInfixOperator (aoper "+" ( + )) Parsor.Expresion.LeftAssoc 4
+    wyrazenie.AddInfixOperator (aoper "-" ( - )) Parsor.Expresion.LeftAssoc 4
+    wyrazenie.AddInfixOperator (aoper "/" ( / )) Parsor.Expresion.LeftAssoc 5
+    wyrazenie.AddInfixOperator (aoper "*" ( * )) Parsor.Expresion.LeftAssoc 5
+    let coper s f = box(kw s) >>. parsor.Return(fun a b -> EOpPorownania(a, b, s, f))
+    wyrazenie.AddInfixOperator (coper ">=" (>=)) Parsor.Expresion.LeftAssoc 2
+    wyrazenie.AddInfixOperator (coper "<=" (<=)) Parsor.Expresion.LeftAssoc 2
+    wyrazenie.AddInfixOperator (coper "=" (=)) Parsor.Expresion.LeftAssoc 2
+    wyrazenie.AddInfixOperator (coper "<>" (<>)) Parsor.Expresion.LeftAssoc 2
+    wyrazenie.AddInfixOperator (coper ">" (>)) Parsor.Expresion.LeftAssoc 2
+    wyrazenie.AddInfixOperator (coper "<" (<)) Parsor.Expresion.LeftAssoc 2
 
 let parsujText text =
     parseString (ws >>. wyrazenie.Parsor .>> eof) [] (OutputConsole()) text
