@@ -243,7 +243,7 @@ gwarantują nam równoważność relacji $\equiv$. Pozostałe reguły jak nastę
 
 definiują równoważność funkcji typowych, aplikacji i abstrakcji konstruktorowych oraz typów uniwersalnych.
 
-\subsubsection{Reguły rodzajowania}
+\subsubsection{Reguły znajdowania rodzaju}
 
 W systemie $F_\omega$ każdemu poprawnie zbudowanemu typowi przyporządkowujemy rodzaj.
 Przyporządkowanie to określa relacja $(.\vdash.::.)$ zdefiniowana następująco.
@@ -282,6 +282,12 @@ Każdemu poprawnie zbudowanemu termowi przyporządkowujemy typ. Przyporządkowan
                 \qquad
                 \frac{\Gamma \vdash t:S \hspace{1.5em} S \equiv T \hspace{1.5em} \Gamma \vdash T::\ast}{\Gamma \vdash t:T}}
 	\]
+	\[\mathtt{
+		\frac{\Gamma,X::K \vdash t:T }{\Gamma \vdash \lambda X::K.t \;:\forall X::K.T}
+                \qquad
+                \frac{\Gamma \vdash t:\forall X::K.T \hspace{1.5em} \Gamma \vdash T'::K}{\Gamma \vdash t[T']\;:[X \mapsto T']T}}
+	\]
+
 
 \subsection{Ewaluacja}
 
@@ -343,7 +349,8 @@ Typowanie:
    & $\mathtt{succ\;nv}$ & \textit{wartość następnika} \\
   \hline
 \end{tabular} \\
-Kinding:
+
+Tworzenie rodzaju:
  	\[\mathtt{ \frac{}{\Gamma \vdash Bool::\ast} \qquad \frac{}{\Gamma \vdash Nat::\ast}
 		}
 	\]
@@ -385,7 +392,7 @@ a to stare, może się przyda: \\
    & $\mathtt{unit}$ & \\
   \hline
 \end{tabular} \\
-Kinding:
+Tworzenie rodzaju:
  	\[\mathtt{ \frac{}{\Gamma \vdash Unit::\ast}
 		}
 	\]
@@ -422,7 +429,7 @@ Ewaluacja:
    & $\mathtt{\{l_i=v_i^{\;\;\;i \in 1..n}\}}$ & \textit{wartość rekordu} \\
   \hline
 \end{tabular} \\
-Rodzajowanie: \\
+Tworzenie rodzaju: \\
  	\[\mathtt{
              \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}
 		}
@@ -458,7 +465,7 @@ Ewaluacja: \\
    & $\mathtt{<l_i:T_i^{\;\;\;i \in 1..n}>}$ & \textit{typ wariantu}\\
   \hline
 \end{tabular} \\
-Kinding:
+Tworzenie rodzaju:
  	\[\mathtt{
              \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash <l_i:T_i^{\;\;\;i \in 1..n}>::\ast}
 		}
@@ -494,6 +501,8 @@ Ewaluacja \\
 
 \subsection{listy}
 
+Jako przykład wbudowanych typów danych wybraliśmy listy. Podobne rekursywne struktury, jak na przykład drzewa, możemy dodać do języka w analogiczny sposób, jednak rekurencyjne typy danych odwiodą nas od tej konieczności. \\
+  
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
@@ -511,7 +520,8 @@ Ewaluacja \\
    & $\mathtt{cons\;[T]\;v\;v}$ & \textit{wartość listy niepustej} \\
   \hline
 \end{tabular} \\
-Kinding:
+
+Tworzenie rodzaju:
  	\[\mathtt{ \frac{\Gamma \vdash T::\ast}{\Gamma \vdash List\;T::\ast}
 		}
 	\]
@@ -588,7 +598,7 @@ Przykłady powyższe obrazują działanie zakodowanych typów rekurencyjnych. Te
 }
 
 
-Kinding:
+Tworzenie rodzaju:
  	\[\mathtt{ \frac{a\;tutaj\;co?}{\Gamma \vdash \{\exists X::K,T\}::K}
 		}
 	\]
@@ -624,7 +634,7 @@ Hmmm, no tu musze się zastanowić, to na dole dla zwykłej wersji. \\
    & $\mathtt{fold[T]\;v}$ & \textit{folding} \\
   \hline  
 \end{tabular} \\
-Kinding:
+Tworzenie rodzaju:
  	\[\mathtt{\frac{}{\Gamma \vdash \mu X.T::\ast}
 		}
 	\]
