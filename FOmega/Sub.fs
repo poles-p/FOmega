@@ -56,15 +56,15 @@ type Podstawienie(podstawienie : Przypisanie list) =
                 | PrzypisanieZabronione(y, _, _) -> y = x;
                 | _ -> false
             match List.tryFind ok podstawienie with
-            | Some(PrzypisanieTypu(_, t)) -> t
+            | Some(PrzypisanieTypu(_, t)) -> t.AlfaKopia
             | Some(PrzypisanieZabronione(_, ex, _)) -> SubstitutionException ex |> raise
             | _ -> typ
         | TWartosc(x, t) -> TWartosc(x, this.Aplikuj t)
         | TZmienna _ -> typ
         | TFunkcja(a, b) -> TFunkcja(this.Aplikuj a, this.Aplikuj b)
-        | TLambda(x,k,t) -> TLambda(x, this.Aplikuj k, this.Aplikuj t)
+        | TLambda(x,x2,k,t) -> TLambda(x, x2, this.Aplikuj k, this.Aplikuj t)
         | TAplikacja(t1,t2) -> TAplikacja(this.Aplikuj t1, this.Aplikuj t2)
-        | TUniwersalny(x,k,t) -> TUniwersalny(x, this.Aplikuj k, this.Aplikuj t)
+        | TUniwersalny(x,x2,k,t) -> TUniwersalny(x, x2, this.Aplikuj k, this.Aplikuj t)
         | TAnotacja(t, k) -> TAnotacja(this.Aplikuj t, this.Aplikuj k)
 
     /// <summary>
@@ -75,11 +75,11 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | EZmienna _ -> term
         | ELambda(x, t, e) -> ELambda(x, this.Aplikuj t, this.Aplikuj e)
         | EAplikacja(e1, e2) -> EAplikacja(this.Aplikuj e1, this.Aplikuj e2)
-        | ETLambda(x, k, e) -> ETLambda(x, this.Aplikuj k, this.Aplikuj e)
+        | ETLambda(x, x2, k, e) -> ETLambda(x, x2, this.Aplikuj k, this.Aplikuj e)
         | ETAplikacja(e, t) -> ETAplikacja(this.Aplikuj e, this.Aplikuj t)
         | EAnotacja(e, t) -> EAnotacja(this.Aplikuj e, this.Aplikuj t)
         | ELet(x, e1, e2) -> ELet(x, this.Aplikuj e1, this.Aplikuj e2)
-        | ETLet(x, t, e) -> ETLet(x, this.Aplikuj t, this.Aplikuj e)
+        | ETLet(x, x2, t, e) -> ETLet(x, x2, this.Aplikuj t, this.Aplikuj e)
 
     /// <summary>
     /// Aplikacja podstawienia do kontekstu
@@ -112,8 +112,8 @@ type Podstawienie(podstawienie : Przypisanie list) =
                 | PrzypisanieZabronione(y, _, _) -> y = x;
                 | _ -> false
             match List.tryFind ok podstawienie with
-            | Some(PrzypisanieTypu(_, t)) -> (true, System.String.Empty, t)
-            | Some(PrzypisanieZabronione(_, ex, t)) -> (false, ex, t)
+            | Some(PrzypisanieTypu(_, t)) -> (true, System.String.Empty, t.AlfaKopia)
+            | Some(PrzypisanieZabronione(_, ex, t)) -> (false, ex, t.AlfaKopia)
             | _ -> (true, System.String.Empty, typ)
         | TWartosc(x, t) ->
             let (rt, ex, t') = this.FAplikuj t;
@@ -123,16 +123,16 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let (ra, ex1, a') = this.FAplikuj a;
             let (rb, ex2, b') = this.FAplikuj b;
             (ra && rb, (if not ra then ex1 else ex2), TFunkcja(a', b'))
-        | TLambda(x,k,t) -> 
+        | TLambda(x,x2,k,t) -> 
             let (rt, ex, t') = this.FAplikuj t
-            (rt, ex, TLambda(x, this.Aplikuj k, t'))
+            (rt, ex, TLambda(x, x2, this.Aplikuj k, t'))
         | TAplikacja(t1,t2) -> 
             let (rt1, ex1, t1') = this.FAplikuj t1;
             let (rt2, ex2, t2') = this.FAplikuj t2;
             (rt1 && rt2, (if not rt1 then ex1 else ex2), TAplikacja(t1', t2'))
-        | TUniwersalny(x,k,t) -> 
+        | TUniwersalny(x,x2,k,t) -> 
             let (rt, ex, t') = this.FAplikuj t;
-            (rt, ex, TUniwersalny(x, this.Aplikuj k, t'))
+            (rt, ex, TUniwersalny(x, x2, this.Aplikuj k, t'))
         | TAnotacja(t, k) -> 
             let (rt, ex, t') = this.FAplikuj t;
             (rt, ex, TAnotacja(t', this.Aplikuj k))
@@ -151,9 +151,9 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let (re1, e1') = this.FAplikuj e1;
             let (re2, e2') = this.FAplikuj e2;
             (re1 && re2, EAplikacja(e1', e2'))
-        | ETLambda(x, k, e) -> 
+        | ETLambda(x, x2, k, e) -> 
             let (re, e') = this.FAplikuj e;
-            (re, ETLambda(x, this.Aplikuj k, e'))
+            (re, ETLambda(x, x2, this.Aplikuj k, e'))
         | ETAplikacja(e, t) ->
             let (re, e') = this.FAplikuj e;
             let (rt, _, t') = this.FAplikuj t;
@@ -166,10 +166,10 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let (re1, e1') = this.FAplikuj e1;
             let (re2, e2') = this.FAplikuj e2;
             (re1 && re2, ELet(x, e1', e2'))
-        | ETLet(x, t, e) -> 
+        | ETLet(x, x2, t, e) -> 
             let (re, e') = this.FAplikuj e;
             let (rt, _, t') = this.FAplikuj t;
-            (re && rt, ETLet(x, t', e'))
+            (re && rt, ETLet(x, x2, t', e'))
 
     member private this.Przypisania =
         podstawienie
@@ -213,7 +213,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
     /// <summary>
     /// Usuwanie zmiennych typowych z podstawienia.
     /// </summary>
-    member this.UsunZmiennaTypowa x = // TODO: dwie różne zmienne mogą mieć tę samą nazwę!
+    member this.UsunZmiennaTypowa x =
         Podstawienie(
             podstawienie |>
             List.map (

@@ -7,6 +7,7 @@ open Core
 open Parsor.Core
 open Parsor.Primitives
 open Parsor.Combinators
+open Parsor.State
 
 /// <summary>
 /// Białe znaki i komentarze. Komentarzem jest ciąg znaków zaczynający się podwójnym ukośnikiem i kończący się 
@@ -76,6 +77,7 @@ let private atomTypu =
     (kw "All" <!> fun () ->
         parsor{
             let! tvar = ident true;
+            let tvar2 = Fresh.swierzaNazwa();
             let! kind =
                 parsor{
                     let! hasKind = tryParse (kw "::");
@@ -85,12 +87,13 @@ let private atomTypu =
                         return! rodzaj.Parsor
                 };
             do! skipChar '.' >>. ws;
-            let! rest = typ.Parsor;
-            return TUniwersalny(tvar,kind,rest)
+            let! rest = localStateUpdateV (fun s -> (tvar, tvar2)::s) typ.Parsor;
+            return TUniwersalny(tvar,tvar2,kind,rest)
         }) <|>
     (kw "\\" <!> fun () ->
         parsor{
             let! tvar = ident true;
+            let tvar2 = Fresh.swierzaNazwa();
             let! kind =
                 parsor{
                     let! hasKind = tryParse (kw "::");
@@ -100,10 +103,19 @@ let private atomTypu =
                         return! rodzaj.Parsor
                     };
             do! skipChar '.' >>. ws;
-            let! rest = typ.Parsor;
-            return TLambda(tvar,kind,rest)
+            let! rest = localStateUpdateV (fun s -> (tvar, tvar2)::s) typ.Parsor;
+            return TLambda(tvar,tvar2,kind,rest)
         }) <|>
-    (ident true <!> fun x -> parsor.Return(TZmienna x))
+    (ident true <!> fun x -> 
+        parsor{
+            let! var = getState;
+            match List.tryFind (fun z -> x = fst z) var with
+            | Some(x, x2) ->
+                return TZmienna(x, x2)
+            | None ->
+                do! warning ("Undefined type variable " + x + ".");
+                return TZmienna(x, Fresh.swierzaNazwa())
+        })
 
 do
     typ.Atom <- atomTypu <??> "type constructor";
@@ -137,6 +149,7 @@ let private atom =
     (kw "\\\\" <!> fun () ->
         parsor{
             let! tvar = ident true;
+            let tvar2 = Fresh.swierzaNazwa();
             let! kind =
                 parsor{
                     let! hasKind = tryParse (kw "::");
@@ -146,8 +159,8 @@ let private atom =
                         return! rodzaj.Parsor
                     };
             do! skipChar '.' >>. ws;
-            let! rest = wyrazenie.Parsor;
-            return ETLambda(tvar,kind,rest)
+            let! rest = localStateUpdateV (fun s -> (tvar,tvar2)::s) wyrazenie.Parsor;
+            return ETLambda(tvar,tvar2,kind,rest)
         }) <|>
     (kw "let" <!> fun () ->
         parsor{
@@ -159,9 +172,10 @@ let private atom =
     (kw "tlet" <!> fun () ->
         parsor{
             let! x = ident true .>> skipChar '=' .>> ws;
+            let x2 = Fresh.swierzaNazwa();
             let! t = typ.Parsor .>> kw "in";
-            let! e = wyrazenie.Parsor;
-            return ETLet(x, t, e)
+            let! e = localStateUpdateV (fun s -> (x,x2)::s) wyrazenie.Parsor;
+            return ETLet(x, x2, t, e)
         }) <|>
     (ident false <!> fun x -> parsor{ return EZmienna x })
 do
@@ -175,4 +189,4 @@ do
     wyrazenie.AddSuffixOperator (kw ":" <!> fun () -> parsor{ let! typ = typ.Parsor in return fun x -> EAnotacja(x, typ) }) 8
 
 let parsujText text =
-    parseString (ws >>. wyrazenie.Parsor .>> eof) () (OutputConsole()) text
+    parseString (ws >>. wyrazenie.Parsor .>> eof) [] (OutputConsole()) text

@@ -34,10 +34,10 @@ let rec unifikuj(k1 : Rodzaj, k2 : Rodzaj) =
 /// </summary>
 let rec betaRedukuj t =
     match t with
-    | TAplikacja(TLambda(x, k, t1), t2) ->
+    | TAplikacja(TLambda(x, x2, k, t1), t2) ->
         match betaRedukuj t2 with
-        | None -> Some(t1.Podstaw x t2)
-        | Some t2' -> Some(TAplikacja(TLambda(x, k, t1), t2))
+        | None -> Some(t1.Podstaw x2 t2)
+        | Some t2' -> Some(TAplikacja(TLambda(x, x2, k, t1), t2))
     | TAplikacja(t1, t2) ->
         opt{
             let! t1' = betaRedukuj t1;
@@ -54,9 +54,9 @@ let rec betaRedukuj t =
 /// </summary>
 let rec betaUnifikuj(t1, t2) =
     match (t1, t2) with
-    | (TZmienna x, TZmienna y) ->
-        if x = y then
-            Some(Podstawienie[], TZmienna x)
+    | (TZmienna(x, x2), TZmienna(y, y2)) ->
+        if x2 = y2 then
+            Some(Podstawienie[], TZmienna(x, x2))
         else
             System.Console.WriteLine("Can not unify {0} with {1}.", t1, t2);
             None
@@ -67,17 +67,19 @@ let rec betaUnifikuj(t1, t2) =
             None
         else
             Some(Podstawienie[PrzypisanieTypu(x, t)], t)
-    | (TUniwersalny(x1, k1, t1), TUniwersalny(x2, k2, t2)) ->
+    | (TUniwersalny(x1, x1', k1, t1), TUniwersalny(x2, x2', k2, t2)) ->
         opt{
             let! (sk, k) = unifikuj(k1, k2);
-            let! (st, t) = betaUnifikuj(sk.Aplikuj t1, sk.Aplikuj(t2.Podstaw x2 (TZmienna x1)));
-            return (st.UsunZmiennaTypowa x1 * sk, TUniwersalny(x1, st.Aplikuj k, t))
+            let x3 = Fresh.swierzaNazwa();
+            let! (st, t) = betaUnifikuj(sk.Aplikuj(t1.Podstaw x1' (TZmienna(x1,x3))), sk.Aplikuj(t2.Podstaw x2' (TZmienna(x1,x3))));
+            return (st.UsunZmiennaTypowa x3 * sk, TUniwersalny(x1, x3, st.Aplikuj k, t))
         }
-    | (TLambda(x1, k1, t1), TLambda(x2, k2, t2)) ->
+    | (TLambda(x1, x1', k1, t1), TLambda(x2, x2', k2, t2)) ->
         opt{
             let! (sk, k) = unifikuj(k1, k2);
-            let! (st, t) = betaUnifikuj(sk.Aplikuj t1, sk.Aplikuj(t2.Podstaw x2 (TZmienna x1)));
-            return (st.UsunZmiennaTypowa x1 * sk, TLambda(x1, st.Aplikuj k, t))
+            let x3 = Fresh.swierzaNazwa();
+            let! (st, t) = betaUnifikuj(sk.Aplikuj(t1.Podstaw x1' (TZmienna(x1,x3))), sk.Aplikuj(t2.Podstaw x2' (TZmienna(x1,x3))));
+            return (st.UsunZmiennaTypowa x3 * sk, TLambda(x1, x3, st.Aplikuj k, t))
         }
     | (TFunkcja(t1, s1), TFunkcja(t2, s2)) ->
         opt{
@@ -114,19 +116,19 @@ let rec betaUnifikuj(t1, t2) =
 /// </summary>
 let rec typBetaNormalny typ = // TODO: zrobić to porządnie
     match typ with
-    | TWZmienna x
-    | TZmienna x -> typ
+    | TWZmienna _
+    | TZmienna _ -> typ
     | TWartosc(x, t) -> typBetaNormalny t
     | TFunkcja(a,b) ->
         TFunkcja(typBetaNormalny a, typBetaNormalny b)
-    | TLambda(x, k, t) ->
-        TLambda(x, k, typBetaNormalny t)
+    | TLambda(x, x2, k, t) ->
+        TLambda(x, x2, k, typBetaNormalny t)
     | TAplikacja(a, b) ->
         match typBetaNormalny a with
-        | TLambda(x, _, a') ->
-            a'.Podstaw x (typBetaNormalny b)
+        | TLambda(x, x2, _, a') ->
+            a'.Podstaw x2 (typBetaNormalny b)
         | a' -> TAplikacja(a', typBetaNormalny b)
-    | TUniwersalny(x, k, t) ->
-        TUniwersalny(x, k, typBetaNormalny t)
+    | TUniwersalny(x, x2, k, t) ->
+        TUniwersalny(x, x2, k, typBetaNormalny t)
     | TAnotacja(t, _) -> 
         typBetaNormalny t

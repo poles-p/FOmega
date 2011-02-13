@@ -327,7 +327,8 @@ Niech $\sigma$ będzie podstawieniem schematowym. Działanie podstawienia formal
 \sigma(T_1 \; T_2) & = (\sigma T_1) \; (\sigma T_2) \\
 \sigma \bar{X} & = 
 	\begin{cases}
-		T & (\bar{X},T) \in \sigma \\
+		\alpha T & (\bar{X},T) \in \sigma, \alpha \ \textrm{jest przemianowaniem} \\
+		& \textrm{wprowadzającym świeże zmienne związane} \\
 		fail & (\bar{X},fail) \in \sigma \\
 		\bar{X} & \textrm{wpp}
 	\end{cases} \\
@@ -399,14 +400,14 @@ zdefiniowaną następująco:
 \end{definicja}
 
 \begin{definicja}
-\emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieją
-podstawienia schematowe $\theta_1$ i $\theta_2$ takie, że:
+\emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieje
+podstawienie schematowe $\theta$ i~przemianowania zmiennych związanych $\alpha_1$ i~$\alpha_2$ takie, że:
 \[
-\theta_1 T_1 =_\beta S =_\beta \theta_2 T_2
+\theta \alpha_1 T_1 =_\beta S =_\beta \theta \alpha_2 T_2
 \]
 oraz
 \[
-\theta_1 \setminus BTV(T_1) = \sigma = \theta_2 \setminus BTV(T_2)
+\theta \setminus BTV(S) = \sigma
 \]
 \end{definicja}
 
@@ -459,25 +460,22 @@ Wówczas zachodzi
 
 \begin{lemat}
 Niech $(\sigma, S)$ będzie $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$, oraz niech $\rho$ będzie 
-podstawieniem schematowym takim, że \mbox{$FTV(\rho) \cap BTV(T_1) = \emptyset$} oraz \mbox{$FTV(\rho) \cap BTV(T_2) = \emptyset$}.
+podstawieniem schematowym takim, że \mbox{$FTV(\rho) \cap BTV(S) = \emptyset$}.
 Wówczas $(\rho \circ \sigma, \rho S)$ również jest $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$.
 \label{lunif1}
 \end{lemat}
 \begin{proof}
-Wiemy, że istnieją takie $\theta_1$ i~$\theta_2$, że
+Wiemy, że istnieją takie $\theta$, $\alpha_1$ i~$\alpha_2$, że
 \[
-\theta_1 T_1 =_\beta S =_\beta \theta_2 T_2 \quad \textrm{oraz} \quad \theta_1 \setminus BTV(T_1) = \sigma = \theta_2 \setminus BTV(T_2)
+\theta \alpha_1 T_1 =_\beta S =_\beta \theta \alpha_2 T_2 \quad \textrm{oraz} \quad \theta \setminus BTV(S) = \sigma
 \]
 A wtedy zachodzi
 \[
-(\rho \circ \theta_1)T_1 = \rho(\theta_1 T_1) =_\beta \rho S =_\beta \rho(\theta_2 T_2) = (\rho \circ \theta_2)T_2
+(\rho \circ \theta) \alpha_1 T_1 = \rho(\theta \alpha_1 T_1) =_\beta \rho S =_\beta \rho(\theta \alpha_2 T_2) = (\rho \circ \theta_2) \alpha_2 T_2
 \]
 oraz z lematu \ref{lsub1}
 \[
-(\rho \circ \theta_1) \setminus BTV(T_1) = \rho \circ (\theta_1 \setminus BTV(T_1)) = \rho \circ \sigma
-\]
-\[
-(\rho \circ \theta_2) \setminus BTV(T_2) = \rho \circ (\theta_2 \setminus BTV(T_2)) = \rho \circ \sigma
+(\rho \circ \theta) \setminus BTV(S) = \rho \circ (\theta \setminus BTV(S)) = \rho \circ \sigma
 \]
 \end{proof}
 
@@ -491,17 +489,17 @@ Wówczas $(\sigma \circ \rho, S)$ jest $\beta$-unifikatorem konstruktorów $(T_1
 \begin{proof}
 Niech $i \in \left\{1,2\right\}$.\\
 Z tego, że $(\sigma, S)$ jest $\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$ wiemy, że istnieje takie
-$\theta_i$, że
+$\theta$ oraz $\alpha_i$, że
 \[
-\theta_i\rho T_i =_\beta S \quad \textrm{oraz} \quad \theta_i \setminus BTV(\rho T_i) = \sigma
+\theta \alpha_i \rho T_i =_\beta S \quad \textrm{oraz} \quad \theta \setminus BTV(S) = \sigma
 \]
-A~wtedy
+A~wtedy z~tego, że $FTV(\rho) \cap BTV(T_i) = \emptyset$
 \[
-(\theta_i \circ \rho) T_i =_\beta S
+(\theta \circ \rho) \alpha_i T_i = \theta \alpha_i \rho T_i =_\beta S
 \]
-oraz z~lematu \ref{lsub2} i~z~tego że $BTV(\rho) \cap BTV(\theta_i) = \emptyset$ mamy
+oraz z~lematu \ref{lsub2} mamy
 \[
-(\theta_i \circ \rho) \setminus BTV(T_i) = (\theta_i \circ BTV(T_i)) \circ \rho = (\theta_i \circ BTV(\rho T_i)) \circ \rho = \sigma \circ \rho
+(\theta \circ \rho) \setminus BTV(S) = (\theta \circ BTV(S)) \circ \rho = \sigma \circ \rho
 \]
 Co kończy dowód.
 \end{proof}
@@ -527,14 +525,16 @@ $\qquad \textrm{else} \ ([\bar{X} := T], T) $ \\
 \begin{tabular}{l}
 $unify_\beta(\forall X_1::K_1.T_1, \forall X_2::K_2.T_2) = $ \\
 $\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 := X_1\}T_2) \ \textrm{in} $ \\
-$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T) $ \\
+$\qquad \textrm{let} \ X_3 = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K \sigma_K \{X_1 := X_3\}T_1, \sigma_K \{X_2 := X_3\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_3) \circ \sigma_K, \forall X_3::\sigma_T \sigma_K K_1.T) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $unify_\beta(\Lambda X_1::K_1.T_1, \Lambda X_2::K_2.T_2) = $ \\
 $\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
-$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 := X_1\}T_2) \ \textrm{in} $ \\
-$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \Lambda X_1::\sigma_T \sigma_K K_1.T) $ \\
+$\qquad \textrm{let} \ X_3 = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K \{X_1 := X_3\}T_1, \sigma_K \{X_2 := X_3\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_3) \circ \sigma_K, \Lambda X_3::\sigma_T \sigma_K K_1.T) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $unify_\beta(T_1 \rightarrow S_1, T_2 \rightarrow S_2) = $ \\
@@ -579,30 +579,30 @@ Możliwe są następujące przypadki:
 dla tych przypadków teza zachodzi trywialnie.
 \item $T_1 \equiv \forall X_1::K_1.T'_1$ oraz $T_2 \equiv \forall X_2::K_2.T'_2$ \\
 Wtedy z załorzenia indukcyjnego $(\sigma_T, T)$ jest $\beta$-unifikatorem konstruktorów typów
-$\sigma_K T'_1$ oraz $\sigma_K\{X_2:=X_1\}T'_2$, gdzie $\sigma_K$ jest unifikatorem rodzajów $K_1$ i~$K_2$.
-Istnieją więc takie podstawienia schematowe $\theta_1$ i~$\theta_2$, że zachodzą równości
+$\sigma_K \{X_1:=X_3\}T'_1$ oraz $\sigma_K\{X_2:=X_3\}T'_2$, gdzie $\sigma_K$ jest unifikatorem rodzajów $K_1$ i~$K_2$.
+Istnieje więc takie podstawienie schematowe $\theta$ oraz przemianowania $\alpha_1$ i~$\alpha_2$, że zachodzą równości
 \[
-\theta_1 \sigma_K T'_1 =_\beta T =_\beta \theta_2 \sigma_K \{X_2:=X_1\} T'_2
+\theta \alpha_1 \sigma_K \{X_1:=X_3\}T'_1 =_\beta T =_\beta \theta \alpha_2 \sigma_K \{X_2:=X_3\} T'_2
 \]
 \[
-\theta_1 \setminus BTV(\sigma_K T'_1) = \sigma_T = \theta_2 \setminus BTV(\sigma_K \{X_2:=X_1\} T'_2)
+\theta \setminus BTV(T) = \sigma_T
 \]
 A wtedy
 \[
-(\theta_1 \circ \sigma_K)\forall X_1::K_1.T'_1 = \forall X_1::\theta_1\sigma_K K_1. \theta_1\sigma_K T'_1 =_\beta
+(\theta \circ \sigma_K)\alpha_1\{X_1:=X_3\} \forall X_1::K_1.T'_1 = \forall X_3::\theta\sigma_K K_1. \theta\sigma_K\alpha_1 \{X_1 := X_3\} T'_1 =
 \]
 \[
-=_\beta \forall X_1::(\theta_1 \setminus BTV(\sigma_K T'_1))\sigma_K K_1.T = \forall X_1::\sigma_T\sigma_K K_1.T
+= \forall X_3::(\theta \setminus BTV(T))\sigma_K K_1.\theta \alpha_1 \sigma_K \{X_1 := X_3\}T'_1 =_\beta \forall X_3::\sigma_T\sigma_K K_1.T
 \]
 oraz
 \[
-(\theta_1 \circ \sigma_K) \setminus BTV(\forall X_1::K_1.T'_1) = (\theta_1 \setminus (\{X_1\} \cup BTV(\sigma_K T'_1))) \circ \sigma_K =
+(\theta \circ \sigma_K) \setminus BTV(\forall X_3::\sigma_T\sigma_K K_1.T) = (\theta \setminus (\{X_3\} \cup BTV(T))) \circ \sigma_K =
 \]
 \[
-= (\sigma_T \setminus X_1) \circ \sigma_K
+= (\sigma_T \setminus X_3) \circ \sigma_K
 \]
 Analogicznie pokarzemy pozostałe dwie równości dla konstruktora $T_2$. Zatem 
-\mbox{$((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T)$} jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
+\mbox{$((\sigma_T \setminus X_3) \circ \sigma_K, \forall X_3::\sigma_T \sigma_K K_1.T)$} jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
 \item $T_1 \equiv \Lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \Lambda X_2::K_2.T'_2$ \\
 Dla tego przypadku dowód przeprowadzamy analogicznie do przypadku poprzedniego.
 \item $T_1 \equiv T'_1 \rightarrow S_1$ oraz $T_2 \equiv T'_2 \rightarrow S_2$ \\

@@ -29,7 +29,7 @@ module Fresh =
 type Rodzaj =
     /// <summary> zmienna rodzajowa (potrzebna przy rekonstrukcji rodzaju) </summary>
     | KWZmienna  of string
-    /// <summary> rodzaj wszystkich typow (*) </summary>
+    /// <summary> rodzaj wszystkich typow ( * ) </summary>
     | KGwiazdka
     /// <summary> rodzaj funkcji typowej (K => K) </summary>
     | KFunkcja  of Rodzaj * Rodzaj
@@ -116,34 +116,35 @@ type Typ =
     /// <remarks> Jest to to samo co typ, jest to wprowadzone po to by ładnie drukować typy </remarks>
     | TWartosc        of string * Typ
     /// <summary> zmienna typowa kwantyfikowana abstrakcją </summary>
-    | TZmienna         of string
+    /// <remarks> Zmienna ma dwie nazwy: jedną podaną przez użytkownika, drugą unikatową dla samego systemu typów.</remarks>
+    | TZmienna         of string * string
     /// <summary> typ funkcji (T -> T) </summary>
     | TFunkcja         of Typ * Typ
     /// <summary> konstruktor abstrakcji z anotowanym argumentem </summary>
-    | TLambda          of string * Rodzaj * Typ
+    | TLambda          of string * string * Rodzaj * Typ
     /// <summary> konstruktor aplikacji typowe  </summary>
     | TAplikacja       of Typ * Typ
     /// <summary> typ uniwersalny anotowany </summary>
-    | TUniwersalny     of string * Rodzaj * Typ
+    | TUniwersalny     of string * string * Rodzaj * Typ
     /// <summary> anotacja rodzajowa (T :: K) </summary>
     | TAnotacja        of Typ * Rodzaj
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/> kwantyfikowanej schematem
     /// </summary>
-    /// <param name="x"> nazwa zmiennej za którą należy wykonać podstawienie </param>
+    /// <param name="x"> nazwa zmiennej (wprowadzona przez system typów) za którą należy wykonać podstawienie </param>
     /// <param name="typ"> konstruktor typu który należy podstawić za zmienną <paramref name="x"/>. </param>
     /// <returns> Funkcja zwraca nowy konstruktor typu po wykonaniu podstawienia. </returns>
-    member this.WPodstaw x typ =
+    member this.WPodstaw x (typ : Typ) =
         // Tu nie zrobimy sobie krzywdy, przy lambdzie bo rozróżniamy dwie klasy zmiennych typowych:
         // tych kwantyfikowanych schematem, i tych kwantyfikowanych abstrakcją
         match this with
-        | TWZmienna y when x = y  -> typ
-        | TWartosc(y,t)          -> TWartosc(y, t.Podstaw x typ)
+        | TWZmienna y when x = y  -> typ.AlfaKopia
+        | TWartosc(y,t)           -> TWartosc(y, t.Podstaw x typ)
         | TFunkcja(t1,t2)         -> TFunkcja(t1.WPodstaw x typ, t2.WPodstaw x typ)
-        | TLambda(y,k,t)          -> TLambda(y, k, t.WPodstaw x typ) 
+        | TLambda(y,y2,k,t)       -> TLambda(y, y2, k, t.WPodstaw x typ) 
         | TAplikacja(t1,t2)       -> TAplikacja(t1.WPodstaw x typ, t2.WPodstaw x typ)
-        | TUniwersalny(y,k, t)    -> TUniwersalny(y, k, t.WPodstaw x typ)
+        | TUniwersalny(y,y2,k, t) -> TUniwersalny(y, y2, k, t.WPodstaw x typ)
         | TAnotacja(t,k)          -> TAnotacja(t.WPodstaw x typ, k)
         | _ -> this
     /// <summary>
@@ -157,9 +158,9 @@ type Typ =
         match this with
         | TWartosc(y,t)           -> TWartosc(y,t.WPodstawRodzaj x kind)
         | TFunkcja(t1,t2)         -> TFunkcja(t1.WPodstawRodzaj x kind, t2.WPodstawRodzaj x kind)
-        | TLambda(y,k,t)          -> TLambda(y, k.WPodstaw x kind, t.WPodstawRodzaj x kind)
+        | TLambda(y,y2,k,t)       -> TLambda(y, y2, k.WPodstaw x kind, t.WPodstawRodzaj x kind)
         | TAplikacja(t1,t2)       -> TAplikacja(t1.WPodstawRodzaj x kind, t2.WPodstawRodzaj x kind)
-        | TUniwersalny(y,k,t)     -> TUniwersalny(y,k.WPodstaw x kind, t.WPodstawRodzaj x kind)
+        | TUniwersalny(y,y2,k,t)  -> TUniwersalny(y,y2,k.WPodstaw x kind, t.WPodstawRodzaj x kind)
         | TAnotacja(t,k)          -> TAnotacja(t.WPodstawRodzaj x kind, k.WPodstaw x kind)
         | _ -> this
     /// <summary>
@@ -169,19 +170,19 @@ type Typ =
     /// <returns> Funkcja zwraca nowy konstruktor typu po wykonaniu podstawienia. </returns>
     member this.WPodstawKilkaRodzajow sub =
         match this with
-        | TWartosc(y,t)       -> TWartosc(y, t.WPodstawKilkaRodzajow sub)
-        | TFunkcja(t1,t2)     -> TFunkcja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
-        | TLambda(y,k,t)      -> TLambda(y, k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
-        | TAplikacja(t1,t2)   -> TAplikacja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
-        | TUniwersalny(y,k,t) -> TUniwersalny(y,k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
-        | TAnotacja(t,k)      -> TAnotacja(t.WPodstawKilkaRodzajow sub, k.WPodstawKilka sub)
+        | TWartosc(y,t)          -> TWartosc(y, t.WPodstawKilkaRodzajow sub)
+        | TFunkcja(t1,t2)        -> TFunkcja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
+        | TLambda(y,y2,k,t)      -> TLambda(y, y2, k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
+        | TAplikacja(t1,t2)      -> TAplikacja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
+        | TUniwersalny(y,y2,k,t) -> TUniwersalny(y,y2,k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
+        | TAnotacja(t,k)         -> TAnotacja(t.WPodstawKilkaRodzajow sub, k.WPodstawKilka sub)
         | _ -> this
     /// <summary>
-    /// Sprawdza, czy dany konstruktor typu zawiera wolne wystąpienie podanej zmiennej 
+    /// Sprawdza, czy dany konstruktor typu zawiera wolne wystąpienie podanej zmiennej
     /// typowej kwantyfikowanej abstrakcją.
     /// </summary>
     /// <param name="x"> nazwa szukanej zmiennej wolnej </param>
-    /// <returns> 
+    /// <returns>
     /// Funkcja zwraca wartość prawdziwą, jeśli istnieje zmienna wolna o podanej nazwie,
     /// w przeciwnym wypadku zwraca wartość fałszywą.
     /// </returns>
@@ -189,13 +190,13 @@ type Typ =
         match this with
         | TWZmienna _ -> false
         | TWartosc(_, t) -> t.ZawieraZmiennaTypowa x
-        | TZmienna y -> x = y
+        | TZmienna(_,y) -> x = y
         | TFunkcja(t1,t2) -> t1.ZawieraZmiennaTypowa x || t2.ZawieraZmiennaTypowa x
-        | TLambda(y,_,_) when x = y -> false
-        | TLambda(_,_,t) -> t.ZawieraZmiennaTypowa x
+        | TLambda(_,y,_,_) when x = y -> false
+        | TLambda(_,_,_,t) -> t.ZawieraZmiennaTypowa x
         | TAplikacja(t1,t2) -> t1.ZawieraZmiennaTypowa x || t2.ZawieraZmiennaTypowa x
-        | TUniwersalny(y,_,_) when x = y -> false
-        | TUniwersalny(_,_,t) -> t.ZawieraZmiennaTypowa x
+        | TUniwersalny(_,y,_,_) when x = y -> false
+        | TUniwersalny(_,_,_,t) -> t.ZawieraZmiennaTypowa x
         | TAnotacja(t,_) -> t.ZawieraZmiennaTypowa x
     /// <summary>
     /// Sprawdza, czy dany konstruktor typu zawiera wystąpienie podanej zmiennej 
@@ -210,11 +211,11 @@ type Typ =
         match this with
         | TWZmienna y -> x = y
         | TWartosc(_, t) -> t.ZawieraZmiennaTypowaW x
-        | TZmienna y -> false
+        | TZmienna _ -> false
         | TFunkcja(t1,t2) -> t1.ZawieraZmiennaTypowaW x || t2.ZawieraZmiennaTypowaW x
-        | TLambda(_,_,t) -> t.ZawieraZmiennaTypowaW x
+        | TLambda(_,_,_,t) -> t.ZawieraZmiennaTypowaW x
         | TAplikacja(t1,t2) -> t1.ZawieraZmiennaTypowaW x || t2.ZawieraZmiennaTypowaW x
-        | TUniwersalny(_,_,t) -> t.ZawieraZmiennaTypowaW x
+        | TUniwersalny(_,_,_,t) -> t.ZawieraZmiennaTypowaW x
         | TAnotacja(t,_) -> t.ZawieraZmiennaTypowaW x
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -227,22 +228,15 @@ type Typ =
         match this with
         | TWZmienna y -> TWZmienna y
         | TWartosc(y, t) -> TWartosc(y, t.Podstaw x typ)
-        | TZmienna y when x = y -> typ
-        | TZmienna y -> TZmienna y
+        | TZmienna(y,y2) when x = y2 -> typ.AlfaKopia
+        | TZmienna _ -> this
         | TFunkcja(t1,t2) -> TFunkcja(t1.Podstaw x typ, t2.Podstaw x typ)
-        | TLambda(y,k,t) ->
-            if x = y then TLambda(y,k,t)
-            elif typ.ZawieraZmiennaTypowa y then
-                let z = Fresh.swierzaNazwa();
-                TLambda(z, k, (t.Podstaw y (TZmienna z)).Podstaw x typ)
-            else TLambda(y, k, t.Podstaw x typ)
+        | TLambda(y,y2,k,t) ->
+            // Tu nie zrobimy sobie krzywdy, bo zmienne związane są unikatowe
+            TLambda(y,y2, k, t.Podstaw x typ)
         | TAplikacja(t1,t2) -> TAplikacja(t1.Podstaw x typ,t2.Podstaw x typ)
-        | TUniwersalny(y,k,t) ->
-            if x = y then TUniwersalny(y,k,t)
-            elif typ.ZawieraZmiennaTypowa y then
-                let z = Fresh.swierzaNazwa();
-                TUniwersalny(z, k, (t.Podstaw y (TZmienna z)).Podstaw x typ)
-            else TUniwersalny(y, k, t.Podstaw x typ)
+        | TUniwersalny(y,y2,k,t) ->
+            TUniwersalny(y,y2, k, t.Podstaw x typ)
         | TAnotacja(t,k) -> TAnotacja(t.Podstaw x typ, k)
 
     /// <summary>
@@ -258,27 +252,19 @@ type Typ =
         match this with
         | TWZmienna y -> TWZmienna y
         | TWartosc(y,t) -> TWartosc(y, t.PodstawKopie x kv typ)
-        | TZmienna y when x = y -> 
+        | TZmienna(y,y2) when x = y2 -> 
             let t =
                 kv |>
                 List.map (fun x -> (x, KWZmienna(Fresh.swierzaNazwa()))) |>
                 typ.WPodstawKilkaRodzajow
             in TWartosc(y, t)
-        | TZmienna y -> TZmienna y
+        | TZmienna _ -> this
         | TFunkcja(t1,t2) -> TFunkcja(t1.PodstawKopie x kv typ, t2.PodstawKopie x kv typ)
-        | TLambda(y,k,t) ->
-            if x = y then TLambda(y,k,t)
-            elif typ.ZawieraZmiennaTypowa y then
-                let z = Fresh.swierzaNazwa();
-                TLambda(z, k, (t.Podstaw y (TZmienna z)).PodstawKopie x kv typ)
-            else TLambda(y, k, t.PodstawKopie x kv typ)
+        | TLambda(y,y2,k,t) ->
+            TLambda(y, y2, k, t.PodstawKopie x kv typ)
         | TAplikacja(t1,t2) -> TAplikacja(t1.PodstawKopie x kv typ,t2.PodstawKopie x kv typ)
-        | TUniwersalny(y,k,t) ->
-            if x = y then TUniwersalny(y,k,t)
-            elif typ.ZawieraZmiennaTypowa y then
-                let z = Fresh.swierzaNazwa();
-                TUniwersalny(z, k, (t.Podstaw y (TZmienna z)).PodstawKopie x kv typ)
-            else TUniwersalny(y, k, t.PodstawKopie x kv typ)
+        | TUniwersalny(y,y2,k,t) ->
+            TUniwersalny(y,y2, k, t.PodstawKopie x kv typ)
         | TAnotacja(t,k) -> TAnotacja(t.PodstawKopie x kv typ, k)
 
     /// <summary>
@@ -293,9 +279,9 @@ type Typ =
         | TWartosc(_, t) -> t.WolneKWZmienne
         | TZmienna _ -> Set.empty
         | TFunkcja(a, b) -> Set.union a.WolneKWZmienne b.WolneKWZmienne
-        | TLambda(x, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
+        | TLambda(_, _, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
         | TAplikacja(a, b) -> Set.union a.WolneKWZmienne b.WolneKWZmienne
-        | TUniwersalny(x, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
+        | TUniwersalny(_, _, k, t) -> Set.union k.WolneKWZmienne t.WolneKWZmienne
         | TAnotacja(t, k) -> Set.union t.WolneKWZmienne k.WolneKWZmienne
 
     /// <summary>
@@ -310,10 +296,31 @@ type Typ =
         | TWartosc(_, t) -> t.WolneTWZmienne
         | TZmienna _ -> Set.empty
         | TFunkcja(a, b) -> Set.union a.WolneTWZmienne b.WolneTWZmienne
-        | TLambda(x, k, t) -> t.WolneTWZmienne
+        | TLambda(_, _, k, t) -> t.WolneTWZmienne
         | TAplikacja(a, b) -> Set.union a.WolneTWZmienne b.WolneTWZmienne
-        | TUniwersalny(x, k, t) -> t.WolneTWZmienne
+        | TUniwersalny(_, _, k, t) -> t.WolneTWZmienne
         | TAnotacja(t, k) -> t.WolneTWZmienne
+
+    /// <summary>
+    /// Typ po alfa-konwersji wprowadzającej świeże zmienne typowe
+    /// </summary>
+    member this.AlfaKopia =
+        match this with
+        | TWZmienna _ -> this
+        | TWartosc(x, t) -> TWartosc(x, t.AlfaKopia)
+        | TZmienna _ -> this
+        | TFunkcja(a, b) -> TFunkcja(a.AlfaKopia, b.AlfaKopia)
+        | TLambda(x, x2, k, t) ->
+            let x2' = Fresh.swierzaNazwa();
+            let t' = t.Podstaw x2 (TZmienna(x, x2'));
+            TLambda(x, x2', k, t'.AlfaKopia)
+        | TAplikacja(a, b) -> TAplikacja(a.AlfaKopia, b.AlfaKopia)
+        | TUniwersalny(x, x2, k, t) ->
+            let x2' = Fresh.swierzaNazwa();
+            let t' = t.Podstaw x2 (TZmienna(x, x2'));
+            TUniwersalny(x, x2', k, t'.AlfaKopia)
+        | TAnotacja(t, k) -> TAnotacja(t.AlfaKopia, k)
+    
 
     /// <summary>
     /// Zamienia typ na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -324,13 +331,13 @@ type Typ =
         match this with
         | TWZmienna x -> x
         | TWartosc(x, _) -> x
-        | TZmienna x -> x
+        | TZmienna(x, x2) -> x
         | TFunkcja(a,b) ->
             let res = a.ToString 1 + " -> " + b.ToString 0;
             if prior >= 1 then
                 "(" + res + ")"
             else res
-        | TLambda(x,k,t) ->
+        | TLambda(x,_,k,t) ->
             let res = "\\" + x + "::" + k.ToString() + "." + t.ToString 0;
             if prior >= 1 then
                 "(" + res + ")"
@@ -340,7 +347,7 @@ type Typ =
             if prior >= 2 then
                 "(" + res + ")"
             else res
-        | TUniwersalny(x,k,t) -> 
+        | TUniwersalny(x,_,k,t) -> 
             let res = "All " + x + "::" + k.ToString() + "." + t.ToString 0;
             if prior >= 1 then
                 "(" + res + ")"
@@ -368,7 +375,7 @@ type Wyrazenie =
     /// <summary> aplikacja </summary>
     | EAplikacja   of Wyrazenie * Wyrazenie
     /// <summary> abstrakcja typowa z anotowanym argumentem </summary>
-    | ETLambda     of string * Rodzaj * Wyrazenie
+    | ETLambda     of string * string * Rodzaj * Wyrazenie
     /// <summary> aplikacja typowa </summary>
     | ETAplikacja  of Wyrazenie * Typ
     /// <summary> anotacja typowa </summary>
@@ -376,7 +383,7 @@ type Wyrazenie =
     /// <summary> definicja lokalna </summary>
     | ELet         of string * Wyrazenie * Wyrazenie
     /// <summary> typ lokalny </summary>
-    | ETLet        of string * Typ * Wyrazenie
+    | ETLet        of string * string * Typ * Wyrazenie
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/> kwantyfikowanej abstrakcją
@@ -389,11 +396,11 @@ type Wyrazenie =
         | EZmienna y -> EZmienna y
         | ELambda(y,t,e) -> ELambda(y, t.Podstaw x typ, e.PodstawTyp x typ)
         | EAplikacja(e1,e2) -> EAplikacja(e1.PodstawTyp x typ, e2.PodstawTyp x typ)
-        | ETLambda(y,k,e) -> ETLambda(y, k, e.PodstawTyp x typ)
+        | ETLambda(y,y2,k,e) -> ETLambda(y, y2, k, e.PodstawTyp x typ)
         | ETAplikacja(e,t) -> ETAplikacja(e.PodstawTyp x typ, t.Podstaw x typ)
         | EAnotacja(e,t) -> EAnotacja(e.PodstawTyp x typ, t.Podstaw x typ)
         | ELet(y,e1,e2) -> ELet(y, e1.PodstawTyp x typ, e2.PodstawTyp x typ)
-        | ETLet(y,t,e) -> ETLet(y, t.Podstaw x typ, e.PodstawTyp x typ)
+        | ETLet(y,y2,t,e) -> ETLet(y, y2, t.Podstaw x typ, e.PodstawTyp x typ)
 
     /// <summary>
     /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -409,11 +416,11 @@ type Wyrazenie =
         | EZmienna y -> EZmienna y
         | ELambda(y,t,e) -> ELambda(y, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
         | EAplikacja(e1,e2) -> EAplikacja(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ)
-        | ETLambda(y,k,e) -> ETLambda(y, k, e.PodstawKopieTypu x kv typ)
+        | ETLambda(y,y2,k,e) -> ETLambda(y, y2, k, e.PodstawKopieTypu x kv typ)
         | ETAplikacja(e,t) -> ETAplikacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ)
         | EAnotacja(e,t) -> EAnotacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ)
         | ELet(y,e1,e2) -> ELet(y, e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ)
-        | ETLet(y,t,e) -> ETLet(y, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
+        | ETLet(y,y2,t,e) -> ETLet(y, y2, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
 
     /// <summary>
     /// Sprawdza, czy dane wyrażenie zawiera wolne wystąpienie podanej zmiennej.
@@ -429,12 +436,12 @@ type Wyrazenie =
         | ELambda(y,_,_) when x = y -> false
         | ELambda(_,_,e) -> e.ZawieraZmienna x
         | EAplikacja(e1,e2) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
-        | ETLambda(_,_,e) -> e.ZawieraZmienna x
+        | ETLambda(_,_,_,e) -> e.ZawieraZmienna x
         | ETAplikacja(e,_) -> e.ZawieraZmienna x
         | EAnotacja(e,_) -> e.ZawieraZmienna x
         | ELet(y,e1,e2) when x = y -> e1.ZawieraZmienna x
         | ELet(y,e1,e2) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
-        | ETLet(_,_,e) -> e.ZawieraZmienna x
+        | ETLet(_,_,_,e) -> e.ZawieraZmienna x
     /// <summary>
     /// Wykonuje podstawienie wyrażenie <paramref name="expr"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/>.
@@ -453,7 +460,7 @@ type Wyrazenie =
                 ELambda(z, t, (e.Podstaw y (EZmienna z)).Podstaw x expr)
             else ELambda(y, t, e.Podstaw x expr)
         | EAplikacja(e1,e2) -> EAplikacja(e1.Podstaw x expr, e2.Podstaw x expr)
-        | ETLambda(y,k,e) -> ETLambda(y,k,e.Podstaw x expr)
+        | ETLambda(y,y2,k,e) -> ETLambda(y,y2,k,e.Podstaw x expr)
         | ETAplikacja(e,t) -> ETAplikacja(e.Podstaw x expr, t)
         | EAnotacja(e,t) -> EAnotacja(e.Podstaw x expr, t)
         | ELet(y,e1,e2) ->
@@ -462,8 +469,8 @@ type Wyrazenie =
                 let z = Fresh.swierzaNazwa();
                 ELet(z, e1.Podstaw x expr, (e2.Podstaw y (EZmienna z)).Podstaw x expr)
             else ELet(y, e1.Podstaw x expr, e2.Podstaw x expr)
-        | ETLet(y,t,e) ->
-            ETLet(y,t,e.Podstaw x expr)
+        | ETLet(y,y2,t,e) ->
+            ETLet(y,y2,t,e.Podstaw x expr)
 
     /// <summary>
     /// Zamienia term na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -483,7 +490,7 @@ type Wyrazenie =
             if prior >= 2 then
                 "(" + res + ")"
             else res
-        | ETLambda(x,k,e) ->
+        | ETLambda(x,_,k,e) ->
             let res = "\\\\" + x + "::" + k.ToString() + "." + e.ToString 0;
             if prior >= 1 then
                 "(" + res + ")"
@@ -503,7 +510,7 @@ type Wyrazenie =
             if prior >= 1 then
                 "(" + res + ")"
             else res
-        | ETLet(x,t,e) ->
+        | ETLet(x,_,t,e) ->
             let res = "tlet " + x + " = " + t.ToString() + " in " + e.ToString()
             if prior >= 1 then
                 "(" + res + ")"

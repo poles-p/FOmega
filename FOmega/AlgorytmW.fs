@@ -16,8 +16,8 @@ let rec rekRodzaj (gamma : KontekstTypowania) typ =
         Some(Podstawienie [], KGwiazdka)
     | TWartosc(_, t) ->
         rekRodzaj gamma t
-    | TZmienna x ->
-        match gamma.SchematRodzaju x with
+    | TZmienna(x, x') ->
+        match gamma.SchematRodzaju x' with
         | None ->
             System.Console.WriteLine("Undefined type variable {0}.", x);
             None
@@ -32,15 +32,15 @@ let rec rekRodzaj (gamma : KontekstTypowania) typ =
             let! (s4, _) = unifikuj(s3.Aplikuj k2, KGwiazdka);
             return (s4 * s3 * s2 * s1, KGwiazdka)
         }
-    | TUniwersalny(x, k, t) ->
+    | TUniwersalny(x, x2, k, t) ->
         opt{
-            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x, [], k)) t;
+            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x2, [], k)) t;
             let! (s2, _) = unifikuj(kt, KGwiazdka)
             return (s2 * s1, KGwiazdka)
         }
-    | TLambda(x, k, t) ->
+    | TLambda(x, x2, k, t) ->
         opt{
-            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x, [], k)) t;
+            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x2, [], k)) t;
             return (s1, KFunkcja(s1.Aplikuj k, kt))
         }
     | TAplikacja(t1, t2) ->
@@ -93,10 +93,10 @@ let rec rekTyp (gamma : KontekstTypowania) term =
                 return (s3*s2*s1, xv)
             | _ -> return! None
         }
-    | ETLambda(x, k, e) ->
+    | ETLambda(x, x2, k, e) ->
         opt{
-            let! (s1, t) = rekTyp (gamma.Rozszerz(SchematRodzaju(x, [], k))) e;
-            return (s1.UsunZmiennaTypowa x, TUniwersalny(x, s1.Aplikuj k, t))
+            let! (s1, t) = rekTyp (gamma.Rozszerz(SchematRodzaju(x2, [], k))) e;
+            return (s1.UsunZmiennaTypowa x2, TUniwersalny(x, x2, s1.Aplikuj k, t))
         }
     | ETAplikacja(e, t) ->
         opt{
@@ -104,11 +104,11 @@ let rec rekTyp (gamma : KontekstTypowania) term =
             let! (s2, k) = rekRodzaj (s1.Aplikuj gamma) (s1.Aplikuj t);
             let freshX = TWZmienna(Fresh.swierzaNazwa());
             let y = Fresh.swierzaNazwa()
-            let! (s3, res) = betaUnifikuj(s2.Aplikuj te, TUniwersalny(y, k, freshX));
+            let! (s3, res) = betaUnifikuj(s2.Aplikuj te, TUniwersalny(y, y, k, freshX));
             match res with
-            | TUniwersalny(uy, uk, ut) ->
+            | TUniwersalny(uy, uy', uk, ut) ->
                 let s321 = s3 * s2 * s1;
-                return (s321, ut.Podstaw uy (s321.Aplikuj t))
+                return (s321, ut.Podstaw uy' (s321.Aplikuj t))
             | _ -> return! None
         }
     | EAnotacja(e, t) ->
@@ -128,17 +128,10 @@ let rec rekTyp (gamma : KontekstTypowania) term =
             let! (s2, t2) = rekTyp gamma2 (s1.Aplikuj e2);
             return (s2 * s1, t2)
         }
-    | ETLet(x, t, e) ->
+    | ETLet(x, x2, t, e) ->
         opt{
-            // TODO: wykomentowałem stare złe rozwiązanie, mam zamiar je przerobić na dobre tak, by drukować ładne komunikaty
-            (* let! (s1, k) = rekRodzaj gamma t;
-            let kv = Set.toList (k.WolneKWZmienne - gamma.WolneKWZmienne);
-            let gamma2 = (s1.Aplikuj gamma).Rozszerz(SchematRodzaju(x, kv, k));
-            let! (s2, tk) = rekTyp gamma2 (s1.Aplikuj e);
-            let s21 = s2 * s1;
-            return (s21, typBetaNormalny (tk.Podstaw x (s21.Aplikuj t))) // TODO: może nie trzeba robić beta redukcji typu. *)
             let! (s1, k) = rekRodzaj gamma t;
             let kv = Set.toList (k.WolneKWZmienne - gamma.WolneKWZmienne);
-            let! (s2, tk) = rekTyp (s1.Aplikuj gamma) ((s1.Aplikuj e).PodstawKopieTypu x kv (s1.Aplikuj t));
+            let! (s2, tk) = rekTyp (s1.Aplikuj gamma) ((s1.Aplikuj e).PodstawKopieTypu x2 kv (s1.Aplikuj t));
             return (s2 * s1, tk)
         }
