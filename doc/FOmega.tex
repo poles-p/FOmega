@@ -762,19 +762,19 @@ Teraz sam kontekst typowania ma postać:
 
 \subsection{$\beta$-unifikacja}
 
-Podczas rekonstukcji typów pojawiają się równania więzów które należy rozwiązać. Samo rozwiązanie
+Podczas rekonstukcji typów pojawiają się równania więzów, które należy rozwiązać. Samo rozwiązanie
 sprowadza się do unifikacji pewnych termów, ale tutaj, ze względu na możliwość występowania funkcji
 typowych, termy równoważne nie muszą być równe, więc sama unifikacja powinna sprowadzać termy do
 $\beta$-równych sobie.
 
 Taka unifikacja niesie ze sobą wiele problemów. Po pierwsze, będziemy chcieli używać podstawienia,
 będącego unifikatorem, na innych termach. To zaś grozi uzewnętrznieniem zmiennych związanych. Drugi
-problem to taki, że samo podstawienie nie musi zrównywać termów, które da się zrównać, ale różnią się
+problem jest taki, że samo podstawienie nie musi zrównywać termów, które da się zrównać, ale różnią się
 nazwami zmiennych związanych.
 
-Z pierwszym problemem poradzimy sobie, traktując podstawienia jako funkcję częściowe, tzn. samo podstawienie
-oprócz przyporzątkowań postaci $[\bar{X} := T]$, może również zawierać podstawienia postaci $[\bar{X} := fail]$.
-Oraz dodając jeszcze operację anulowania podstawienia:
+Z pierwszym problemem poradzimy sobie, traktując podstawienia jako funkcję częściową, tzn. samo podstawienie
+oprócz przyporządkowań postaci $[\bar{X} := T]$, może również zawierać podstawienia postaci $[\bar{X} := fail]$.
+Dodając operację anulowania podstawienia dostajemy:
 \[
 [\bar{X} := T] \setminus X = 
 \begin{cases}
@@ -812,29 +812,27 @@ który jest ogólniejszy od wszystkich innych $\beta$-unifikatorów tychże kons
 \end{definicja}
 
 \begin{lemat}
-Niech $A$ i $B$ będą podzbiorami zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie podstawieniem.
+Niech $A$ i $B$ będą podzbiorami zbioru zmiennych typowych kwantyfikowanych abstrakcją, niech $\theta$ będzie podstawieniem.
 Wówczas zachodzi
 \[
 (\theta \setminus A) \setminus B = \theta \setminus (A \cup B).
 \]
 \label{lsub0}
 \end{lemat}
-\begin{proof}
-\end{proof}
+
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ i~$\rho$ będą podstawieniami, oraz
+Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwantyfikowanych abstrakcją, niech $\theta$ i~$\rho$ będą podstawieniami, oraz
 niech zachodzi $Var(\rho) \cap A = \emptyset$. Wówczas zachodzi 
 \[
 (\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A)
 \].
 \label{lsub1}
 \end{lemat}
-\begin{proof}
-\end{proof}
+
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem,
+Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwantyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem,
 niech $\rho$ będzie podstawieniem takim, że $Var(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
 Wówczas zachodzi
 \[
@@ -842,8 +840,7 @@ Wówczas zachodzi
 \]
 \label{lsub2}
 \end{lemat}
-\begin{proof}
-\end{proof}
+
 
 \begin{lemat}
 Niech $(\sigma, S)$ będzie $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$, oraz niech $\rho$ będzie 
@@ -891,7 +888,7 @@ oraz z~lematu \ref{lsub2} i~z~tego że $BTV(\rho) \cap BTV(\theta_i) = \emptyset
 \[
 (\theta_i \circ \rho) \setminus BTV(T_i) = (\theta_i \circ BTV(T_i)) \circ \rho = (\theta_i \circ BTV(\rho T_i)) \circ \rho = \sigma \circ \rho
 \]
-Co kończy dowód.
+co kończy dowód.
 \end{proof}
 
 \subsubsection{Algorytm $\beta$-unifikacji}
@@ -951,7 +948,7 @@ $\qquad\qquad (\sigma \circ \theta, \sigma V \; T) $ \\
 Algorytm $unify_\beta$ dla konstruktorów typów, dla których daje się określić rodzaj, zatrzymuje się.
 \end{fakt}
 \begin{proof}
-Trywialne. Wynika z~tego, że algorytm jest sterowany składnią, oraz z~silnej normalizowalności kostruktorów typów.
+Trywialne. Wynika z~tego, że algorytm jest sterowany składnią, oraz z~silnej normalizowalności konstruktorów typów.
 \end{proof}
 \begin{twierdzenie}
 Niech $T_1$ oraz $T_2$ będą konstruktorami typów, które daje się orodzajować. Wówczas jeśli
@@ -966,7 +963,7 @@ Możliwe są następujące przypadki:
 \item $T_1 =_\beta T_2$ lub $T_1 \equiv \bar{X}$ lub $T_2 \equiv \bar{X}$ \\
 dla tych przypadków teza zachodzi trywialnie.
 \item $T_1 \equiv \forall X_1::K_1.T'_1$ oraz $T_2 \equiv \forall X_2::K_2.T'_2$ \\
-Wtedy z załorzenia indukcyjnego $(\sigma_T, T)$ jest $\beta$-unifikatorem konstruktorów typów
+Wtedy z założenia indukcyjnego $(\sigma_T, T)$ jest $\beta$-unifikatorem konstruktorów typów
 $\sigma_K T'_1$ oraz $\sigma_K\{X_2:=X_1\}T'_2$, gdzie $\sigma_K$ jest unifikatorem rodzajów $K_1$ i~$K_2$.
 Istnieją więc takie podstawienia $\theta_1$ i~$\theta_2$, że zachodzą równości
 \[
@@ -989,14 +986,14 @@ oraz
 \[
 = (\sigma_T \setminus X_1) \circ \sigma_K
 \]
-Analogicznie pokarzemy pozostałe dwie równości dla konstruktora $T_2$. Zatem 
+Analogicznie pokażemy pozostałe dwie równości dla konstruktora $T_2$. Zatem 
 $((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T)$ jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
 \item $T_1 \equiv \lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \lambda X_2::K_2.T'_2$ \\
 Dla tego przypadku dowód przeprowadzamy analogicznie do przypadku poprzedniego.
 \item $T_1 \equiv T'_1 \rightarrow S_1$ oraz $T_2 \equiv T'_2 \rightarrow S_2$ \\
-Teza wynika wprost z załorzenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
+Teza wynika wprost z założenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
 \item $T_1 \longrightarrow_\beta S_1$ lub $T_2 \longrightarrow_\beta S_2$ \\
-Wynika z~załorzenia indukcyjnego i~z~faktu, że $\beta$-redukcja zachowuje $\beta$-równość.
+Wynika z~założenia indukcyjnego i~z~faktu, że $\beta$-redukcja zachowuje $\beta$-równość.
 \item $T_1 \equiv V_1\;S_1$ oraz $T_2 \equiv V_2\;S_2$ \\
 Dowód przeprowadzamy analogicznie do przypadku z typem funkcji.
 \end{itemize}
@@ -1006,17 +1003,12 @@ Dowód przeprowadzamy analogicznie do przypadku z typem funkcji.
 Algorytm $unify_\beta$ działający na konstruktorach typów nie zawierających zmiennych schematowych
 zwraca pusty unifikator jeśli konstruktory są $\beta$ równe, w~przeciwnym przypadku zawodzi (zawraca $fail$).
 \end{fakt}
-\begin{proof}
-\end{proof}
 
 \begin{fakt}
 Jeżeli z~algorytmu usuniemy pierwszy przypadek sprawdzający $\beta$-równość konstruktorów, otrzymamy algorytm
 równoważny.
 \end{fakt}
-\begin{proof}
-\end{proof}
 
-Tu powinno pojawić się jeszcze kilka dowodów własności.
 
 \subsection{Rekonstrukcja typów}
 
@@ -1113,7 +1105,6 @@ $\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma, X::\Omega \wide
 $\qquad\qquad (\sigma_2 \circ \sigma_1, T_t) $ \\
 \end{tabular} \\
 
-Tu można wspomnieć o jego własnościach.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
