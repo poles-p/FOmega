@@ -322,13 +322,23 @@ Do tego dochodzą reguły dla nowych w języku abstrakcji typowych i aplikacji t
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
-Ważne!!! Zaoszczędza dużo pisania i pozwala w zasanie na przepisanie regułek z innych systemów ;) \\
-Typowanie:
+
+W rozdziale tym chcielibyśmy poruszyć, jak w systemie $F_\omega$ zdefiniować najprostrze
+konstrukcje, takie jak wyrażenia arytmetyczne i logiczne, warianty, sekwencje wyrażeń, 
+typy egzystencjalne, rekordy i inne. Pokażemy również, jak przebiega typowanie, ewaluacja i 
+gdzieniegdzie dodamy reguły tworzenia rodzaju.
+
+Chcielibysmy podkreślić, że następująca reguła typowania:
+
  	\[\mathtt{ \frac{\Gamma \vdash t:T \;\;\; S\equiv T \;\;\; \Gamma \vdash S::\ast}{\Gamma \vdash t:S}
 		}
 	\]
+bardzo ułatwia definiowanie reguł typowania w $F_\omega$. W większości przypadków są one takie same lub
+lekko zmodyfikowane, dlatego nie powinny nastręczać trudności.
 
 \subsection{wyrażenia arytmetyczne i logiczne}
+
+Wyreżania arytmetyczne i logiczne to część, bez której żaden język się nie obędzie. Oczywiście można je sobie zakodować w systemie $F_\omega$, ale normą są wbudowane w język wyrażenia. Termy, typy i wartości wyrażeń zdefiniujemy następująco: \\
 
 \begin{tabular}{| l c r |}
   \hline
@@ -356,24 +366,32 @@ Typowanie:
   \hline
 \end{tabular} \\
 
-Tworzenie rodzaju:
+Na pewno musimy dodać reguły tworzenia rodzaju dla \texttt{Nat} i \texttt{Bool}, którym nadamy rodzaj~$\mathtt{\ast}$:
  	\[\mathtt{ \frac{}{\Gamma \vdash Bool::\ast} \qquad \frac{}{\Gamma \vdash Nat::\ast}
 		}
 	\]
-Typowanie:
- 	\[\mathtt{ \frac{}{\Gamma \vdash true:Bool} \qquad \frac{}{\Gamma \vdash false:Bool} \quad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash iszero\;t:Bool}
+
+Typowanie wygląda dokładnie tak samo jak w rachunku lambda z typami prostymi. Możemy sobie pozwolić na takie reguły dzięki regule XXX.
+Przykładowo, nie tylko termy typu \texttt{Nat} mogą się dobrze otypować, gdy zaaplikujemy je do \texttt{succ}. Dla $\mathtt{t:(\lambda X.X)Nat}$
+otrzymamy:
+
+ 	\[\mathtt{ \frac{\frac{\Gamma \vdash t:(\lambda X.X)Nat\hspace{2em}\Gamma \vdash (\lambda X.X)Nat \equiv Nat \hspace{2em}\Gamma \vdash (\lambda X.X)Nat::\ast}{\Gamma \vdash t:Nat}}{\Gamma \vdash succ\;t:Nat} 
 		}
 	\]
- 	\[\mathtt{\frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T \;\;\; \Gamma \vdash T::\ast}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T} 
+Nie musimy również pisać reguł typu:~\[\mathtt{\frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T\;\;\; \Gamma \vdash T::\ast}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T} 
+		}
+	\]
+ponieważ posiadanie typu przez term $\mathtt{t_2}$ gwarantuje nam, że ten typ będzie rodzaju $\mathtt{\ast}$.
+Stąd, reguły typowania wyrażeń arytmetycznych i logicznych wyglądają następująco w $F_\omega$:~\[\mathtt{ \frac{}{\Gamma \vdash true:Bool} \qquad \frac{}{\Gamma \vdash false:Bool} \quad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash iszero\;t:Bool}
+		}
+	\]
+ 	\[\mathtt{\frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T} 
 		}
 	\]
  	\[\mathtt{ \frac{}{\Gamma \vdash zero:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash succ\;t:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash pred\;t:Nat} 
 		}
 	\]
-Ewaluacja:
- 	\[\mathtt{ ał ał ał
-		}
-	\]
+Zdefiniowanie reguł ewaluacji pozostawiamy Czytelnikowi.
 
 \subsection{unit i sekwencje}
 
