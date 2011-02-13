@@ -707,7 +707,7 @@ Ewaluacja:
 \subsection{Kilka słów o składni.}
 
 
-Rozważmy język o składni z 2 rozdziału rozszerzony o następujące konstrukcje:
+Rozważmy język o składni z drugiego rozdziału rozszerzony o następujące konstrukcje: \\
 
 \begin{tabular}{| l c r |}
   \hline
@@ -812,7 +812,7 @@ który jest ogólniejszy od wszystkich innych $\beta$-unifikatorów tychże kons
 \end{definicja}
 
 \begin{lemat}
-Niech $A$ i $B$ będą podzbiorami zbioru zmiennych typowych kwantyfikowanych abstrakcją, niech $\theta$ będzie podstawieniem.
+Niech $A$ i $B$ będą podzbiorami zbioru zmiennych konstruktorowych, niech $\theta$ będzie podstawieniem.
 Wówczas zachodzi
 \[
 (\theta \setminus A) \setminus B = \theta \setminus (A \cup B).
@@ -822,21 +822,21 @@ Wówczas zachodzi
 
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwantyfikowanych abstrakcją, niech $\theta$ i~$\rho$ będą podstawieniami, oraz
+Niech $A$ będzie podzbiorem zbioru zmiennych konstruktorowych, niech $\theta$ i~$\rho$ będą podstawieniami, oraz
 niech zachodzi $Var(\rho) \cap A = \emptyset$. Wówczas zachodzi 
 \[
-(\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A)
-\].
+(\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A).
+\]
 \label{lsub1}
 \end{lemat}
 
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwantyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem,
+Niech $A$ będzie podzbiorem zbioru zmiennych konstruktorowych, niech $\theta$ będzie dowolnym podstawieniem,
 niech $\rho$ będzie podstawieniem takim, że $Var(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
 Wówczas zachodzi
 \[
-(\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho
+(\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho.
 \]
 \label{lsub2}
 \end{lemat}
