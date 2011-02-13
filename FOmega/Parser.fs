@@ -26,7 +26,7 @@ let private oper str f =
 let private slowoKluczowe s =
     match s with
     | "All" | "Bool" | "Nat"
-    | "case" | "else" | "false" | "if" | "in" | "left" | "let" 
+    | "case" | "else" | "false" | "fix" | "if" | "in" | "left" | "let" 
     | "of" | "right" | "then" | "tlet" | "true" -> true
     | _ -> false
 
@@ -238,6 +238,21 @@ let private atom =
             do! kw "=>" |> skip;
             let! e3 = wyrazenie.Parsor;
             return ECase(e1,e2,e3,pos)
+        }) <|>
+    (withPos (kw "fix") <!> fun (_,pos) ->
+        parsor{
+            let! var = ident false;
+            let! hasType = tryParse (kw ":");
+            match hasType with
+            | None -> 
+                do! skipChar '.' >>. ws;
+                let! rest = wyrazenie.Parsor;
+                return EFix(var,rest,pos)
+            | Some _ ->
+                let! typ = typ.Parsor;
+                do! skipChar '.' >>. ws;
+                let! rest = wyrazenie.Parsor;
+                return EFix(var,EAnotacja(rest, typ, pos),pos)     
         }) <|>
     (withPos(ident false) <!> fun x -> parsor{ return EZmienna x }) <|>
     (withPos(localStateV () pnumber .>> ws) <!> fun n -> parsor.Return( ENat n ))

@@ -73,3 +73,5 @@ let rec oblicz t =
         | ELewy(e, _) -> oblicz(EAplikacja(e2, e, pos))
         | EPrawy(e, _) -> oblicz(EAplikacja(e3, e, pos))
         | t -> FOmegaRuntimeException(t.Polozenie.ToString(), t.ToString() + " is not a copair.") |> raise
+    | EFix(x,e,pos) ->
+        e.Podstaw x t |> oblicz

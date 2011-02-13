@@ -240,3 +240,10 @@ let rec rekTyp (gamma : KontekstTypowania) term =
                 | _ -> return! None
             | _ -> return! None
         }
+    | EFix(x, e, pos) ->
+        opt{
+            let freshX = TWZmienna(Fresh.swierzaNazwa());
+            let! (s1, te) = rekTyp (gamma.Rozszerz (SchematTypu(x, [], [], freshX))) e;
+            let! (s2, res) = betaUnifikuj(s1.Aplikuj(pos, freshX), te) pos;
+            return (s2 * s1, res);
+        }

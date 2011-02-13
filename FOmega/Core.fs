@@ -450,6 +450,8 @@ type Wyrazenie =
     | EPrawy of Wyrazenie * Parsor.Core.IPosition
     /// <summary> destruktor kopary (wybór wariantu) </summary>
     | ECase of Wyrazenie * Wyrazenie * Wyrazenie * Parsor.Core.IPosition
+    /// <summary> punkt stały </summary>
+    | EFix of string * Wyrazenie * Parsor.Core.IPosition
 
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -480,6 +482,7 @@ type Wyrazenie =
         | ELewy(e,pos) -> ELewy(e.PodstawTyp x typ, pos)
         | EPrawy(e,pos) -> EPrawy(e.PodstawTyp x typ, pos)
         | ECase(e1, e2, e3, pos) -> ECase(e1.PodstawTyp x typ, e2.PodstawTyp x typ, e3.PodstawTyp x typ, pos)
+        | EFix(y, e, pos) -> EFix(y, e.PodstawTyp x typ, pos)
 
     /// <summary>
     /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -515,6 +518,7 @@ type Wyrazenie =
         | EPrawy(e,pos) -> EPrawy(e.PodstawKopieTypu x kv typ, pos)
         | ECase(e1,e2,e3,pos) -> 
             ECase(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, e3.PodstawKopieTypu x kv typ, pos)
+        | EFix(y, e, pos) -> EFix(y, e.PodstawKopieTypu x kv typ, pos)
 
     /// <summary>
     /// Sprawdza, czy dane wyrażenie zawiera wolne wystąpienie podanej zmiennej.
@@ -546,6 +550,8 @@ type Wyrazenie =
         | ELewy(e,_) -> e.ZawieraZmienna x
         | EPrawy(e,_) -> e.ZawieraZmienna x
         | ECase(e1,e2,e3, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x || e3.ZawieraZmienna x
+        | EFix(y, _, _) when x = y -> false
+        | EFix(_, e, _) -> e.ZawieraZmienna x
     /// <summary>
     /// Wykonuje podstawienie wyrażenie <paramref name="expr"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/>.
@@ -585,6 +591,12 @@ type Wyrazenie =
         | ELewy(e, pos) -> ELewy(e.Podstaw x expr, pos)
         | EPrawy(e, pos) -> EPrawy(e.Podstaw x expr, pos)
         | ECase(e1, e2, e3, pos) -> ECase(e1.Podstaw x expr, e2.Podstaw x expr, e3.Podstaw x expr, pos)
+        | EFix(y,e,pos) ->
+            if x = y then EFix(y,e,pos)
+            elif expr.ZawieraZmienna y then
+                let z = Fresh.swierzaNazwa();
+                EFix(z, (e.Podstaw y (EZmienna(z, pos))).Podstaw x expr, pos)
+            else EFix(y, e.Podstaw x expr, pos)
 
     /// <summary>
     /// Polożenie danego wyrażenia w kodzie źródłowym.
@@ -595,7 +607,7 @@ type Wyrazenie =
         | ETAplikacja(_,_,pos) | EAnotacja(_,_,pos) | ELet(_,_,_,pos) | ETLet(_,_,_,_,pos)
         | ENat(_,pos) | ETrue pos | EFalse pos | EOpArytmetyczny(_,_,_,_,pos) | EOpPorownania(_,_,_,_,pos) 
         | EIf(_,_,_,pos) | EPara(_,_,pos) | EProjLewy(_, pos) | EProjPrawy(_, pos) | ELewy(_, pos) | EPrawy(_, pos)
-        | ECase(_,_,_,pos) ->  pos
+        | ECase(_,_,_,pos) | EFix(_,_,pos) ->  pos
 
     /// <summary>
     /// Zamienia term na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -674,6 +686,11 @@ type Wyrazenie =
             else res
         | ECase(e1,e2,e3,_) ->
             let res = "case " + e1.ToString() + " of left=> " + e2.ToString() + " |right=> " + e3.ToString();
+            if prior > 0 then
+                "(" + res + ")"
+            else res
+        | EFix(x,e,_) ->
+            let res = "fix " + x + "." + e.ToString 0;
             if prior > 0 then
                 "(" + res + ")"
             else res

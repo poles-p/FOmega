@@ -54,6 +54,8 @@ let rec betaRedukuj t =
 /// </summary>
 let rec betaUnifikuj (t1, t2) pos =
     match (t1, t2) with
+    | (TWZmienna x, TWZmienna y) when x=y ->
+        Some(Podstawienie[], TWZmienna x)
     | (TZmienna(x, x2), TZmienna(y, y2)) ->
         if x2 = y2 then
             Some(Podstawienie[], TZmienna(x, x2))

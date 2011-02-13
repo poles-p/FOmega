@@ -93,6 +93,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | ELewy(e,p) -> ELewy(this.Aplikuj e, p);
         | EPrawy(e,p) -> EPrawy(this.Aplikuj e, p);
         | ECase(e1,e2,e3,p) -> ECase(this.Aplikuj e1, this.Aplikuj e2, this.Aplikuj e3, p)
+        | EFix(x,e,p) -> EFix(x, this.Aplikuj e, p)
 
     /// <summary>
     /// Aplikacja podstawienia do kontekstu
@@ -227,6 +228,9 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let (re2, e2') = this.FAplikuj e2;
             let (re3, e3') = this.FAplikuj e3;
             (re1 && re2 && re3, ECase(e1', e2', e3', p))
+        | EFix(x, e, p) ->
+            let (re, e') = this.FAplikuj e;
+            (re, EFix(x, e', p))
 
     member private this.Przypisania =
         podstawienie
