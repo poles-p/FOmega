@@ -40,6 +40,8 @@
 \date{Wrocław, dnia \today\ r.}
 \author{Piotr Polesiuk \\ \texttt{bassists@o2.pl}}
 
+\sloppy
+
 \begin{document}
 \thispagestyle{empty}
 \maketitle
@@ -67,11 +69,9 @@ Rozważmy język o składni:
   \hline
   t ::= &  &  \\
    & $x$ & \textit{zmienne}  \\
-   & $\lambda x:T.t$ & \textit{abstrakcja (anotowana)} \\
-   & $\lambda x.t$ & \textit{abstrakcja (nieanotowana)} \\
+   & $\lambda x:T.t$ & \textit{abstrakcja} \\
    & $t\;t$ & \textit{aplikacja} \\
-   & $\Delta X::K.t$ & \textit{abstrakcja typowa (anotowana)} \\
-   & $\Delta X.t$ & \textit{abstrakcja typowa (nieanotowana)} \\
+   & $\Delta X::K.t$ & \textit{abstrakcja typowa} \\
    & $t[T]$ & \textit{aplikacja typowa} \\
    & $\textrm{let} \ x = t \ \textrm{in} \ t$ & \textit{zmienna lokalna} \\
    & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
@@ -79,10 +79,8 @@ Rozważmy język o składni:
   T ::= &  &  \\
    & $X$ & \textit{zmienna typowa (kwantyfikowana abstrakcją)} \\
    & $T \rightarrow T$ & \textit{typ funkcji} \\
-   & $\forall X::K.T$ & \textit{typ uniwersalny (anotowany)} \\
-   & $\forall X.T$ & \textit{typ uniwersalny (nieanotowany)} \\
-   & $\Lambda X::K.T$ & \textit{konstruktor abstrakcji typowej (anotowany)} \\
-   & $\Lambda X.T$ & \textit{konstruktor abstrakcji typowej (nieanotowany)} \\
+   & $\forall X::K.T$ & \textit{typ uniwersalny} \\
+   & $\Lambda X::K.T$ & \textit{konstruktor abstrakcji typowej} \\
    & $T\;T$ & \textit{aplikacja konstruktora typowego} \\
    & $\bar{X}$ & \textit{zmienna typowa (kwantyfikowana schematem)} \\
    & & \\
@@ -93,6 +91,9 @@ Rozważmy język o składni:
    & & \\
   \hline
 \end{tabular} \\
+
+W dodatku zakładamy, że wszystkie zmienne związane kwantyfikowane abstrakcją są unikatowe (tzn. zmienna $X$ może
+występować za conajwyżej jednym kwantyfikatorem).
 
 Ważnym założeniem jest to, że $\bar{X}::*$, co nam ułatwi sprawę przy unifikacji, a~zarazem zbytnio nie ograniczy języka.
   
@@ -131,7 +132,12 @@ Teraz sam kontekst typowania ma postać:
   \hline
 \end{tabular} \\
 
-\section{Zbiory zmiennych}
+Jeżeli chcemy spojrzeć na ten język, jak na język programowania z~rekonstrukcją typów, można
+dopuścić nieanotowane kwantyfikatory, które parser będzie zamieniać na anotowane świeżą zmienną schematową 
+(typową albo rodzajową w~zależności od kwantyfikatora). Z~drugiej strony nie ma potrzeby pozwalać programiście
+jawnie korzystać ze zmiennych schematowych.
+
+\section{Zbiory zmiennych i~podstawienia}
 
 W~dalszej części będziemy używać różnych zbiorów zmiennych występujących w~konstrukcjach w~naszym języku, więc
 to jest dobre miejsce by te zbiory i~operacje zdefiniować.
@@ -219,6 +225,41 @@ BTV(\textrm{tlet} \ X = T \ \textrm{in} \ t) & = BTV(T) \cup BTV(t) \cup \{ X \}
 \end{align*}
 \end{definicja}
 
+\subsection{Podstawienia}
+
+Założenie o~unikalności zwmiennych związanych wiąże się z~niewielką modyfkacją podstawienia.
+\[
+\{X := T\} Y = 
+	\begin{cases}
+		\alpha T & X=Y, \alpha \ \textrm{jest przemianowaniem zmiennych} \\
+		& \textrm{związanych w~$T$ na świeże} \\
+		Y & X \neq Y
+	\end{cases} \\
+\]
+Reszta definicji pozostaje bez zmian.
+
+Przy rekonstrukcji typów będziemy dodatkowo używać podstawienia, które dodatkowo wstawia świeże zmienne rodzajowe.
+Zdefiniujemy je podobnie:
+\[
+\{X(\{\widehat{X}_1, \dots, \widehat{X}_n\}) := T\} Y = 
+	\begin{cases}
+		\alpha \sigma T & X=Y, \alpha \ \textrm{jest przemianowaniem zmiennych} \\
+		& \textrm{związanych w~$T$ na świeże}, \\
+		& \sigma = [\widehat{X}_1 := fresh, \dots, \widehat{X}_n := fresh] \\
+		Y & X \neq Y
+	\end{cases} \\
+\]
+\[
+\ldots
+\]
+$\sigma$ jest podstawieniem schematowym, definicja jego działania pojawi się później.
+
+Purystów matematycznych może przerażać pojawiająca się w~definicji ,,świeża zmienna'', oznaczana
+jako $fresh$. Jest to zmienna która dotychczas nigdzie się nie pojawiła, i~nie będzie wprowadzona więcej niż raz.
+Można ją formalnie zdefiniować pamiętając cały czas zbiór użytych zmiennych i~przekazując go jako dodatkowy argument do prawie
+wszystkich operacji, ale spowodowało by to znaczne pogorszenie czytelności tego dokumentu, dlatego tak nie robimy.
+Zainteresowany Czytelnik może samodzielnie poprawić przytoczone tu definicje i~twierdzenia formalnie definiując świeżą zmienną.
+
 Dla przytoczonych tu definicji później zajdzie potrzeba rozszerzenia ich na konteksty i~podstawienia.
 Rozszerzenia te są na tyle oczywiste i~naturalne, że nie ma potrzeby ich przytaczania.
 
@@ -229,7 +270,7 @@ sprowadza się do unifikacji pewnych termów, ale tutaj, ze względu na możliwo
 typowych, termy równoważne nie muszą być równe, więc sama unifikacja powinna sprowadzać termy do
 $\beta$-równych sobie.
 
-Taka unifikacja niesie ze sobą wiele problemów. Po pierwsze, będziemy chcieli używać podstawienia,
+Taka unifikacja niesie ze sobą wiele problemów. Po pierwsze, będziemy chcieli używać podstawienia (za zmienne schematowe),
 będącego unifikatorem, na innych termach. To zaś grozi uzewnętrznieniem zmiennych związanych. Drugi
 problem to taki, że samo podstawienie nie musi zrównywać termów, które da się zrównać, ale różnią się
 nazwami zmiennych związanych.
@@ -248,35 +289,27 @@ Oraz dodając jeszcze operację anulowania podstawienia:
 Z drugim problemem poradzimy sobie traktując unifikator jako parę zawierającą podstawienie, które dobrze działa
 na zewnątrz, oraz term będący wynikiem unifikacji.
 
-Ponadto, przy $\beta$ redukcji typów, oraz przy typowaniu instrukcji \verb+tlet+, pojawi się podstawienie, które
-podstawia typy za zmienne kwantyfikowane abstrakcją. Działa ono jak zwykłe podstawienie znane nam z~rachunku $\lambda$,
-więc nie będziemy go tu szerzej omawiać. Dla odróżnienia będziemy oznaczać je przez $\{ X_1 := T_1, \dots, X_n := T_n \}$.
-Oprócz podstawień postaci $\{X := T\}$, będziemy używać podstawień postaci $\{X(A) := T\}$, gdzie $A = \{ \widehat{X}_1, \dots, \widehat{X}_n \}$ 
-jest zbiorem zmiennych rodzajowych.
-Takie podstawienia działają podobnie, z~tą różnicą, że za wszystkie wystąpienia zmiennej $X$ podstawia $\{ \widehat{X}_1 := fresh, \dots , \widehat{X}_n := fresh \} T$,
-przyczym komplet świeżych zmiennych jest inny dla każdego wystąpienia zmiennej $X$.
-
 \begin{definicja}
-\emph{Podstawieniem} nazwiemy skończony zbiór par postaci $(\bar{X},T)$, $(\bar{X},fail)$ oraz $(\widehat{X},K)$, takich że
+\emph{Podstawieniem schematowym} nazwiemy skończony zbiór par postaci $(\bar{X},T)$, $(\bar{X},fail)$ oraz $(\widehat{X},K)$, takich że
 $\bar{X} \notin \bar{Var}(T)$ oraz $\widehat{X} \notin \widehat{Var}(K)$ (po podstawieniu powinny zniknąć wszystkie zmienne, za 
 które coś podstawiliśmy). 
-\emph{Podstawieniem} pustym nazwiemy podstawienie będące zbiorem pustym i~ będziemy oznaczać przez $[]$.
-Podstawienia, będziemy reprezentować jako listy postaci
+\emph{Podstawieniem schematowym pustym} nazwiemy podstawienie schematowe będące zbiorem pustym i~będziemy oznaczać przez $[]$.
+Podstawienia schematowe, będziemy reprezentować jako listy postaci
 \[
 [\bar{X}_1 := T_1, \dots, \bar{X}_k := T_k, \bar{X}_{k+1} := fail, \dots , \bar{X}_n := fail, \widehat{X}_1 := K_1, \dots, \widehat{X}_m := K_m]
 \]
-\emph{Dziedziną} podstawienia $\sigma$ nazwiemy zbiór takich zmiennych typowych $\bar{X}$ i~rodzajowych $\widehat{X}$, że
-$(\bar{X}, T) \in \sigma$ lub $(\bar{X}, fail) \in \sigma$ oraz $(\widehat{X}, K) \in \sigma$. Dziedzinę podstawienia $\sigma$
+\emph{Dziedziną} podstawienia schematowego $\sigma$ nazwiemy zbiór takich zmiennych typowych $\bar{X}$ i~rodzajowych $\widehat{X}$, że
+$(\bar{X}, T) \in \sigma$ lub $(\bar{X}, fail) \in \sigma$ oraz $(\widehat{X}, K) \in \sigma$. Dziedzinę podstawienia schematowego $\sigma$
 będziemy oznaczać przez $Dom(\sigma)$.
 \end{definicja}
 
 \begin{definicja}
-Podstawienie może działać na rodzajach, typach, termach i~kontekstach. Jeżeli w~podstawieniu występuje
-para $\widehat{X} := K$, to za wszystkie wystąpienia zmiennej $\widehat{X}$ zostanie podstawione $K$. Analogicznie
-się dzieje w~przypadku wystąpienia pary $\bar{X} := T$. Jeżeli w~podstawieniu wystąpi para $\bar{X} := fail$,
+Podstawienie schematowe może działać na rodzajach, typach, termach i~kontekstach. Jeżeli w~podstawieniu występuje
+para $\widehat{X} := K$, to za wszystkie wystąpienia zmiennej~$\widehat{X}$ zostanie podstawione $K$. Analogicznie
+się dzieje w~przypadku wystąpienia pary $\bar{X} := T$. Jeżeli w~podstawieniu schematowym wystąpi para $\bar{X} := fail$,
 a~w~typie/termie/kontekście do którego podstawienie aplikujemy występuje zmienna $\bar{X}$, to podstawienie jest niemożliwe.
 
-Niech $\sigma$ będzie podstawieniem. Działanie podstawienia formalnie definiujemy jako:
+Niech $\sigma$ będzie podstawieniem schematowym. Działanie podstawienia formalnie definiujemy jako:
 \begin{align*}
 \sigma * & = * \\
 \sigma (K_1 \Rightarrow K_2) & = \sigma K_1 \Rightarrow \sigma K_2 \\
@@ -328,7 +361,8 @@ Niech $\sigma$ będzie podstawieniem. Działanie podstawienia formalnie definiuj
 \end{definicja}
 
 \begin{definicja}
-Powiemy, że podstawienie $\rho$ jest \emph{złożeniem} podstawień $\sigma$ i~$\theta$, które będziemy oznaczać $\sigma\circ\theta$ jeżeli
+Powiemy, że podstawienie schematowe $\rho$ jest \emph{złożeniem} podstawień schematowych $\sigma$ i~$\theta$, 
+które będziemy oznaczać $\sigma\circ\theta$ jeżeli
 dla każdego rodzaju $K$, typu $T$, termu $t$ i~kontekstu $\Gamma$ zachodzi:
 \begin{align*}
 \rho K & = \sigma(\theta K) \\
@@ -339,7 +373,7 @@ dla każdego rodzaju $K$, typu $T$, termu $t$ i~kontekstu $\Gamma$ zachodzi:
 \end{definicja}
 
 \begin{lemat}
-Niech $\sigma$ i~$\theta$ będą podstawieniami. Wówczas zachodzi
+Niech $\sigma$ i~$\theta$ będą podstawieniami schematowymi. Wówczas zachodzi
 \begin{align*}
 \sigma \circ \theta = & \{ (\widehat{X}, \sigma K) | (\widehat{X}, K) \in \theta \} \\
 \cup & \{ (\widehat{X}, K) \in \sigma | \widehat{X} \notin Dom(\theta) \} \\
@@ -348,25 +382,25 @@ Niech $\sigma$ i~$\theta$ będą podstawieniami. Wówczas zachodzi
 \cup & \{ (\bar{X}, T) \in \sigma | \bar{X} \notin Dom(\theta) \} \\
 \cup & \{ (\bar{X}, fail) \in \sigma | \bar{X} \notin Dom(\theta) \}
 \end{align*}
-Pozwala nam to algorytmicznie wyliczać złożenia podstawień.
+Pozwala nam to algorytmicznie wyliczać złożenia podstawień schematowych.
 \end{lemat}
 \begin{proof}
 \end{proof}
 
 \begin{definicja}
-\emph{Anulowaniem zbioru $A$ zmiennych typowych kwantyfikowanych abstrakcją z~podstawienia $\sigma$} nazwiemy operację
+\emph{Anulowaniem zbioru $A$ zmiennych typowych kwantyfikowanych abstrakcją z~podstawienia schematowego $\sigma$} nazwiemy operację
 zdefiniowaną następująco:
 \begin{align*}
 \sigma \setminus A = & \{ (\widehat{X}, K) \in \sigma \} \cup \{ (\bar{X}, fail) \in \sigma \} \\
 \cup & \{ (\bar{X}, T) \in \sigma | FTV(T) \cap A = \emptyset \} \\
 \cup & \{ (\bar{X}, fail) | \exists (\bar{X}, T) \in \sigma . FTV(T) \cap A \neq \emptyset \}
 \end{align*}
-\emph{Anulowanie zmiennej $X$ z~podstawienia $\sigma$} oznaczamy przez $\sigma \setminus X$ i~definiujemy jako $\sigma \setminus \{X\}$.
+\emph{Anulowanie zmiennej $X$ z~podstawienia schematowego $\sigma$} oznaczamy przez $\sigma \setminus X$ i~definiujemy jako $\sigma \setminus \{X\}$.
 \end{definicja}
 
 \begin{definicja}
 \emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieją
-podstawienia $\theta_1$ i $\theta_2$ takie, że:
+podstawienia schematowe $\theta_1$ i $\theta_2$ takie, że:
 \[
 \theta_1 T_1 =_\beta S =_\beta \theta_2 T_2
 \]
@@ -378,7 +412,7 @@ oraz
 
 \begin{definicja}
 Powiemy, że $\beta$-unifikator $(\sigma, S)$ jest \emph{ogólniejszy} od $\beta$-unifikatora
-$(\theta, T)$, jeżeli istnieje takie podstawienie $\rho$ i przemianowanie $\alpha$, że
+$(\theta, T)$, jeżeli istnieje takie podstawienie schematowe $\rho$ i~przemianowanie $\alpha$, że
 \[
 \rho\alpha S =_\beta T \quad \textrm{oraz} \quad \rho\alpha\sigma = \theta
 \]
@@ -390,7 +424,7 @@ który jest ogólniejszy od wszystkich innych $\beta$-unifikatorów tychże kons
 \end{definicja}
 
 \begin{lemat}
-Niech $A$ i $B$ będą podzbiorami zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie podstawieniem.
+Niech $A$ i $B$ będą podzbiorami zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie podstawieniem schematowym.
 Wówczas zachodzi
 \[
 (\theta \setminus A) \setminus B = \theta \setminus (A \cup B).
@@ -401,7 +435,7 @@ Wówczas zachodzi
 \end{proof}
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ i~$\rho$ będą podstawieniami, oraz
+Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ i~$\rho$ będą podstawieniami schematowymi, oraz
 niech zachodzi $FTV(\rho) \cap A = \emptyset$. Wówczas zachodzi 
 \[
 (\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A)
@@ -412,8 +446,8 @@ niech zachodzi $FTV(\rho) \cap A = \emptyset$. Wówczas zachodzi
 \end{proof}
 
 \begin{lemat}
-Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem,
-niech $\rho$ będzie podstawieniem takim, że $FTV(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
+Niech $A$ będzie podzbiorem zbioru zmiennych typowych kwnatyfikowanych abstrakcją, niech $\theta$ będzie dowolnym podstawieniem schematowym,
+niech $\rho$ będzie podstawieniem schematowym takim, że $FTV(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
 Wówczas zachodzi
 \[
 (\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho
@@ -425,7 +459,7 @@ Wówczas zachodzi
 
 \begin{lemat}
 Niech $(\sigma, S)$ będzie $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$, oraz niech $\rho$ będzie 
-podstawieniem takim, że $FTV(\rho) \cap BTV(T_1) = \emptyset$ oraz $FTV(\rho) \cap BTV(T_2) = \emptyset$.
+podstawieniem schematowym takim, że \mbox{$FTV(\rho) \cap BTV(T_1) = \emptyset$} oraz \mbox{$FTV(\rho) \cap BTV(T_2) = \emptyset$}.
 Wówczas $(\rho \circ \sigma, \rho S)$ również jest $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$.
 \label{lunif1}
 \end{lemat}
@@ -448,9 +482,9 @@ oraz z lematu \ref{lsub1}
 \end{proof}
 
 \begin{lemat}
-Niech $T_1$ i~$T_2$ będą konstrktorami typów, $\rho$ niech będzie podstawieniem takim, że 
+Niech $T_1$ i~$T_2$ będą konstrktorami typów, $\rho$ niech będzie podstawieniem schematowym takim, że 
 $FTV(\rho) \cap BTV(T_1) = \emptyset$ oraz $FTV(\rho) \cap BTV(T_2) = \emptyset$, a $(\sigma, S)$ niech będzie 
-$\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$.
+\mbox{$\beta$-unifikatorem} konstruktorów $(\rho T_1, \rho T_2)$.
 Wówczas $(\sigma \circ \rho, S)$ jest $\beta$-unifikatorem konstruktorów $(T_1, T_2)$.
 \label{lunif2}
 \end{lemat}
@@ -534,7 +568,7 @@ Trywialne. Wynika z~tego, że algorytm jest sterowany składnią, oraz z~silnej 
 \begin{twierdzenie}
 Niech $T_1$ oraz $T_2$ będą konstruktorami typów, które daje się orodzajować. Wówczas jeśli
 $unify_\beta(T_1, T_2) = (\sigma, S)$, to $(\sigma, S)$ jest $\beta$-unifikatorem konstruktorów typów
-$T_1$ i~$T_2$
+$T_1$ i~$T_2$.
 \end{twierdzenie}
 \begin{proof}
 Indukcja po głebokości rekursji.
@@ -546,7 +580,7 @@ dla tych przypadków teza zachodzi trywialnie.
 \item $T_1 \equiv \forall X_1::K_1.T'_1$ oraz $T_2 \equiv \forall X_2::K_2.T'_2$ \\
 Wtedy z załorzenia indukcyjnego $(\sigma_T, T)$ jest $\beta$-unifikatorem konstruktorów typów
 $\sigma_K T'_1$ oraz $\sigma_K\{X_2:=X_1\}T'_2$, gdzie $\sigma_K$ jest unifikatorem rodzajów $K_1$ i~$K_2$.
-Istnieją więc takie podstawienia $\theta_1$ i~$\theta_2$, że zachodzą równości
+Istnieją więc takie podstawienia schematowe $\theta_1$ i~$\theta_2$, że zachodzą równości
 \[
 \theta_1 \sigma_K T'_1 =_\beta T =_\beta \theta_2 \sigma_K \{X_2:=X_1\} T'_2
 \]
@@ -568,11 +602,11 @@ oraz
 = (\sigma_T \setminus X_1) \circ \sigma_K
 \]
 Analogicznie pokarzemy pozostałe dwie równości dla konstruktora $T_2$. Zatem 
-$((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T)$ jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
+\mbox{$((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T)$} jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
 \item $T_1 \equiv \Lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \Lambda X_2::K_2.T'_2$ \\
 Dla tego przypadku dowód przeprowadzamy analogicznie do przypadku poprzedniego.
 \item $T_1 \equiv T'_1 \rightarrow S_1$ oraz $T_2 \equiv T'_2 \rightarrow S_2$ \\
-Teza wynika wprost z załorzenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
+Teza wynika wprost z~załorzenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
 \item $T_1 \longrightarrow_\beta S_1$ lub $T_2 \longrightarrow_\beta S_2$ \\
 Wynika z~załorzenia indukcyjnego i~z~faktu, że $\beta$-redukcja zachowuje $\beta$-równość.
 \item $T_1 \equiv V_1\;S_1$ oraz $T_2 \equiv V_2\;S_2$ \\
@@ -588,7 +622,8 @@ zwraca pusty unifikator jeśli konstruktory są $\beta$ równe, w~przeciwnym prz
 \end{proof}
 
 \begin{fakt}
-Jeżeli z~algorytmu usuniemy pierwszy przypadek sprawdzający $\beta$-równość konstruktorów, otrzymamy algorytm
+Jeżeli w~algorytmie pierwszy przypadek sprawdzający $\beta$-równość konstruktorów zamienimy na analogiczy 
+sprawdzający tożsamość zmiennych typowych (a~przy rozszerzeniach jeszcze typów bazowych), otrzymamy algorytm
 równoważny.
 \end{fakt}
 \begin{proof}
@@ -699,7 +734,7 @@ Funkcja $typeof$ zatrzymuje się.
 \end{proof}
 
 \begin{twierdzenie}
-Niech $t$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas $typeof(\Gamma \vdash t : ?) = (\sigma, T)$ wtedy 
+Niech $t$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas \mbox{$typeof(\Gamma \vdash t : ?) = (\sigma, T)$} wtedy 
 i~tylko wtedy gdy $\Gamma \vdash t : T'$, gdzie $T' =_\beta T$ oraz $\sigma = []$ (tzn. gdy program zawiera wszystkie anotacje, algorytm $typeof$ wykonuje zwykłą 
 kontrolę typów w~systemie $F_\omega$).
 \label{twtypecheck}
@@ -708,7 +743,7 @@ kontrolę typów w~systemie $F_\omega$).
 Szkic dowodu:
 \begin{enumerate}
 \item Indukcyjnie po strukturze typu pokazujemy analogiczne twierdzenie dla rodzajów i~funkcji $kindof$:\\
-Niech $T$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas $kindof(\Gamma \vdash t :: ?) = (\sigma, K)$ wtedy
+Niech $T$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas \mbox{$kindof(\Gamma \vdash t :: ?) = (\sigma, K)$} wtedy
 i~tylko wtedy gdy $\Gamma \vdash T :: K$ oraz $\sigma = []$.
 \item Indukcyjnie po strukturze wyrażenia $t$ pokażemy tezę implikację tezy w~jedną stronę.
 \item Pokazujemy indukcyjnie, że drzewa wyprowadzenia $\Gamma \vdash t : T$ można zawsze przebudować tak, by
@@ -723,7 +758,7 @@ korzystać jedynie nad argumentem aplikacji i~w~kożeniu drzewa wyprowadzenia.
 
 \begin{twierdzenie}
 Niech $t$ i~$\Gamma$ będą takim termem i~kontekstem, że $typeof(\Gamma \vdash t : ?) = (\sigma, T)$. Wówczas
-istnieje takie podstawienie $\theta$, że zachodzą następujące własności:
+istnieje takie podstawienie schematowe $\theta$, że zachodzą następujące własności:
 \begin{itemize}
 \item $\theta \Gamma \vdash \theta t : T$
 \item $\theta \setminus BTV(t) = \sigma$
@@ -732,11 +767,11 @@ istnieje takie podstawienie $\theta$, że zachodzą następujące własności:
 \begin{proof}
 Szkic dowodu:
 \begin{enumerate}
-\item Podobnie jak w~dowodzie twierdzenia \ref{twtypecheck} najpierw indukcyjnie dowodzimy alaogicznego twierdzenia
+\item Podobnie jak w~dowodzie twierdzenia \ref{twtypecheck} najpierw indukcyjnie dowodzimy analogicznego twierdzenia
 dla funkcji $kindod$ i~relacji rodzajowania.
-\item Indukcyjnie po strukturze termu $t$ pokazujemy tezę. Podstawienie $\theta$ konstruujemy tak jak podstawienie
+\item Indukcyjnie po strukturze termu $t$ pokazujemy tezę. Podstawienie schematowe $\theta$ konstruujemy tak jak podstawienie schematowe
 $\sigma$ tyle, że z~pominięciem alnulowania zmiennych związanych. W~miejscach w~których korzystamy z~$\beta$-unifikacji
-korzystamy z~definicji $\beta$-unifikatora by zkonstruować podstawienie $\theta$.
+korzystamy z~definicji \mbox{$\beta$-unifikatora} by zkonstruować podstawienie schematowe $\theta$.
 \end{enumerate}
 \end{proof}
 
