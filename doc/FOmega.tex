@@ -299,7 +299,7 @@ Wartości w $F_\omega$ zdefiniujemy dokładnie jak w $\lambda_{\rightarrow}$. \\
   \hline
 \end{tabular} \\
 
-Ewaluacja przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się na rozszerzeniach minimalnej wersji $F_\omega$ i pojawią się tam nowe rzeczy. Teraz, dla czytelności, przetoczymy reguły ewaluacji dla wersji minimalnej ($\mathtt{t_1,t_1',t_2,t_2',t}$ to termy, \texttt{v} to wartość, \texttt{x:T} to zmienna \texttt{x} typu \texttt{T}):
+Ewaluacja przebiega w sposób standardowy dla aplikacji i abstrakcji termów. Teraz, dla czytelności, przetoczymy te reguły ewaluacji ($\mathtt{t_1,t_1',t_2,t_2',t}$ to termy, \texttt{v} to wartość, \texttt{x:T} to zmienna \texttt{x} typu \texttt{T}):
 	\[\mathtt{
 		\frac{t_1 \longrightarrow t_1'}{t_1\;t_2 \longrightarrow t_1'\;t_2}
                 \qquad
@@ -308,7 +308,13 @@ Ewaluacja przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się n
  	\[\mathtt{
 		(\lambda x:T.t)v \longrightarrow [x \mapsto v]t}
 	\]
-
+Do tego dochodzą reguły dla nowych w języku abstrakcji typowych i aplikacji typowych.
+	\[\mathtt{
+		\frac{t \longrightarrow t'}{t[T] \longrightarrow t'[T]}}
+	\]
+ 	\[\mathtt{
+		(\lambda X::K.t)[T] \longrightarrow [X \mapsto T]t}
+	\]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
