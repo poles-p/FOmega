@@ -452,6 +452,7 @@ Do zbioru termów dodamy następujące dwie konstrukcje:\\
    & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
   \hline
 \end{tabular} \\
+
 Oczywiście możemy zdefiniować \texttt{let} i \texttt{tlet} jako:
  	\[\mathtt{let\;x=t_1\;in\;t_2 \;\overset{def}{=}\;(\lambda x:T.t_2)t_1 \hspace{3em}\text{gdzie}\; t_1:T 
 		}
@@ -1398,29 +1399,44 @@ korzystamy z~definicji \mbox{$\beta$-unifikatora} by skonstruować podstawienie 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Własności i dowody}
+\section{Inne własności $F_\omega$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
-\subsection{Inne własności $F_\omega$}
+\subsection{Nierozstrzygalność}
 
-\begin{definicja}
-Reguły przepisywania typów w systemie $F_{\omega}$ w wersji Curry'ego standardowe, oprócz: \\
-
-$\frac{\Gamma \vdash M : \forall X \sigma}{\Gamma \vdash M : nf(\sigma [ X := \tau ])}$
-
-\end{definicja}
-
-
-Nierozstzygalne są problemy:
+\begin{fakt}
+Nierozstrzygalne są problemy:
     \begin{itemize}
-        \item sprawdzania typu: dane $\Gamma, M, \tau$, Czy $\Gamma \vdash M : \tau$
-        \item typowalność: dane M, Czy $\exists \Gamma \tau . \Gamma \vdash M : \tau$
+        \item sprawdzania typu: dane $\Gamma, M, \tau$, pytamy czy $\Gamma \vdash M : \tau$
+        \item typowalność: dane M, pytamy czy $\exists \Gamma \tau . \Gamma \vdash M : \tau$
+        \item sprawdzania niepustości typu 
     \end{itemize}
+\end{fakt}
 
+\subsection{Redukcja na typach - definicja i własności}
 
+Jak już wspomnieliśmy, możemy na typach zdefiniować redukcję, która przebiega bardzo podobnie do $\beta$-redukcji na termach.\\
 
+	\[\mathtt{
+		\frac{}{T \Rightarrow T}
+                \qquad
+                \frac{S_1 \Rightarrow T_1 \;\;\; S_2 \Rightarrow T_2}{S_1 \rightarrow S_2 \Rightarrow T_1 \rightarrow T_2}}
+	\]
+	\[\mathtt{
+                \frac{S_1 \Rightarrow T_1 \;\; S_2 \Rightarrow T_2}{S_1\;S_2 \Rightarrow T_1\;T_2}
+                \qquad
+                \frac{S \Rightarrow T}{\forall X::K.S \Rightarrow \forall X::K.T} }
+	\]
+	\[\mathtt{
+		\frac{S \Rightarrow T}{\lambda X::K.S \Rightarrow \lambda X::K.T}
+                \qquad
+                (\lambda X::K.S)T \equiv [X \mapsto T]S}
+	\] 
+	\[\mathtt{
+                \frac{S_1 \Rightarrow T_1 \;\;\; S_2 \Rightarrow T_2}{(\lambda X::K.S_1)S_2 \Rightarrow [X \mapsto T_2]T_1 }}
+	\]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
