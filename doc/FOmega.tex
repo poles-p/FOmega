@@ -109,7 +109,8 @@ Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy oraz typ
   \hline
   $\mathtt{t}$ ::= &  & \textit{termy}  \\
    & $\mathtt{x}$ & \textit{zmienne}  \\
-   & $\mathtt{\lambda x:T.t}$ & \textit{abstrakcja} \\
+   & $\mathtt{\lambda x:T.t}$ & \textit{abstrakcja anotowana} \\
+   & $\mathtt{\lambda x.t}$ & \textit{abstrakcja nieanotowana} \\
    & $\mathtt{t \hspace{0.2em} t}$ & \textit{aplikacja} \\
    & & \\
   $\mathtt{T}$ ::= &  & \textit{typy} \\
@@ -147,7 +148,8 @@ Teraz możemy $\lambda_{\rightarrow}$ rozszerzyć o następujące konstrukcje:
 \begin{tabular}{| l c r |}
    \hline
    $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
-   & $\mathtt{\lambda X::K.T}$ & \textit{abstrakcja konstruktorowa} \\
+   & $\mathtt{\lambda X::K.T}$ & \textit{abstrakcja konstruktorowa anotowana} \\
+   & $\mathtt{\lambda X.T}$ & \textit{abstrakcja konstruktorowa nieanotowana} \\
    & $\mathtt{T\;T}$ & \textit{aplikacji konstruktorowa} \\
    \hline
 \end{tabular}
@@ -167,7 +169,8 @@ Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ w
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\dots$ & \textit{termy} \\
-   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa} \\
+   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa anotowana} \\
+   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa nieanotowana}  \\
    & $\mathtt{t[T]}$ & \textit{aplikacja typowa} \\
   \hline
 \end{tabular}
@@ -176,7 +179,8 @@ Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ w
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
-   & $\mathtt{\forall X::K.T}$ & \textit{typ uniwersalny} \\
+   & $\mathtt{\forall X::K.T}$ & \textit{typ uniwersalny anotowany} \\
+   & $\mathtt{\forall X.T}$ & \textit{typ uniwersalny nieanotowany} \\
   \hline
 \end{tabular}
 
@@ -703,34 +707,18 @@ Ewaluacja:
 \subsection{Kilka słów o składni.}
 
 
-Rozważmy język o składni:
+Rozważmy język o składni z 2 rozdziału rozszerzony o następujące konstrukcje:
 
 \begin{tabular}{| l c r |}
   \hline
-  t ::= &  &  \\
-   & $x$ & \textit{zmienne}  \\
-   & $\lambda x:T.t$ & \textit{abstrakcja (anotowana)} \\
-   & $\lambda x.t$ & \textit{abstrakcja (nieanotowana)} \\
-   & $t\;t$ & \textit{aplikacja} \\
-   & $\Delta X::K.t$ & \textit{abstrakcja typowa (anotowana)} \\
-   & $\Delta X.t$ & \textit{abstrakcja typowa (nieanotowana)} \\
-   & $t[T]$ & \textit{aplikacja typowa} \\
+  t ::= & $\dots$ &  \\
    & $\textrm{let} \ x = t \ \textrm{in} \ t$ & \textit{zmienna lokalna} \\
    & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
    & & \\
   T ::= &  &  \\
-   & $X$ & \textit{zmienna typowa (kwantyfikowana abstrakcją)} \\
-   & $T \rightarrow T$ & \textit{typ funkcji} \\
-   & $\forall X::K.T$ & \textit{typ uniwersalny (anotowany)} \\
-   & $\forall X.T$ & \textit{typ uniwersalny (nieanotowany)} \\
-   & $\Lambda X::K.T$ & \textit{konstruktor abstrakcji typowej (anotowany)} \\
-   & $\Lambda X.T$ & \textit{konstruktor abstrakcji typowej (nieanotowany)} \\
-   & $T\;T$ & \textit{aplikacja konstruktora typowego} \\
    & $\bar{X}$ & \textit{zmienna typowa (kwantyfikowana schematem)} \\
    & & \\
   K ::= & & \\
-   & $*$ & \textit{rodzaj wszystkich typów} \\
-   & $K \Rightarrow K$ & \textit{rodzaj funkcji typowej} \\
    & $\widehat{X}$ & \textit{zmienna rodzajowa (kwantyfikowana schematem)} \\
    & & \\
   \hline
@@ -738,8 +726,7 @@ Rozważmy język o składni:
 
 Ważnym założeniem jest to, że $\bar{X}::*$, co nam ułatwi sprawę przy unifikacji, a~zarazem zbytnio nie ograniczy języka.
   
-Jeżeli chcemy dodać ML-polimorfizm, będą nam portrzebne schematy typów i schematy rodzajów:
-
+Jeżeli chcemy dodać ML-polimorfizm, będą nam portrzebne schematy typów i schematy rodzajów:\\
 \begin{tabular}{| l c r |}
   \hline
   $\left<T\right>$ ::= &  & \textit{schemat typu} \\
@@ -932,10 +919,10 @@ $\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 
 $\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
-$unify_\beta(\Lambda X_1::K_1.T_1, \Lambda X_2::K_2.T_2) = $ \\
+$unify_\beta(\lambda X_1::K_1.T_1, \lambda X_2::K_2.T_2) = $ \\
 $\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
 $\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K T_1, \sigma_K \{X_2 := X_1\}T_2) \ \textrm{in} $ \\
-$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \Lambda X_1::\sigma_T \sigma_K K_1.T) $ \\
+$\qquad\qquad ((\sigma_T \setminus X_1) \circ \sigma_K, \lambda X_1::\sigma_T \sigma_K K_1.T) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
 $unify_\beta(T_1 \rightarrow S_1, T_2 \rightarrow S_2) = $ \\
@@ -1004,7 +991,7 @@ oraz
 \]
 Analogicznie pokarzemy pozostałe dwie równości dla konstruktora $T_2$. Zatem 
 $((\sigma_T \setminus X_1) \circ \sigma_K, \forall X_1::\sigma_T \sigma_K K_1.T)$ jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
-\item $T_1 \equiv \Lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \Lambda X_2::K_2.T'_2$ \\
+\item $T_1 \equiv \lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \lambda X_2::K_2.T'_2$ \\
 Dla tego przypadku dowód przeprowadzamy analogicznie do przypadku poprzedniego.
 \item $T_1 \equiv T'_1 \rightarrow S_1$ oraz $T_2 \equiv T'_2 \rightarrow S_2$ \\
 Teza wynika wprost z załorzenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
@@ -1057,7 +1044,7 @@ $\qquad \textrm{let} \ \rho = unify(K_T, *) \ \textrm{in} $ \\
 $\qquad\qquad (\rho \circ \sigma, *) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
-$kindof(\Gamma \vdash \Lambda X::K.T :: ?) = $ \\
+$kindof(\Gamma \vdash \lambda X::K.T :: ?) = $ \\
 $\qquad \textrm{let} \ (\sigma, K_T) = kindof(\Gamma, X::K \vdash T :: ?) \ \textrm{in} $ \\
 $\qquad\qquad (\sigma, K \Rightarrow K_T) $ \\
 \end{tabular} \\
@@ -1097,7 +1084,7 @@ $\qquad \textrm{let} \ (\sigma_3, T_3) = unify_\beta(\sigma_2 T_1, T_2 \rightarr
 $\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \sigma_3 \bar{X}) $ \\
 \end{tabular} \\
 \begin{tabular}{l}
-$typeof(\Gamma \vdash \Delta X::K.t : ?) = $ \\
+$typeof(\Gamma \vdash \lambda X::K.t : ?) = $ \\
 $\qquad \textrm{let} \ (\sigma, T) = typeof(\Gamma, X::K \vdash t : ?) \ \textrm{in} $ \\
 $\qquad\qquad (\sigma \setminus X, \forall X::\sigma K.T) $ \\
 \end{tabular} \\
