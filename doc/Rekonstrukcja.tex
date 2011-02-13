@@ -248,6 +248,14 @@ Oraz dodając jeszcze operację anulowania podstawienia:
 Z drugim problemem poradzimy sobie traktując unifikator jako parę zawierającą podstawienie, które dobrze działa
 na zewnątrz, oraz term będący wynikiem unifikacji.
 
+Ponadto, przy $\beta$ redukcji typów, oraz przy typowaniu instrukcji \verb+tlet+, pojawi się podstawienie, które
+podstawia typy za zmienne kwantyfikowane abstrakcją. Działa ono jak zwykłe podstawienie znane nam z~rachunku $\lambda$,
+więc nie będziemy go tu szerzej omawiać. Dla odróżnienia będziemy oznaczać je przez $\{ X_1 := T_1, \dots, X_n := T_n \}$.
+Oprócz podstawień postaci $\{X := T\}$, będziemy używać podstawień postaci $\{X(A) := T\}$, gdzie $A = \{ \widehat{X}_1, \dots, \widehat{X}_n \}$ 
+jest zbiorem zmiennych rodzajowych.
+Takie podstawienia działają podobnie, z~tą różnicą, że za wszystkie wystąpienia zmiennej $X$ podstawia $\{ \widehat{X}_1 := fresh, \dots , \widehat{X}_n := fresh \} T$,
+przyczym komplet świeżych zmiennych jest inny dla każdego wystąpienia zmiennej $X$.
+
 \begin{definicja}
 \emph{Podstawieniem} nazwiemy skończony zbiór par postaci $(\bar{X},T)$, $(\bar{X},fail)$ oraz $(\widehat{X},K)$, takich że
 $\bar{X} \notin \bar{Var}(T)$ oraz $\widehat{X} \notin \widehat{Var}(K)$ (po podstawieniu powinny zniknąć wszystkie zmienne, za 
