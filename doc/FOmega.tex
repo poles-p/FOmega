@@ -443,10 +443,34 @@ Ewaluacja i typowanie nie zmieniają się.
 
 \subsection{Definicje lokalne}
 
+Do zbioru termów dodamy następujące dwie konstrukcje:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  t ::= &  &  \\
+   & $\textrm{let} \ x = t \ \textrm{in} \ t$ & \textit{zmienna lokalna} \\
+   & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
+  \hline
+\end{tabular} \\
+Oczywiście możemy zdefiniować \texttt{let} i \texttt{tlet} jako:
  	\[\mathtt{let\;x=t_1\;in\;t_2 \;\overset{def}{=}\;(\lambda x:T.t_2)t_1 \hspace{3em}\text{gdzie}\; t_1:T 
 		}
 	\]
-
+ 	\[\mathtt{tlet\;X=T\;in\;t \;\overset{def}{=}\;(\lambda X::K.t)T \hspace{3em}\text{gdzie}\; T::K 
+		}
+	\]
+Reguły typowania i ewaluacji pozostają bez zmian dla \texttt{let}, ale zdefiniujemy je dla \texttt{tlet}.
+Typowanie:
+ 	\[\mathtt{ \frac{\Gamma,X:S \vdash t:T}{\Gamma \vdash tlet\;X=S\;in\;t : [X \mapsto S]T}
+		}
+	\]
+i ewaluacja:
+ 	\[\mathtt{ tlet\;X=S\;in\;t \longrightarrow [X \mapsto S]t
+		}
+	\]
+ 	\[\mathtt{ \frac{t \longrightarrow t'}{tlet\;X=T\;in\;t \longrightarrow tlet\;X=T\;in\;t'}
+		}
+	\]
 \subsection{Rekordy}
 
 Składnię rekordów zdefiniujemy następująco:\\
@@ -672,7 +696,7 @@ Po wprowadzeniu rozszerzeń z rozdziału trzeciego możemy rozszerzyć relację 
 	\]
         \[\mathtt{ \frac{T_1 \equiv T_1' \dots T_n \equiv T_n'}{\{l_i:T_i^{\;\;\;i \in 1..n}\} \equiv \{l_i:T_i'^{\;\;\;i \in 1..n}\}}
                    \qquad
-                   \frac{T_1 \equiv T_1' \dots T_n \equiv T_n'}{<l_i:T_i^{\;\;\;i \in 1..n}> \equiv \{l_i:T_i'^{\;\;\;i \in 1..n}\}}
+                   \frac{T_1 \equiv T_1' \dots T_n \equiv T_n'}{<l_i:T_i^{\;\;\;i \in 1..n}> \equiv <l_i:T_i'^{\;\;\;i \in 1..n}>}
 		}
 	\]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
