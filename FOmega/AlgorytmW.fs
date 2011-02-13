@@ -58,6 +58,22 @@ let rec rekRodzaj (gamma : KontekstTypowania) typ pos =
             return (s2 * s1, rk)
         }
     | TNat | TBool -> Some(Podstawienie[], KGwiazdka)
+    | TPara(t1, t2) ->
+        opt{
+            let! (s1, k1) = rekRodzaj gamma t1 pos;
+            let! (s2, k2) = rekRodzaj (s1.Aplikuj(pos, gamma)) (s1.Aplikuj(pos, t2)) pos;
+            let! (s3, _) = unifikuj(s2.Aplikuj k1, KGwiazdka) pos;
+            let! (s4, _) = unifikuj(s3.Aplikuj k2, KGwiazdka) pos;
+            return (s4 * s3 * s2 * s1, KGwiazdka)
+        }
+    | TKopara(t1, t2) ->
+        opt{
+            let! (s1, k1) = rekRodzaj gamma t1 pos;
+            let! (s2, k2) = rekRodzaj (s1.Aplikuj(pos, gamma)) (s1.Aplikuj(pos, t2)) pos;
+            let! (s3, _) = unifikuj(s2.Aplikuj k1, KGwiazdka) pos;
+            let! (s4, _) = unifikuj(s3.Aplikuj k2, KGwiazdka) pos;
+            return (s4 * s3 * s2 * s1, KGwiazdka)
+        }
 
 /// <summary>
 /// Rekonstrukcja typów
@@ -163,4 +179,64 @@ let rec rekTyp (gamma : KontekstTypowania) term =
             let! (s4, _) = betaUnifikuj((s3*s2).Aplikuj(e1.Polozenie, t1), TBool) e1.Polozenie;
             let! (s5, rt) = betaUnifikuj((s4*s3).Aplikuj(e2.Polozenie, t2), s4.Aplikuj(e3.Polozenie, t3)) e2.Polozenie;
             return (s5 * s4 * s3 * s21, rt)
+        }
+    | EPara(e1, e2, pos) ->
+        opt{
+            let! (s1, t1) = rekTyp gamma e1;
+            let! (s2, t2) = rekTyp (s1.Aplikuj(e2.Polozenie, gamma)) (s1.Aplikuj e2);
+            return (s2 * s1, TPara(s2.Aplikuj(e1.Polozenie, t1), t2))
+        }
+    | EProjLewy(e, pos) ->
+        opt{
+            let! (s1, te) = rekTyp gamma e;
+            let freshX = TWZmienna(Fresh.swierzaNazwa());
+            let freshY = TWZmienna(Fresh.swierzaNazwa());
+            let! (se, t) = betaUnifikuj(te, TPara(freshX, freshY)) pos;
+            match t with
+            | TPara(lt, _) ->
+                return (se*s1, lt)
+            | _ -> return! None
+        }
+    | EProjPrawy(e, pos) ->
+        opt{
+            let! (s1, te) = rekTyp gamma e;
+            let freshX = TWZmienna(Fresh.swierzaNazwa());
+            let freshY = TWZmienna(Fresh.swierzaNazwa());
+            let! (se, t) = betaUnifikuj(te, TPara(freshX, freshY)) pos;
+            match t with
+            | TPara(_, rt) ->
+                return (se*s1, rt)
+            | _ -> return! None
+        }
+    | ELewy(e, pos) ->
+        opt{
+            let! (s1, t) = rekTyp gamma e;
+            let fresh = TWZmienna(Fresh.swierzaNazwa());
+            return (s1, TKopara(t, fresh))
+        }
+    | EPrawy(e, pos) ->
+        opt{
+            let! (s1, t) = rekTyp gamma e;
+            let fresh = TWZmienna(Fresh.swierzaNazwa());
+            return (s1, TKopara(fresh, t))
+        }
+    | ECase(e1, e2, e3, pos) -> 
+        opt{
+            let! (s1, t1) = rekTyp gamma e1;
+            let! (s2, t2) = rekTyp (s1.Aplikuj(pos, gamma)) (s1.Aplikuj e2);
+            let s21 = s2 * s1;
+            let! (s3, t3) = rekTyp (s21.Aplikuj(pos, gamma)) (s21.Aplikuj e3);
+            let freshX = TWZmienna(Fresh.swierzaNazwa());
+            let freshY = TWZmienna(Fresh.swierzaNazwa());
+            let! (s4, res) = betaUnifikuj((s3*s2).Aplikuj(e1.Polozenie, t1), TKopara(freshX, freshY)) e1.Polozenie;
+            match res with
+            | TKopara(typL, typR) ->
+                let freshV = TWZmienna(Fresh.swierzaNazwa());
+                let! (s5, rt) = betaUnifikuj((s4*s3).Aplikuj(e2.Polozenie, t2), TFunkcja(typL, freshV)) e2.Polozenie;
+                match rt with
+                | TFunkcja(_, vTyp) ->
+                    let! (s6, _) = betaUnifikuj((s5*s4).Aplikuj(e3.Polozenie, t3), TFunkcja(typR, vTyp)) e3.Polozenie
+                    return (s6 * s5 * s4 * s3 * s21, s6.Aplikuj(pos, vTyp) )
+                | _ -> return! None
+            | _ -> return! None
         }

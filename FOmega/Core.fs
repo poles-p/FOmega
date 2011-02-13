@@ -132,6 +132,10 @@ type Typ =
     | TNat
     /// <summary> typ logiczny </summary>
     | TBool
+    /// <summary> typ pary </summary>
+    | TPara of Typ * Typ
+    /// <summary> typ kopary (wariantu dwuelementowego) </summary>
+    | TKopara of Typ * Typ
 
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -145,12 +149,14 @@ type Typ =
         // tych kwantyfikowanych schematem, i tych kwantyfikowanych abstrakcją
         match this with
         | TWZmienna y when x = y  -> typ.AlfaKopia
-        | TWartosc(y,t)           -> TWartosc(y, t.Podstaw x typ)
+        | TWartosc(y,t)           -> TWartosc(y, t.WPodstaw x typ)
         | TFunkcja(t1,t2)         -> TFunkcja(t1.WPodstaw x typ, t2.WPodstaw x typ)
         | TLambda(y,y2,k,t)       -> TLambda(y, y2, k, t.WPodstaw x typ) 
         | TAplikacja(t1,t2)       -> TAplikacja(t1.WPodstaw x typ, t2.WPodstaw x typ)
         | TUniwersalny(y,y2,k, t) -> TUniwersalny(y, y2, k, t.WPodstaw x typ)
         | TAnotacja(t,k)          -> TAnotacja(t.WPodstaw x typ, k)
+        | TPara(t1, t2)           -> TPara(t1.WPodstaw x typ, t2.WPodstaw x typ)
+        | TKopara(t1, t2)         -> TKopara(t1.WPodstaw x typ, t2.WPodstaw x typ)
         | _ -> this
     /// <summary>
     /// Wykonuje podstawienie rodzaju <paramref name="kind"/> za wszystkie wystąpienia 
@@ -167,6 +173,8 @@ type Typ =
         | TAplikacja(t1,t2)       -> TAplikacja(t1.WPodstawRodzaj x kind, t2.WPodstawRodzaj x kind)
         | TUniwersalny(y,y2,k,t)  -> TUniwersalny(y,y2,k.WPodstaw x kind, t.WPodstawRodzaj x kind)
         | TAnotacja(t,k)          -> TAnotacja(t.WPodstawRodzaj x kind, k.WPodstaw x kind)
+        | TPara(t1,t2)            -> TPara(t1.WPodstawRodzaj x kind, t2.WPodstawRodzaj x kind)
+        | TKopara(t1,t2)          -> TKopara(t1.WPodstawRodzaj x kind, t2.WPodstawRodzaj x kind)
         | _ -> this
     /// <summary>
     /// Wykonuje podstawienie jednocześnie kilku zmiennych
@@ -181,6 +189,8 @@ type Typ =
         | TAplikacja(t1,t2)      -> TAplikacja(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
         | TUniwersalny(y,y2,k,t) -> TUniwersalny(y,y2,k.WPodstawKilka sub, t.WPodstawKilkaRodzajow sub)
         | TAnotacja(t,k)         -> TAnotacja(t.WPodstawKilkaRodzajow sub, k.WPodstawKilka sub)
+        | TPara(t1,t2)           -> TPara(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
+        | TKopara(t1,t2)         -> TKopara(t1.WPodstawKilkaRodzajow sub, t2.WPodstawKilkaRodzajow sub)
         | _ -> this
     /// <summary>
     /// Sprawdza, czy dany konstruktor typu zawiera wolne wystąpienie podanej zmiennej
@@ -205,6 +215,7 @@ type Typ =
         | TAnotacja(t,_) -> t.ZawieraZmiennaTypowa x
         | TNat
         | TBool -> false
+        | TPara(t1,t2) | TKopara(t1,t2) -> t1.ZawieraZmiennaTypowa x || t2.ZawieraZmiennaTypowa x
     /// <summary>
     /// Sprawdza, czy dany konstruktor typu zawiera wystąpienie podanej zmiennej 
     /// typowej kwantyfikowanej schematem.
@@ -226,6 +237,7 @@ type Typ =
         | TAnotacja(t,_) -> t.ZawieraZmiennaTypowaW x
         | TNat
         | TBool -> false
+        | TPara(t1,t2) | TKopara(t1,t2) -> t1.ZawieraZmiennaTypowaW x || t2.ZawieraZmiennaTypowaW x
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/> kwantyfikowanej abstrakcją
@@ -233,7 +245,7 @@ type Typ =
     /// <param name="x"> nazwa zmiennej za którą należy wykonać podstawienie </param>
     /// <param name="typ"> konstruktor typu który należy podstawić za zmienną <paramref name="x"/>. </param>
     /// <returns> Funkcja zwraca nowy konstruktor typu po wykonaniu podstawienia. </returns>
-    member this.Podstaw x typ =
+    member this.Podstaw x (typ : Typ) =
         match this with
         | TWZmienna y -> TWZmienna y
         | TWartosc(y, t) -> TWartosc(y, t.Podstaw x typ)
@@ -249,6 +261,8 @@ type Typ =
         | TAnotacja(t,k) -> TAnotacja(t.Podstaw x typ, k)
         | TNat -> TNat
         | TBool -> TBool
+        | TPara(t1,t2) -> TPara(t1.Podstaw x typ, t2.Podstaw x typ)
+        | TKopara(t1,t2) -> TKopara(t1.Podstaw x typ, t2.Podstaw x typ)
 
     /// <summary>
     /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -279,6 +293,8 @@ type Typ =
         | TAnotacja(t,k) -> TAnotacja(t.PodstawKopie x kv typ, k)
         | TNat -> TNat
         | TBool -> TBool
+        | TPara(t1,t2) -> TPara(t1.PodstawKopie x kv typ, t2.PodstawKopie x kv typ)
+        | TKopara(t1,t2) -> TKopara(t1.PodstawKopie x kv typ, t2.PodstawKopie x kv typ)
 
     /// <summary>
     /// Wolne zmienne rodzajowe kwantyfikowane schematem
@@ -298,6 +314,7 @@ type Typ =
         | TAnotacja(t, k) -> Set.union t.WolneKWZmienne k.WolneKWZmienne
         | TNat
         | TBool -> Set.empty
+        | TPara(t1,t2) | TKopara(t1,t2) -> Set.union t1.WolneKWZmienne t2.WolneKWZmienne
 
     /// <summary>
     /// Wolne zmienne typowe kwantyfikowane schematem
@@ -317,6 +334,7 @@ type Typ =
         | TAnotacja(t, k) -> t.WolneTWZmienne
         | TNat
         | TBool -> Set.empty
+        | TPara(t1,t2) | TKopara(t1,t2) -> Set.union t1.WolneTWZmienne t2.WolneTWZmienne
 
     /// <summary>
     /// Typ po alfa-konwersji wprowadzającej świeże zmienne typowe
@@ -339,6 +357,8 @@ type Typ =
         | TAnotacja(t, k) -> TAnotacja(t.AlfaKopia, k)
         | TNat -> TNat
         | TBool -> TBool
+        | TPara(t1,t2) -> TPara(t1.AlfaKopia, t2.AlfaKopia)
+        | TKopara(t1,t2) -> TKopara(t1.AlfaKopia, t2.AlfaKopia)
 
     /// <summary>
     /// Zamienia typ na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -377,6 +397,8 @@ type Typ =
             else res
         | TNat -> "Nat"
         | TBool -> "Bool"
+        | TPara(t1,t2) -> "{" + t1.ToString() + "," + t2.ToString() + "}"
+        | TKopara(t1,t2) -> "<" + t1.ToString() + "|" + t2.ToString() + ">"
     /// <summary>
     /// Zamienia rodzaj na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
     /// </summary>
@@ -416,6 +438,18 @@ type Wyrazenie =
     | EOpPorownania   of Wyrazenie * Wyrazenie * string * (int -> int -> bool) * Parsor.Core.IPosition
     /// <summary> instrukcja warunkowa </summary>
     | EIf of Wyrazenie * Wyrazenie * Wyrazenie * Parsor.Core.IPosition
+    /// <summary> para elementów </summary>
+    | EPara of Wyrazenie * Wyrazenie * Parsor.Core.IPosition
+    /// <summary> projekcja na pierwszy element pary </summary>
+    | EProjLewy of Wyrazenie * Parsor.Core.IPosition
+    /// <summary> projekcja na drugi element pary </summary>
+    | EProjPrawy of Wyrazenie * Parsor.Core.IPosition
+    /// <summary> lewy element kopary </summary>
+    | ELewy of Wyrazenie * Parsor.Core.IPosition
+    /// <summary> prawy element kopary </summary>
+    | EPrawy of Wyrazenie * Parsor.Core.IPosition
+    /// <summary> destruktor kopary (wybór wariantu) </summary>
+    | ECase of Wyrazenie * Wyrazenie * Wyrazenie * Parsor.Core.IPosition
 
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -440,6 +474,12 @@ type Wyrazenie =
         | EOpPorownania(e1, e2, s, f, pos) ->
             EOpPorownania(e1.PodstawTyp x typ, e2.PodstawTyp x typ, s, f, pos)
         | EIf(e1,e2,e3, pos) -> EIf(e1.PodstawTyp x typ, e2.PodstawTyp x typ, e3.PodstawTyp x typ, pos)
+        | EPara(e1,e2,pos) -> EPara(e1.PodstawTyp x typ, e2.PodstawTyp x typ, pos)
+        | EProjLewy(e,pos) -> EProjLewy(e.PodstawTyp x typ, pos)
+        | EProjPrawy(e,pos) -> EProjPrawy(e.PodstawTyp x typ, pos)
+        | ELewy(e,pos) -> ELewy(e.PodstawTyp x typ, pos)
+        | EPrawy(e,pos) -> EPrawy(e.PodstawTyp x typ, pos)
+        | ECase(e1, e2, e3, pos) -> ECase(e1.PodstawTyp x typ, e2.PodstawTyp x typ, e3.PodstawTyp x typ, pos)
 
     /// <summary>
     /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -467,6 +507,14 @@ type Wyrazenie =
             EOpPorownania(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, s, f, pos)
         | EIf(e1,e2,e3,pos) -> 
             EIf(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, e3.PodstawKopieTypu x kv typ, pos)
+        | EPara(e1,e2,pos) ->
+            EPara(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, pos)
+        | EProjLewy(e,pos) -> EProjLewy(e.PodstawKopieTypu x kv typ, pos)
+        | EProjPrawy(e,pos) -> EProjPrawy(e.PodstawKopieTypu x kv typ, pos)
+        | ELewy(e,pos) -> ELewy(e.PodstawKopieTypu x kv typ, pos)
+        | EPrawy(e,pos) -> EPrawy(e.PodstawKopieTypu x kv typ, pos)
+        | ECase(e1,e2,e3,pos) -> 
+            ECase(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, e3.PodstawKopieTypu x kv typ, pos)
 
     /// <summary>
     /// Sprawdza, czy dane wyrażenie zawiera wolne wystąpienie podanej zmiennej.
@@ -492,6 +540,12 @@ type Wyrazenie =
         | EOpArytmetyczny(e1, e2, _, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
         | EOpPorownania(e1, e2, _, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
         | EIf(e1,e2,e3, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x || e3.ZawieraZmienna x
+        | EPara(e1,e2,_) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
+        | EProjLewy(e,_) -> e.ZawieraZmienna x
+        | EProjPrawy(e,_) -> e.ZawieraZmienna x
+        | ELewy(e,_) -> e.ZawieraZmienna x
+        | EPrawy(e,_) -> e.ZawieraZmienna x
+        | ECase(e1,e2,e3, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x || e3.ZawieraZmienna x
     /// <summary>
     /// Wykonuje podstawienie wyrażenie <paramref name="expr"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/>.
@@ -525,6 +579,12 @@ type Wyrazenie =
         | EOpArytmetyczny(e1, e2, s, f, pos) -> EOpArytmetyczny(e1.Podstaw x expr, e2.Podstaw x expr, s, f, pos)
         | EOpPorownania(e1, e2, s, f, pos) -> EOpPorownania(e1.Podstaw x expr, e2.Podstaw x expr, s, f, pos)
         | EIf(e1, e2, e3, pos) -> EIf(e1.Podstaw x expr, e2.Podstaw x expr, e3.Podstaw x expr, pos)
+        | EPara(e1, e2, pos) -> EPara(e1.Podstaw x expr, e2.Podstaw x expr, pos)
+        | EProjLewy(e, pos) -> EProjLewy(e.Podstaw x expr, pos)
+        | EProjPrawy(e, pos) -> EProjPrawy(e.Podstaw x expr, pos)
+        | ELewy(e, pos) -> ELewy(e.Podstaw x expr, pos)
+        | EPrawy(e, pos) -> EPrawy(e.Podstaw x expr, pos)
+        | ECase(e1, e2, e3, pos) -> ECase(e1.Podstaw x expr, e2.Podstaw x expr, e3.Podstaw x expr, pos)
 
     /// <summary>
     /// Polożenie danego wyrażenia w kodzie źródłowym.
@@ -534,7 +594,8 @@ type Wyrazenie =
         | EZmienna(_, pos) | ELambda(_,_,_,pos) | EAplikacja(_,_,pos) | ETLambda(_,_,_,_,pos)
         | ETAplikacja(_,_,pos) | EAnotacja(_,_,pos) | ELet(_,_,_,pos) | ETLet(_,_,_,_,pos)
         | ENat(_,pos) | ETrue pos | EFalse pos | EOpArytmetyczny(_,_,_,_,pos) | EOpPorownania(_,_,_,_,pos) 
-        | EIf(_,_,_,pos) -> pos
+        | EIf(_,_,_,pos) | EPara(_,_,pos) | EProjLewy(_, pos) | EProjPrawy(_, pos) | ELewy(_, pos) | EPrawy(_, pos)
+        | ECase(_,_,_,pos) ->  pos
 
     /// <summary>
     /// Zamienia term na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -595,6 +656,24 @@ type Wyrazenie =
             else res
         | EIf(e1,e2,e3,_) ->
             let res = "if " + e1.ToString() + " then " + e2.ToString() + " else " + e3.ToString();
+            if prior > 0 then
+                "(" + res + ")"
+            else res
+        | EPara(e1,e2,_) -> "{" + e1.ToString() + "," + e2.ToString() + "}"
+        | EProjLewy(e,_) -> e.ToString 12 + ".left"
+        | EProjPrawy(e,_) -> e.ToString 12 + ".right"
+        | ELewy(e,_) ->
+            let res = "left " + e.ToString();
+            if prior > 0 then
+                "(" + res + ")"
+            else res
+        | EPrawy(e,_) ->
+            let res = "right " + e.ToString();
+            if prior > 0 then
+                "(" + res + ")"
+            else res
+        | ECase(e1,e2,e3,_) ->
+            let res = "case " + e1.ToString() + " of left=> " + e2.ToString() + " |right=> " + e3.ToString();
             if prior > 0 then
                 "(" + res + ")"
             else res

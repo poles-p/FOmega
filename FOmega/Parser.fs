@@ -21,12 +21,13 @@ let private ws =
     ) 
 
 let private oper str f =
-    skipString str >>. ws >>. parsor.Return f
+    (skipString str >>. ws >>. parsor.Return f) <?> str
 
 let private slowoKluczowe s =
     match s with
     | "All" | "Bool" | "Nat"
-    | "else" | "false" | "if" | "in" | "let" | "then" | "tlet" | "true" -> true
+    | "case" | "else" | "false" | "if" | "in" | "left" | "let" 
+    | "of" | "right" | "then" | "tlet" | "true" -> true
     | _ -> false
 
 let private ident upper =
@@ -74,6 +75,22 @@ let private atomTypu =
     (skipChar '(' >>. ws <!> fun () ->
         typ.Parsor .>> skipChar ')' .>> ws
     ) <|>
+    (skipChar '{' >>. ws <!> fun () ->
+        parsor{
+            let! t1 = typ.Parsor;
+            do! skipChar ',' .>> ws;
+            let! t2 = typ.Parsor;
+            do! skipChar '}' .>> ws;
+            return TPara(t1,t2)
+        }) <|>
+    (skipChar '<' >>. ws <!> fun () ->
+        parsor{
+            let! t1 = typ.Parsor;
+            do! skipChar '|' .>> ws;
+            let! t2 = typ.Parsor;
+            do! skipChar '>' .>> ws;
+            return TKopara(t1,t2)
+        }) <|>
     (kw "All" <!> fun () ->
         parsor{
             let! tvar = ident true;
@@ -133,6 +150,14 @@ let private atom =
     (skipChar '(' >>. ws <!> fun () ->
         wyrazenie.Parsor .>> skipChar ')' .>> ws
     ) <|>
+    (withPos(skipChar '{' >>. ws) <!> fun (_,pos) ->
+        parsor{
+            let! e1 = wyrazenie.Parsor;
+            do! skipChar ',' .>> ws;
+            let! e2 = wyrazenie.Parsor;
+            do! skipChar '}' .>> ws;
+            return EPara(e1,e2,pos)
+        }) <|>
     (withPos (kw "\\") <!> fun (_,pos) ->
         parsor{
             let! var = ident false;
@@ -190,6 +215,30 @@ let private atom =
             let! e3 = wyrazenie.Parsor;
             return EIf(e1, e2, e3, pos)
         }) <|>
+    (withPos(kw "left") <!> fun (_,pos) ->
+        parsor{
+            let! e = wyrazenie.Parsor;
+            return ELewy(e, pos)
+        }) <|>
+    (withPos(kw "right") <!> fun (_,pos) ->
+        parsor{
+            let! e = wyrazenie.Parsor;
+            return EPrawy(e, pos)
+        }) <|>
+    (withPos(kw "case") <!> fun (_,pos) ->
+        parsor{
+            let! e1 = wyrazenie.Parsor;
+            do! kw "of" |> skip;
+            do! tryParse(skipChar '|' .>> ws) |> skip
+            do! kw "left" |> skip;
+            do! kw "=>" |> skip;
+            let! e2 = wyrazenie.Parsor;
+            do! skipChar '|' .>> ws;
+            do! kw "right" |> skip;
+            do! kw "=>" |> skip;
+            let! e3 = wyrazenie.Parsor;
+            return ECase(e1,e2,e3,pos)
+        }) <|>
     (withPos(ident false) <!> fun x -> parsor{ return EZmienna x }) <|>
     (withPos(localStateV () pnumber .>> ws) <!> fun n -> parsor.Return( ENat n ))
 do
@@ -213,6 +262,9 @@ do
     wyrazenie.AddInfixOperator (coper "<>" (<>)) Parsor.Expresion.LeftAssoc 2
     wyrazenie.AddInfixOperator (coper ">" (>)) Parsor.Expresion.LeftAssoc 2
     wyrazenie.AddInfixOperator (coper "<" (<)) Parsor.Expresion.LeftAssoc 2
+
+    wyrazenie.AddSuffixOperator (withPos(kw ".left") <!> fun (_,pos) -> parsor.Return(fun x -> EProjLewy(x,pos))) 12
+    wyrazenie.AddSuffixOperator (withPos(kw ".right") <!> fun (_,pos) -> parsor.Return(fun x -> EProjPrawy(x,pos))) 12
 
 let parsujText text =
     parseString (ws >>. wyrazenie.Parsor .>> eof) [] (OutputConsole()) text

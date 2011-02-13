@@ -57,3 +57,19 @@ let rec oblicz t =
         | ETrue _ -> oblicz e2
         | EFalse _ -> oblicz e3
         | t -> FOmegaRuntimeException(t.Polozenie.ToString(), t.ToString() + " is not a bool.") |> raise
+    | EPara(e1, e2, pos) -> EPara(oblicz e1, oblicz e2, pos)
+    | EProjLewy(e, pos) ->
+        match oblicz e with
+        | EPara(el, er, _) -> el
+        | t -> FOmegaRuntimeException(t.Polozenie.ToString(), t.ToString() + " is not a pair.") |> raise
+    | EProjPrawy(e, pos) ->
+        match oblicz e with
+        | EPara(el, er, _) -> er
+        | t -> FOmegaRuntimeException(t.Polozenie.ToString(), t.ToString() + " is not a pair.") |> raise
+    | ELewy(e,pos) -> ELewy(oblicz e, pos)
+    | EPrawy(e,pos) -> EPrawy(oblicz e, pos)
+    | ECase(e1, e2, e3, pos) ->
+        match oblicz e1 with
+        | ELewy(e, _) -> oblicz(EAplikacja(e2, e, pos))
+        | EPrawy(e, _) -> oblicz(EAplikacja(e3, e, pos))
+        | t -> FOmegaRuntimeException(t.Polozenie.ToString(), t.ToString() + " is not a copair.") |> raise

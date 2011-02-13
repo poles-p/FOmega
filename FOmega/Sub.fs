@@ -67,6 +67,8 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | TUniwersalny(x,x2,k,t) -> TUniwersalny(x, x2, this.Aplikuj k, this.Aplikuj(pos, t))
         | TAnotacja(t, k) -> TAnotacja(this.Aplikuj(pos, t), this.Aplikuj k)
         | TNat | TBool -> typ
+        | TPara(t1,t2) -> TPara(this.Aplikuj(pos, t1), this.Aplikuj(pos, t2))
+        | TKopara(t1,t2) -> TKopara(this.Aplikuj(pos, t1), this.Aplikuj(pos, t2))
 
     /// <summary>
     /// Aplikacja podstawienia do termu
@@ -85,6 +87,12 @@ type Podstawienie(podstawienie : Przypisanie list) =
         | EOpArytmetyczny(e1, e2, s, f, p) -> EOpArytmetyczny(this.Aplikuj e1, this.Aplikuj e2, s, f, p)
         | EOpPorownania(e1, e2, s, f, p) -> EOpPorownania(this.Aplikuj e1, this.Aplikuj e2, s, f, p)
         | EIf(e1, e2, e3, p) -> EIf(this.Aplikuj e1, this.Aplikuj e2, this.Aplikuj e3, p)
+        | EPara(e1,e2,p) -> EPara(this.Aplikuj e1, this.Aplikuj e2, p);
+        | EProjLewy(e,p) -> EProjLewy(this.Aplikuj e, p);
+        | EProjPrawy(e,p) -> EProjPrawy(this.Aplikuj e, p);
+        | ELewy(e,p) -> ELewy(this.Aplikuj e, p);
+        | EPrawy(e,p) -> EPrawy(this.Aplikuj e, p);
+        | ECase(e1,e2,e3,p) -> ECase(this.Aplikuj e1, this.Aplikuj e2, this.Aplikuj e3, p)
 
     /// <summary>
     /// Aplikacja podstawienia do kontekstu
@@ -142,6 +150,14 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let (rt, ex, t') = this.FAplikuj t;
             (rt, ex, TAnotacja(t', this.Aplikuj k))
         | TNat | TBool -> (true, System.String.Empty, typ)
+        | TPara(t1,t2) ->
+            let (rt1, ex1, t1') = this.FAplikuj t1;
+            let (rt2, ex2, t2') = this.FAplikuj t2;
+            (rt1 && rt2, (if not rt1 then ex1 else ex2), TPara(t1', t2'))
+        | TKopara(t1,t2) ->
+            let (rt1, ex1, t1') = this.FAplikuj t1;
+            let (rt2, ex2, t2') = this.FAplikuj t2;
+            (rt1 && rt2, (if not rt1 then ex1 else ex2), TKopara(t1', t2'))
 
     /// <summary>
     /// Aplikacja podstawienia do termu, ignoruje podstawienia zabronione
@@ -190,6 +206,27 @@ type Podstawienie(podstawienie : Przypisanie list) =
             let (re2, e2') = this.FAplikuj e2;
             let (re3, e3') = this.FAplikuj e3;
             (re1 && re2 && re3, EIf(e1', e2', e3', p))
+        | EPara(e1, e2, p) ->
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            (re1 && re2, EPara(e1', e2', p))
+        | EProjLewy(e, p) ->
+            let (re, e') = this.FAplikuj e;
+            (re, EProjLewy(e', p))
+        | EProjPrawy(e, p) ->
+            let (re, e') = this.FAplikuj e;
+            (re, EProjPrawy(e', p))
+        | ELewy(e, p) ->
+            let (re, e') = this.FAplikuj e;
+            (re, ELewy(e', p))
+        | EPrawy(e, p) ->
+            let (re, e') = this.FAplikuj e;
+            (re, EPrawy(e', p))
+        | ECase(e1, e2, e3, p) ->
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            let (re3, e3') = this.FAplikuj e3;
+            (re1 && re2 && re3, ECase(e1', e2', e3', p))
 
     member private this.Przypisania =
         podstawienie

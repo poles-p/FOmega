@@ -89,6 +89,18 @@ let rec betaUnifikuj (t1, t2) pos =
             let! (ss, s) = betaUnifikuj(st.Aplikuj(pos,s1), st.Aplikuj(pos,s2)) pos;
             return (ss * st, TFunkcja(ss.Aplikuj(pos, t), s))
         }
+    | (TPara(t1, s1), TPara(t2, s2)) ->
+        opt{
+            let! (st, t) = betaUnifikuj(t1, t2) pos;
+            let! (ss, s) = betaUnifikuj(st.Aplikuj(pos,s1), st.Aplikuj(pos,s2)) pos;
+            return (ss * st, TPara(ss.Aplikuj(pos, t), s))
+        }
+    | (TKopara(t1, s1), TKopara(t2, s2)) ->
+        opt{
+            let! (st, t) = betaUnifikuj(t1, t2) pos;
+            let! (ss, s) = betaUnifikuj(st.Aplikuj(pos,s1), st.Aplikuj(pos,s2)) pos;
+            return (ss * st, TKopara(ss.Aplikuj(pos, t), s))
+        }
     | (TWartosc(x, t1), t2)
     | (t1, TWartosc(x, t2)) ->
         opt{
@@ -135,3 +147,5 @@ let rec typBetaNormalny typ = // TODO: zrobić to porządnie
     | TAnotacja(t, _) -> 
         typBetaNormalny t
     | TNat | TBool -> typ
+    | TPara(t1, t2) -> TPara(typBetaNormalny t1, typBetaNormalny t2)
+    | TKopara(t1, t2) -> TKopara(typBetaNormalny t1, typBetaNormalny t2)
