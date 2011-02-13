@@ -10,12 +10,12 @@ open BetaUnifikacja
 /// <summary>
 /// Rekonstrukcja rodzaju
 /// </summary>
-let rec rekRodzaj (gamma : KontekstTypowania) typ =
+let rec rekRodzaj (gamma : KontekstTypowania) typ pos =
     match typ with
     | TWZmienna _ ->
         Some(Podstawienie [], KGwiazdka)
     | TWartosc(_, t) ->
-        rekRodzaj gamma t
+        rekRodzaj gamma t pos
     | TZmienna(x, x') ->
         match gamma.SchematRodzaju x' with
         | None ->
@@ -26,35 +26,35 @@ let rec rekRodzaj (gamma : KontekstTypowania) typ =
             Some(Podstawienie[], podst.Aplikuj kind)
     | TFunkcja(t1, t2) ->
         opt{
-            let! (s1, k1) = rekRodzaj gamma t1;
-            let! (s2, k2) = rekRodzaj (s1.Aplikuj gamma) (s1.Aplikuj t2);
-            let! (s3, _) = unifikuj(s2.Aplikuj k1, KGwiazdka);
-            let! (s4, _) = unifikuj(s3.Aplikuj k2, KGwiazdka);
+            let! (s1, k1) = rekRodzaj gamma t1 pos;
+            let! (s2, k2) = rekRodzaj (s1.Aplikuj(pos, gamma)) (s1.Aplikuj(pos, t2)) pos;
+            let! (s3, _) = unifikuj(s2.Aplikuj k1, KGwiazdka) pos;
+            let! (s4, _) = unifikuj(s3.Aplikuj k2, KGwiazdka) pos;
             return (s4 * s3 * s2 * s1, KGwiazdka)
         }
     | TUniwersalny(x, x2, k, t) ->
         opt{
-            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x2, [], k)) t;
-            let! (s2, _) = unifikuj(kt, KGwiazdka)
+            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x2, [], k)) t pos;
+            let! (s2, _) = unifikuj(kt, KGwiazdka) pos
             return (s2 * s1, KGwiazdka)
         }
     | TLambda(x, x2, k, t) ->
         opt{
-            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x2, [], k)) t;
+            let! (s1, kt) = rekRodzaj (gamma.Rozszerz <| SchematRodzaju(x2, [], k)) t pos;
             return (s1, KFunkcja(s1.Aplikuj k, kt))
         }
     | TAplikacja(t1, t2) ->
         opt{
-            let! (s1, k1) = rekRodzaj gamma t1;
-            let! (s2, k2) = rekRodzaj (s1.Aplikuj gamma) (s1.Aplikuj t2);
+            let! (s1, k1) = rekRodzaj gamma t1 pos;
+            let! (s2, k2) = rekRodzaj (s1.Aplikuj(pos, gamma)) (s1.Aplikuj(pos, t2)) pos;
             let fresh = KWZmienna(Fresh.swierzaNazwa());
-            let! (s3, _) = unifikuj(s2.Aplikuj k1, KFunkcja(k2, fresh))
+            let! (s3, _) = unifikuj(s2.Aplikuj k1, KFunkcja(k2, fresh)) pos
             return (s3 * s2 * s1, s3.Aplikuj fresh)
         }
     | TAnotacja(t, k) ->
         opt{
-            let! (s1, kt) = rekRodzaj gamma t;
-            let! (s2, rk) = unifikuj(kt, s1.Aplikuj k);
+            let! (s1, kt) = rekRodzaj gamma t pos;
+            let! (s2, rk) = unifikuj(kt, s1.Aplikuj k) pos;
             return (s2 * s1, rk)
         }
     | TNat | TBool -> Some(Podstawienie[], KGwiazdka)
@@ -64,103 +64,103 @@ let rec rekRodzaj (gamma : KontekstTypowania) typ =
 /// </summary>
 let rec rekTyp (gamma : KontekstTypowania) term =
     match term with
-    | EZmienna x ->
+    | EZmienna(x, pos) ->
         match gamma.SchematTypu x with
         | None ->
-            System.Console.WriteLine("Undefined variable {0}.", x);
+            System.Console.WriteLine("Error at {1} : Undefined variable {0}.", x, pos);
             None
         | Some(tv, kv, typ) ->
             let przemianowanieT x = PrzypisanieTypu(x, Fresh.swierzaNazwa() |> TWZmienna);
             let przemianowanieK x = PrzypisanieRodzaju(x, Fresh.swierzaNazwa() |> KWZmienna);
             let podst = Podstawienie(List.append (List.map przemianowanieT tv) (List.map przemianowanieK kv));
-            Some(Podstawienie[], podst.Aplikuj typ)
-    | ELambda(x, t, e) ->
+            Some(Podstawienie[], podst.Aplikuj(pos, typ))
+    | ELambda(x, t, e, pos) ->
         opt{
-            let! (s1, k) = rekRodzaj gamma t;
-            let! (s2, _) = unifikuj(k, KGwiazdka);
+            let! (s1, k) = rekRodzaj gamma t pos;
+            let! (s2, _) = unifikuj(k, KGwiazdka) pos;
             let s21 = s2 * s1;
-            let! (s3, te) = rekTyp (s21.Aplikuj(gamma.Rozszerz (SchematTypu(x, [], [], t)))) (s21.Aplikuj e);
+            let! (s3, te) = rekTyp (s21.Aplikuj(e.Polozenie, gamma.Rozszerz (SchematTypu(x, [], [], t)))) (s21.Aplikuj e);
             let s321 = s3 * s21;
-            return (s321, TFunkcja(s321.Aplikuj t, te))
+            return (s321, TFunkcja(s321.Aplikuj(pos, t), te))
         }
-    | EAplikacja(e1, e2) ->
+    | EAplikacja(e1, e2, pos) ->
         opt{
             let! (s1, t1) = rekTyp gamma e1;
-            let! (s2, t2) = rekTyp (s1.Aplikuj gamma) (s1.Aplikuj e2);
+            let! (s2, t2) = rekTyp (s1.Aplikuj(pos, gamma)) (s1.Aplikuj e2);
             let fresh = TWZmienna(Fresh.swierzaNazwa());
-            let! (s3, t3) = betaUnifikuj(s2.Aplikuj t1, TFunkcja(t2, fresh));
+            let! (s3, t3) = betaUnifikuj(s2.Aplikuj(e1.Polozenie, t1), TFunkcja(t2, fresh)) pos;
             match t3 with
             | TFunkcja(_, xv) ->
                 return (s3*s2*s1, xv)
             | _ -> return! None
         }
-    | ETLambda(x, x2, k, e) ->
+    | ETLambda(x, x2, k, e, pos) ->
         opt{
             let! (s1, t) = rekTyp (gamma.Rozszerz(SchematRodzaju(x2, [], k))) e;
             return (s1.UsunZmiennaTypowa x2, TUniwersalny(x, x2, s1.Aplikuj k, t))
         }
-    | ETAplikacja(e, t) ->
+    | ETAplikacja(e, t, pos) ->
         opt{
             let! (s1, te) = rekTyp gamma e;
-            let! (s2, k) = rekRodzaj (s1.Aplikuj gamma) (s1.Aplikuj t);
+            let! (s2, k) = rekRodzaj (s1.Aplikuj(pos, gamma)) (s1.Aplikuj(e.Polozenie, t)) pos;
             let freshX = TWZmienna(Fresh.swierzaNazwa());
             let y = Fresh.swierzaNazwa()
-            let! (s3, res) = betaUnifikuj(s2.Aplikuj te, TUniwersalny(y, y, k, freshX));
+            let! (s3, res) = betaUnifikuj(s2.Aplikuj(e.Polozenie, te), TUniwersalny(y, y, k, freshX)) e.Polozenie;
             match res with
             | TUniwersalny(uy, uy', uk, ut) ->
                 let s321 = s3 * s2 * s1;
-                return (s321, ut.Podstaw uy' (s321.Aplikuj t))
+                return (s321, ut.Podstaw uy' (s321.Aplikuj(pos, t)))
             | _ -> return! None
         }
-    | EAnotacja(e, t) ->
+    | EAnotacja(e, t, pos) ->
         opt{
             let! (s1, te) = rekTyp gamma e;
-            let! (s2, k) = rekRodzaj (s1.Aplikuj gamma) (s1.Aplikuj t);
-            let! (s3, _) = unifikuj(k, KGwiazdka);
-            let! (s4, rt) = betaUnifikuj((s3*s2).Aplikuj te, (s3*s2*s1).Aplikuj t);
+            let! (s2, k) = rekRodzaj (s1.Aplikuj(pos, gamma)) (s1.Aplikuj(pos, t)) pos;
+            let! (s3, _) = unifikuj(k, KGwiazdka) pos;
+            let! (s4, rt) = betaUnifikuj((s3*s2).Aplikuj(pos, te), (s3*s2*s1).Aplikuj(pos, t)) pos;
             return (s4 * s3 * s2 * s1, rt)
         }
-    | ELet(x, e1, e2) ->
+    | ELet(x, e1, e2, pos) ->
         opt{
             let! (s1, t1) = rekTyp gamma e1;
             let tv = Set.toList (t1.WolneTWZmienne - gamma.WolneTWZmienne); // TODO: nie jestem pewien, czy trzeba wykonać podstawienie na gammie
             let kv = Set.toList (t1.WolneKWZmienne - gamma.WolneKWZmienne);
-            let gamma2 = (s1.Aplikuj gamma).Rozszerz(SchematTypu(x, tv, kv, t1));
+            let gamma2 = (s1.Aplikuj(pos, gamma)).Rozszerz(SchematTypu(x, tv, kv, t1));
             let! (s2, t2) = rekTyp gamma2 (s1.Aplikuj e2);
             return (s2 * s1, t2)
         }
-    | ETLet(x, x2, t, e) ->
+    | ETLet(x, x2, t, e, pos) ->
         opt{
-            let! (s1, k) = rekRodzaj gamma t;
+            let! (s1, k) = rekRodzaj gamma t pos;
             let kv = Set.toList (k.WolneKWZmienne - gamma.WolneKWZmienne);
-            let! (s2, tk) = rekTyp (s1.Aplikuj gamma) ((s1.Aplikuj e).PodstawKopieTypu x2 kv (s1.Aplikuj t));
+            let! (s2, tk) = rekTyp (s1.Aplikuj(pos, gamma)) ((s1.Aplikuj e).PodstawKopieTypu x2 kv (s1.Aplikuj(pos, t)));
             return (s2 * s1, tk)
         }
     | ENat _ -> Some(Podstawienie[], TNat)
-    | ETrue | EFalse -> Some(Podstawienie[], TBool)
-    | EOpArytmetyczny(e1, e2, s, f) ->
+    | ETrue _ | EFalse _ -> Some(Podstawienie[], TBool)
+    | EOpArytmetyczny(e1, e2, s, f, pos) ->
         opt{
             let! (s1, t1) = rekTyp gamma e1;
-            let! (s2, t2) = rekTyp (s1.Aplikuj gamma) (s1.Aplikuj e2);
-            let! (s3, _) = betaUnifikuj(s2.Aplikuj t1, TNat);
-            let! (s4, _) = betaUnifikuj(s3.Aplikuj t2, TNat);
+            let! (s2, t2) = rekTyp (s1.Aplikuj(pos, gamma)) (s1.Aplikuj e2);
+            let! (s3, _) = betaUnifikuj(s2.Aplikuj(e1.Polozenie, t1), TNat) e1.Polozenie;
+            let! (s4, _) = betaUnifikuj(s3.Aplikuj(e2.Polozenie, t2), TNat) e2.Polozenie;
             return (s4 * s3 * s2 * s1, TNat)
         }
-    | EOpPorownania(e1, e2, s, f) ->
+    | EOpPorownania(e1, e2, s, f, pos) ->
         opt{
             let! (s1, t1) = rekTyp gamma e1;
-            let! (s2, t2) = rekTyp (s1.Aplikuj gamma) (s1.Aplikuj e2);
-            let! (s3, _) = betaUnifikuj(s2.Aplikuj t1, TNat);
-            let! (s4, _) = betaUnifikuj(s3.Aplikuj t2, TNat);
+            let! (s2, t2) = rekTyp (s1.Aplikuj(pos, gamma)) (s1.Aplikuj e2);
+            let! (s3, _) = betaUnifikuj(s2.Aplikuj(e1.Polozenie, t1), TNat) e1.Polozenie;
+            let! (s4, _) = betaUnifikuj(s3.Aplikuj(e2.Polozenie, t2), TNat) e2.Polozenie;
             return (s4 * s3 * s2 * s1, TBool)
         }
-    | EIf(e1, e2, e3) ->
+    | EIf(e1, e2, e3, pos) ->
         opt{
             let! (s1, t1) = rekTyp gamma e1;
-            let! (s2, t2) = rekTyp (s1.Aplikuj gamma) (s1.Aplikuj e2);
+            let! (s2, t2) = rekTyp (s1.Aplikuj(pos, gamma)) (s1.Aplikuj e2);
             let s21 = s2 * s1;
-            let! (s3, t3) = rekTyp (s21.Aplikuj gamma) (s21.Aplikuj e3);
-            let! (s4, _) = betaUnifikuj((s3*s2).Aplikuj t1, TBool);
-            let! (s5, rt) = betaUnifikuj((s4*s3).Aplikuj t2, s4.Aplikuj t3);
+            let! (s3, t3) = rekTyp (s21.Aplikuj(pos, gamma)) (s21.Aplikuj e3);
+            let! (s4, _) = betaUnifikuj((s3*s2).Aplikuj(e1.Polozenie, t1), TBool) e1.Polozenie;
+            let! (s5, rt) = betaUnifikuj((s4*s3).Aplikuj(e2.Polozenie, t2), s4.Aplikuj(e3.Polozenie, t3)) e2.Polozenie;
             return (s5 * s4 * s3 * s21, rt)
         }

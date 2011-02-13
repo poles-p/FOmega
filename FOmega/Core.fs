@@ -389,33 +389,33 @@ type Typ =
 /// </summary>
 type Wyrazenie =
     /// <summary> zmienna </summary>
-    | EZmienna     of string
+    | EZmienna     of string * Parsor.Core.IPosition
     /// <summary> abstrakcja z anotowanym argumentem </summary>
-    | ELambda      of string * Typ * Wyrazenie
+    | ELambda      of string * Typ * Wyrazenie * Parsor.Core.IPosition
     /// <summary> aplikacja </summary>
-    | EAplikacja   of Wyrazenie * Wyrazenie
+    | EAplikacja   of Wyrazenie * Wyrazenie * Parsor.Core.IPosition
     /// <summary> abstrakcja typowa z anotowanym argumentem </summary>
-    | ETLambda     of string * string * Rodzaj * Wyrazenie
+    | ETLambda     of string * string * Rodzaj * Wyrazenie * Parsor.Core.IPosition
     /// <summary> aplikacja typowa </summary>
-    | ETAplikacja  of Wyrazenie * Typ
+    | ETAplikacja  of Wyrazenie * Typ * Parsor.Core.IPosition
     /// <summary> anotacja typowa </summary>
-    | EAnotacja    of Wyrazenie * Typ
+    | EAnotacja    of Wyrazenie * Typ * Parsor.Core.IPosition
     /// <summary> definicja lokalna </summary>
-    | ELet         of string * Wyrazenie * Wyrazenie
+    | ELet         of string * Wyrazenie * Wyrazenie * Parsor.Core.IPosition
     /// <summary> typ lokalny </summary>
-    | ETLet        of string * string * Typ * Wyrazenie
+    | ETLet        of string * string * Typ * Wyrazenie * Parsor.Core.IPosition
     /// <summary> wartść calkowitoliczbowa </summary>
-    | ENat of int
+    | ENat of int * Parsor.Core.IPosition
     /// <summary> prawdziwa wartość logiczna </summary>
-    | ETrue
+    | ETrue of Parsor.Core.IPosition
     /// <summary> fałszywa wartość logiczna </summary>
-    | EFalse
+    | EFalse of Parsor.Core.IPosition
     /// <summary> operator arytmetyczny </summary>
-    | EOpArytmetyczny of Wyrazenie * Wyrazenie * string * (int -> int -> int)
+    | EOpArytmetyczny of Wyrazenie * Wyrazenie * string * (int -> int -> int) * Parsor.Core.IPosition
     /// <summary> operator porównania </summary>
-    | EOpPorownania   of Wyrazenie * Wyrazenie * string * (int -> int -> bool)
+    | EOpPorownania   of Wyrazenie * Wyrazenie * string * (int -> int -> bool) * Parsor.Core.IPosition
     /// <summary> instrukcja warunkowa </summary>
-    | EIf of Wyrazenie * Wyrazenie * Wyrazenie
+    | EIf of Wyrazenie * Wyrazenie * Wyrazenie * Parsor.Core.IPosition
 
     /// <summary>
     /// Wykonuje podstawienie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -426,20 +426,20 @@ type Wyrazenie =
     /// <returns> Funkcja zwraca nowe wyrazenie po wykonaniu podstawienia. </returns>
     member this.PodstawTyp x typ =
         match this with
-        | EZmienna y -> EZmienna y
-        | ELambda(y,t,e) -> ELambda(y, t.Podstaw x typ, e.PodstawTyp x typ)
-        | EAplikacja(e1,e2) -> EAplikacja(e1.PodstawTyp x typ, e2.PodstawTyp x typ)
-        | ETLambda(y,y2,k,e) -> ETLambda(y, y2, k, e.PodstawTyp x typ)
-        | ETAplikacja(e,t) -> ETAplikacja(e.PodstawTyp x typ, t.Podstaw x typ)
-        | EAnotacja(e,t) -> EAnotacja(e.PodstawTyp x typ, t.Podstaw x typ)
-        | ELet(y,e1,e2) -> ELet(y, e1.PodstawTyp x typ, e2.PodstawTyp x typ)
-        | ETLet(y,y2,t,e) -> ETLet(y, y2, t.Podstaw x typ, e.PodstawTyp x typ)
-        | ENat _ | ETrue | EFalse -> this
-        | EOpArytmetyczny(e1, e2, s, f) -> 
-            EOpArytmetyczny(e1.PodstawTyp x typ, e2.PodstawTyp x typ, s, f)
-        | EOpPorownania(e1, e2, s, f) ->
-            EOpPorownania(e1.PodstawTyp x typ, e2.PodstawTyp x typ, s, f)
-        | EIf(e1,e2,e3) -> EIf(e1.PodstawTyp x typ, e2.PodstawTyp x typ, e3.PodstawTyp x typ)
+        | EZmienna _ -> this
+        | ELambda(y,t,e,pos) -> ELambda(y, t.Podstaw x typ, e.PodstawTyp x typ, pos)
+        | EAplikacja(e1,e2,pos) -> EAplikacja(e1.PodstawTyp x typ, e2.PodstawTyp x typ, pos)
+        | ETLambda(y,y2,k,e,pos) -> ETLambda(y, y2, k, e.PodstawTyp x typ, pos)
+        | ETAplikacja(e,t,pos) -> ETAplikacja(e.PodstawTyp x typ, t.Podstaw x typ, pos)
+        | EAnotacja(e,t,pos) -> EAnotacja(e.PodstawTyp x typ, t.Podstaw x typ, pos)
+        | ELet(y,e1,e2,pos) -> ELet(y, e1.PodstawTyp x typ, e2.PodstawTyp x typ, pos)
+        | ETLet(y,y2,t,e,pos) -> ETLet(y, y2, t.Podstaw x typ, e.PodstawTyp x typ,pos)
+        | ENat _ | ETrue _ | EFalse _ -> this
+        | EOpArytmetyczny(e1, e2, s, f, pos) -> 
+            EOpArytmetyczny(e1.PodstawTyp x typ, e2.PodstawTyp x typ, s, f, pos)
+        | EOpPorownania(e1, e2, s, f, pos) ->
+            EOpPorownania(e1.PodstawTyp x typ, e2.PodstawTyp x typ, s, f, pos)
+        | EIf(e1,e2,e3, pos) -> EIf(e1.PodstawTyp x typ, e2.PodstawTyp x typ, e3.PodstawTyp x typ, pos)
 
     /// <summary>
     /// Wykonuje podstawienie kopie konstruktora typu <paramref name="typ"/> za wszystkie wystąpienia 
@@ -452,21 +452,21 @@ type Wyrazenie =
     /// <returns> Funkcja zwraca nowe wyrazenie po wykonaniu podstawienia. </returns>
     member this.PodstawKopieTypu x kv typ =
         match this with
-        | EZmienna y -> EZmienna y
-        | ELambda(y,t,e) -> ELambda(y, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
-        | EAplikacja(e1,e2) -> EAplikacja(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ)
-        | ETLambda(y,y2,k,e) -> ETLambda(y, y2, k, e.PodstawKopieTypu x kv typ)
-        | ETAplikacja(e,t) -> ETAplikacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ)
-        | EAnotacja(e,t) -> EAnotacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ)
-        | ELet(y,e1,e2) -> ELet(y, e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ)
-        | ETLet(y,y2,t,e) -> ETLet(y, y2, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ)
-        | ENat _ | ETrue | EFalse -> this
-        | EOpArytmetyczny(e1, e2, s, f) -> 
-            EOpArytmetyczny(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, s, f)
-        | EOpPorownania(e1, e2, s, f) ->
-            EOpPorownania(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, s, f)
-        | EIf(e1,e2,e3) -> 
-            EIf(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, e3.PodstawKopieTypu x kv typ)
+        | EZmienna _ -> this
+        | ELambda(y,t,e,pos) -> ELambda(y, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ, pos)
+        | EAplikacja(e1,e2,pos) -> EAplikacja(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, pos)
+        | ETLambda(y,y2,k,e,pos) -> ETLambda(y, y2, k, e.PodstawKopieTypu x kv typ, pos)
+        | ETAplikacja(e,t,pos) -> ETAplikacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ, pos)
+        | EAnotacja(e,t,pos) -> EAnotacja(e.PodstawKopieTypu x kv typ, t.PodstawKopie x kv typ, pos)
+        | ELet(y,e1,e2,pos) -> ELet(y, e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, pos)
+        | ETLet(y,y2,t,e,pos) -> ETLet(y, y2, t.PodstawKopie x kv typ, e.PodstawKopieTypu x kv typ, pos)
+        | ENat _ | ETrue _ | EFalse _ -> this
+        | EOpArytmetyczny(e1, e2, s, f, pos) -> 
+            EOpArytmetyczny(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, s, f, pos)
+        | EOpPorownania(e1, e2, s, f, pos) ->
+            EOpPorownania(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, s, f, pos)
+        | EIf(e1,e2,e3,pos) -> 
+            EIf(e1.PodstawKopieTypu x kv typ, e2.PodstawKopieTypu x kv typ, e3.PodstawKopieTypu x kv typ, pos)
 
     /// <summary>
     /// Sprawdza, czy dane wyrażenie zawiera wolne wystąpienie podanej zmiennej.
@@ -478,20 +478,20 @@ type Wyrazenie =
     /// </returns>
     member this.ZawieraZmienna x =
         match this with
-        | EZmienna y -> x = y
-        | ELambda(y,_,_) when x = y -> false
-        | ELambda(_,_,e) -> e.ZawieraZmienna x
-        | EAplikacja(e1,e2) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
-        | ETLambda(_,_,_,e) -> e.ZawieraZmienna x
-        | ETAplikacja(e,_) -> e.ZawieraZmienna x
-        | EAnotacja(e,_) -> e.ZawieraZmienna x
-        | ELet(y,e1,e2) when x = y -> e1.ZawieraZmienna x
-        | ELet(y,e1,e2) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
-        | ETLet(_,_,_,e) -> e.ZawieraZmienna x
-        | ENat _ | ETrue | EFalse -> false
-        | EOpArytmetyczny(e1, e2, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
-        | EOpPorownania(e1, e2, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
-        | EIf(e1,e2,e3) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x || e3.ZawieraZmienna x
+        | EZmienna(y, _) -> x = y
+        | ELambda(y,_,_,_) when x = y -> false
+        | ELambda(_,_,e,_) -> e.ZawieraZmienna x
+        | EAplikacja(e1,e2,_) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
+        | ETLambda(_,_,_,e,_) -> e.ZawieraZmienna x
+        | ETAplikacja(e,_,_) -> e.ZawieraZmienna x
+        | EAnotacja(e,_,_) -> e.ZawieraZmienna x
+        | ELet(y,e1,e2,_) when x = y -> e1.ZawieraZmienna x
+        | ELet(y,e1,e2,_) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
+        | ETLet(_,_,_,e,_) -> e.ZawieraZmienna x
+        | ENat _ | ETrue _ | EFalse _ -> false
+        | EOpArytmetyczny(e1, e2, _, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
+        | EOpPorownania(e1, e2, _, _, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x
+        | EIf(e1,e2,e3, _) -> e1.ZawieraZmienna x || e2.ZawieraZmienna x || e3.ZawieraZmienna x
     /// <summary>
     /// Wykonuje podstawienie wyrażenie <paramref name="expr"/> za wszystkie wystąpienia 
     /// zmiennej <paramref name="x"/>.
@@ -501,30 +501,40 @@ type Wyrazenie =
     /// <returns> Funkcja zwraca nowe wyrażenie po wykonaniu podstawienia. </returns>
     member this.Podstaw x expr =
         match this with
-        | EZmienna y when x = y -> expr
-        | EZmienna y -> EZmienna y
-        | ELambda(y,t,e) ->
-            if x = y then ELambda(y,t,e)
+        | EZmienna(y, _) when x = y -> expr
+        | EZmienna _ -> this
+        | ELambda(y,t,e,pos) ->
+            if x = y then ELambda(y,t,e,pos)
             elif expr.ZawieraZmienna y then
                 let z = Fresh.swierzaNazwa();
-                ELambda(z, t, (e.Podstaw y (EZmienna z)).Podstaw x expr)
-            else ELambda(y, t, e.Podstaw x expr)
-        | EAplikacja(e1,e2) -> EAplikacja(e1.Podstaw x expr, e2.Podstaw x expr)
-        | ETLambda(y,y2,k,e) -> ETLambda(y,y2,k,e.Podstaw x expr)
-        | ETAplikacja(e,t) -> ETAplikacja(e.Podstaw x expr, t)
-        | EAnotacja(e,t) -> EAnotacja(e.Podstaw x expr, t)
-        | ELet(y,e1,e2) ->
-            if x = y then ELet(y,e1,e2)
+                ELambda(z, t, (e.Podstaw y (EZmienna(z, pos))).Podstaw x expr, pos)
+            else ELambda(y, t, e.Podstaw x expr, pos)
+        | EAplikacja(e1,e2,pos) -> EAplikacja(e1.Podstaw x expr, e2.Podstaw x expr, pos)
+        | ETLambda(y,y2,k,e,pos) -> ETLambda(y,y2,k,e.Podstaw x expr, pos)
+        | ETAplikacja(e,t,pos) -> ETAplikacja(e.Podstaw x expr, t, pos)
+        | EAnotacja(e,t, pos) -> EAnotacja(e.Podstaw x expr, t, pos)
+        | ELet(y,e1,e2,pos) ->
+            if x = y then ELet(y,e1,e2,pos)
             elif expr.ZawieraZmienna y then
                 let z = Fresh.swierzaNazwa();
-                ELet(z, e1.Podstaw x expr, (e2.Podstaw y (EZmienna z)).Podstaw x expr)
-            else ELet(y, e1.Podstaw x expr, e2.Podstaw x expr)
-        | ETLet(y,y2,t,e) ->
-            ETLet(y,y2,t,e.Podstaw x expr)
-        | ENat _ | ETrue | EFalse -> this
-        | EOpArytmetyczny(e1, e2, s, f) -> EOpArytmetyczny(e1.Podstaw x expr, e2.Podstaw x expr, s, f)
-        | EOpPorownania(e1, e2, s, f) -> EOpPorownania(e1.Podstaw x expr, e2.Podstaw x expr, s, f)
-        | EIf(e1, e2, e3) -> EIf(e1.Podstaw x expr, e2.Podstaw x expr, e3.Podstaw x expr)
+                ELet(z, e1.Podstaw x expr, (e2.Podstaw y (EZmienna(z,pos))).Podstaw x expr, pos)
+            else ELet(y, e1.Podstaw x expr, e2.Podstaw x expr, pos)
+        | ETLet(y,y2,t,e,pos) ->
+            ETLet(y,y2,t,e.Podstaw x expr,pos)
+        | ENat _ | ETrue _ | EFalse _ -> this
+        | EOpArytmetyczny(e1, e2, s, f, pos) -> EOpArytmetyczny(e1.Podstaw x expr, e2.Podstaw x expr, s, f, pos)
+        | EOpPorownania(e1, e2, s, f, pos) -> EOpPorownania(e1.Podstaw x expr, e2.Podstaw x expr, s, f, pos)
+        | EIf(e1, e2, e3, pos) -> EIf(e1.Podstaw x expr, e2.Podstaw x expr, e3.Podstaw x expr, pos)
+
+    /// <summary>
+    /// Polożenie danego wyrażenia w kodzie źródłowym.
+    /// </summary>
+    member this.Polozenie =
+        match this with
+        | EZmienna(_, pos) | ELambda(_,_,_,pos) | EAplikacja(_,_,pos) | ETLambda(_,_,_,_,pos)
+        | ETAplikacja(_,_,pos) | EAnotacja(_,_,pos) | ELet(_,_,_,pos) | ETLet(_,_,_,_,pos)
+        | ENat(_,pos) | ETrue pos | EFalse pos | EOpArytmetyczny(_,_,_,_,pos) | EOpPorownania(_,_,_,_,pos) 
+        | EIf(_,_,_,pos) -> pos
 
     /// <summary>
     /// Zamienia term na ciąg znaków z możliwie najoszczędniejszym nawiasowaniem
@@ -533,57 +543,57 @@ type Wyrazenie =
     /// <returns> Ciąg znaków reprezentujący term </returns>
     member this.ToString prior =
         match this with
-        | EZmienna x -> x
-        | ELambda(x,t,e) ->
+        | EZmienna(x, _) -> x
+        | ELambda(x,t,e,_) ->
             let res = "\\" + x + ":" + t.ToString() + "." + e.ToString 0;
             if prior > 8 then
                 "(" + res + ")"
             else res
-        | EAplikacja(a,b) ->
+        | EAplikacja(a,b,_) ->
             let res = a.ToString 8 + " " + b.ToString 9
             if prior > 8 then
                 "(" + res + ")"
             else res
-        | ETLambda(x,_,k,e) ->
+        | ETLambda(x,_,k,e,_) ->
             let res = "\\\\" + x + "::" + k.ToString() + "." + e.ToString 0;
             if prior > 0 then
                 "(" + res + ")"
             else res
-        | ETAplikacja(a,b) ->
+        | ETAplikacja(a,b,_) ->
             let res = a.ToString 8 + "[" + b.ToString() + "]"
             if prior > 8 then
                 "(" + res + ")"
             else res
-        | EAnotacja(e,t) ->
+        | EAnotacja(e,t,_) ->
             let res = e.ToString 9 + " :: " + t.ToString();
             if prior > 8 then
                 "(" + res + ")"
             else res
-        | ELet(x,e1,e2) ->
+        | ELet(x,e1,e2,_) ->
             let res = "let " + x + " = " + e1.ToString() + " in " + e2.ToString()
             if prior > 0 then
                 "(" + res + ")"
             else res
-        | ETLet(x,_,t,e) ->
+        | ETLet(x,_,t,e,_) ->
             let res = "tlet " + x + " = " + t.ToString() + " in " + e.ToString()
             if prior > 0 then
                 "(" + res + ")"
             else res
-        | ENat n -> n.ToString()
-        | ETrue -> "true"
-        | EFalse -> "false"
-        | EOpArytmetyczny(e1, e2, s, _) ->
+        | ENat(n,_) -> n.ToString()
+        | ETrue _ -> "true"
+        | EFalse _ -> "false"
+        | EOpArytmetyczny(e1, e2, s, _, _) ->
             let p = if s = "+" || s = "-" then 4 else 5;
             let res = e1.ToString p + s + e2.ToString(p+1);
             if prior > p then
                 "(" + res + ")"
             else res
-        | EOpPorownania(e1, e2, s, _) ->
+        | EOpPorownania(e1, e2, s, _, _) ->
             let res = e1.ToString 3 + s + e2.ToString 3;
             if prior > 2 then
                 "(" + res + ")"
             else res
-        | EIf(e1,e2,e3) ->
+        | EIf(e1,e2,e3,_) ->
             let res = "if " + e1.ToString() + " then " + e2.ToString() + " else " + e3.ToString();
             if prior > 0 then
                 "(" + res + ")"

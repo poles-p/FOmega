@@ -12,7 +12,7 @@ let main =
                 | Parsor.Core.Success term ->
                     opt{
                         let! (s, typ) = AlgorytmW.rekTyp (KontekstTypowania[]) term;
-                        let! (_, kind) = AlgorytmW.rekRodzaj (KontekstTypowania[]) typ;
+                        let! (_, kind) = AlgorytmW.rekRodzaj (KontekstTypowania[]) typ "";
                         System.Console.WriteLine("{0}  :  {1}  ::  {2}", snd (s.FAplikuj term), typ, kind);
                         System.Console.WriteLine();
                         System.Console.WriteLine(Interpreter.oblicz term);
@@ -20,10 +20,10 @@ let main =
                     } |> ignore                
                 | Parsor.Core.Error -> ()
             with
-            | SubstitutionException ex ->
-                System.Console.WriteLine("Error : {0}", ex)
-            | Interpreter.FOmegaRuntimeException ex ->
-                System.Console.WriteLine("Runtime error : {0}", ex)
+            | SubstitutionException(pos, ex) ->
+                System.Console.WriteLine("Error at {0} : {1}", pos, ex)
+            | Interpreter.FOmegaRuntimeException(pos, ex) ->
+                System.Console.WriteLine("Runtime error at {0} : {1}", pos, ex)
             | :? System.IO.IOException as ex ->
                 System.Console.WriteLine("IO Exception : {0}", ex.Message)
     done

@@ -9,7 +9,7 @@ open Core
 /// Wyjątek rzucany w przypadku, gdy podstawienie nie jest możliwe (występuje w nim przypisanie X := fail).
 /// Niesie ono informację jakiego podstawienia nie wolno wykonać.
 /// </summary>
-exception SubstitutionException of string
+exception SubstitutionException of string * string
 
 /// <summary>
 /// Pojedyncze przypisanie w podstawieniu.
@@ -47,7 +47,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
     /// <summary>
     /// Aplikacja podstawienia do typu
     /// </summary>
-    member this.Aplikuj typ =
+    member this.Aplikuj(pos, typ) =
         match typ with
         | TWZmienna x ->
             let ok p =
@@ -57,15 +57,15 @@ type Podstawienie(podstawienie : Przypisanie list) =
                 | _ -> false
             match List.tryFind ok podstawienie with
             | Some(PrzypisanieTypu(_, t)) -> t.AlfaKopia
-            | Some(PrzypisanieZabronione(_, ex, _)) -> SubstitutionException ex |> raise
+            | Some(PrzypisanieZabronione(_, ex, _)) -> SubstitutionException(pos.ToString(), ex) |> raise
             | _ -> typ
-        | TWartosc(x, t) -> TWartosc(x, this.Aplikuj t)
+        | TWartosc(x, t) -> TWartosc(x, this.Aplikuj(pos, t))
         | TZmienna _ -> typ
-        | TFunkcja(a, b) -> TFunkcja(this.Aplikuj a, this.Aplikuj b)
-        | TLambda(x,x2,k,t) -> TLambda(x, x2, this.Aplikuj k, this.Aplikuj t)
-        | TAplikacja(t1,t2) -> TAplikacja(this.Aplikuj t1, this.Aplikuj t2)
-        | TUniwersalny(x,x2,k,t) -> TUniwersalny(x, x2, this.Aplikuj k, this.Aplikuj t)
-        | TAnotacja(t, k) -> TAnotacja(this.Aplikuj t, this.Aplikuj k)
+        | TFunkcja(a, b) -> TFunkcja(this.Aplikuj(pos, a), this.Aplikuj(pos, b))
+        | TLambda(x,x2,k,t) -> TLambda(x, x2, this.Aplikuj k, this.Aplikuj(pos, t))
+        | TAplikacja(t1,t2) -> TAplikacja(this.Aplikuj(pos, t1), this.Aplikuj(pos, t2))
+        | TUniwersalny(x,x2,k,t) -> TUniwersalny(x, x2, this.Aplikuj k, this.Aplikuj(pos, t))
+        | TAnotacja(t, k) -> TAnotacja(this.Aplikuj(pos, t), this.Aplikuj k)
         | TNat | TBool -> typ
 
     /// <summary>
@@ -74,22 +74,22 @@ type Podstawienie(podstawienie : Przypisanie list) =
     member this.Aplikuj term =
         match term with
         | EZmienna _ -> term
-        | ELambda(x, t, e) -> ELambda(x, this.Aplikuj t, this.Aplikuj e)
-        | EAplikacja(e1, e2) -> EAplikacja(this.Aplikuj e1, this.Aplikuj e2)
-        | ETLambda(x, x2, k, e) -> ETLambda(x, x2, this.Aplikuj k, this.Aplikuj e)
-        | ETAplikacja(e, t) -> ETAplikacja(this.Aplikuj e, this.Aplikuj t)
-        | EAnotacja(e, t) -> EAnotacja(this.Aplikuj e, this.Aplikuj t)
-        | ELet(x, e1, e2) -> ELet(x, this.Aplikuj e1, this.Aplikuj e2)
-        | ETLet(x, x2, t, e) -> ETLet(x, x2, this.Aplikuj t, this.Aplikuj e)
-        | ENat _ | ETrue | EFalse -> term
-        | EOpArytmetyczny(e1, e2, s, f) -> EOpArytmetyczny(this.Aplikuj e1, this.Aplikuj e2, s, f)
-        | EOpPorownania(e1, e2, s, f) -> EOpPorownania(this.Aplikuj e1, this.Aplikuj e2, s, f)
-        | EIf(e1, e2, e3) -> EIf(this.Aplikuj e1, this.Aplikuj e2, this.Aplikuj e3)
+        | ELambda(x, t, e, p) -> ELambda(x, this.Aplikuj(p, t), this.Aplikuj e, p)
+        | EAplikacja(e1, e2, p) -> EAplikacja(this.Aplikuj e1, this.Aplikuj e2, p)
+        | ETLambda(x, x2, k, e, p) -> ETLambda(x, x2, this.Aplikuj k, this.Aplikuj e, p)
+        | ETAplikacja(e, t, p) -> ETAplikacja(this.Aplikuj e, this.Aplikuj(p, t), p)
+        | EAnotacja(e, t, p) -> EAnotacja(this.Aplikuj e, this.Aplikuj(p, t), p)
+        | ELet(x, e1, e2, p) -> ELet(x, this.Aplikuj e1, this.Aplikuj e2, p)
+        | ETLet(x, x2, t, e, p) -> ETLet(x, x2, this.Aplikuj(p, t), this.Aplikuj e, p)
+        | ENat _ | ETrue _ | EFalse _ -> term
+        | EOpArytmetyczny(e1, e2, s, f, p) -> EOpArytmetyczny(this.Aplikuj e1, this.Aplikuj e2, s, f, p)
+        | EOpPorownania(e1, e2, s, f, p) -> EOpPorownania(this.Aplikuj e1, this.Aplikuj e2, s, f, p)
+        | EIf(e1, e2, e3, p) -> EIf(this.Aplikuj e1, this.Aplikuj e2, this.Aplikuj e3, p)
 
     /// <summary>
     /// Aplikacja podstawienia do kontekstu
     /// </summary>
-    member this.Aplikuj (gamma : KontekstTypowania) =
+    member this.Aplikuj (pos, gamma : KontekstTypowania) =
         let aplikuj schemat =
             match schemat with
             | SchematTypu(x, tv, kv, t) ->
@@ -97,7 +97,7 @@ type Podstawienie(podstawienie : Przypisanie list) =
                 let kv2 = List.map (fun _ -> Fresh.swierzaNazwa()) kv;
                 let pt = Podstawienie( List.map2 (fun x y -> PrzypisanieTypu(x, TWZmienna y)) tv tv2 );
                 let pk = Podstawienie( List.map2 (fun x y -> PrzypisanieRodzaju(x, KWZmienna y)) kv kv2 );
-                SchematTypu(x, tv2, kv2, (this * pk * pt).Aplikuj t)
+                SchematTypu(x, tv2, kv2, (this * pk * pt).Aplikuj(pos, t))
             | SchematRodzaju(x, kv, k) ->
                 let kv2 = List.map (fun _ -> Fresh.swierzaNazwa()) kv;
                 let pk = Podstawienie( List.map2 (fun x y -> PrzypisanieRodzaju(x, KWZmienna y)) kv kv2 );
@@ -149,47 +149,47 @@ type Podstawienie(podstawienie : Przypisanie list) =
     member this.FAplikuj term =
         match term with
         | EZmienna _ -> (true, term)
-        | ELambda(x, t, e) -> 
+        | ELambda(x, t, e, p) -> 
             let (rt, _, t') = this.FAplikuj t;
             let (re, e') = this.FAplikuj e;
-            (rt && re, ELambda(x, t', e'))
-        | EAplikacja(e1, e2) -> 
+            (rt && re, ELambda(x, t', e', p))
+        | EAplikacja(e1, e2, p) -> 
             let (re1, e1') = this.FAplikuj e1;
             let (re2, e2') = this.FAplikuj e2;
-            (re1 && re2, EAplikacja(e1', e2'))
-        | ETLambda(x, x2, k, e) -> 
+            (re1 && re2, EAplikacja(e1', e2', p))
+        | ETLambda(x, x2, k, e, p) -> 
             let (re, e') = this.FAplikuj e;
-            (re, ETLambda(x, x2, this.Aplikuj k, e'))
-        | ETAplikacja(e, t) ->
-            let (re, e') = this.FAplikuj e;
-            let (rt, _, t') = this.FAplikuj t;
-            (re && rt, ETAplikacja(e', t'))
-        | EAnotacja(e, t) -> 
+            (re, ETLambda(x, x2, this.Aplikuj k, e', p))
+        | ETAplikacja(e, t, p) ->
             let (re, e') = this.FAplikuj e;
             let (rt, _, t') = this.FAplikuj t;
-            (re && rt, EAnotacja(e', t'))
-        | ELet(x, e1, e2) ->
-            let (re1, e1') = this.FAplikuj e1;
-            let (re2, e2') = this.FAplikuj e2;
-            (re1 && re2, ELet(x, e1', e2'))
-        | ETLet(x, x2, t, e) -> 
+            (re && rt, ETAplikacja(e', t', p))
+        | EAnotacja(e, t, p) -> 
             let (re, e') = this.FAplikuj e;
             let (rt, _, t') = this.FAplikuj t;
-            (re && rt, ETLet(x, x2, t', e'))
-        | ENat _ | ETrue | EFalse -> (true, term)
-        | EOpArytmetyczny(e1, e2, s, f) -> 
+            (re && rt, EAnotacja(e', t', p))
+        | ELet(x, e1, e2, p) ->
             let (re1, e1') = this.FAplikuj e1;
             let (re2, e2') = this.FAplikuj e2;
-            (re1 && re2, EOpArytmetyczny(e1', e2', s, f))
-        | EOpPorownania(e1, e2, s, f) -> 
+            (re1 && re2, ELet(x, e1', e2', p))
+        | ETLet(x, x2, t, e, p) -> 
+            let (re, e') = this.FAplikuj e;
+            let (rt, _, t') = this.FAplikuj t;
+            (re && rt, ETLet(x, x2, t', e', p))
+        | ENat _ | ETrue _ | EFalse _ -> (true, term)
+        | EOpArytmetyczny(e1, e2, s, f, p) -> 
             let (re1, e1') = this.FAplikuj e1;
             let (re2, e2') = this.FAplikuj e2;
-            (re1 && re2, EOpPorownania(e1', e2', s, f))
-        | EIf(e1, e2, e3) ->
+            (re1 && re2, EOpArytmetyczny(e1', e2', s, f, p))
+        | EOpPorownania(e1, e2, s, f, p) -> 
+            let (re1, e1') = this.FAplikuj e1;
+            let (re2, e2') = this.FAplikuj e2;
+            (re1 && re2, EOpPorownania(e1', e2', s, f, p))
+        | EIf(e1, e2, e3, p) ->
             let (re1, e1') = this.FAplikuj e1;
             let (re2, e2') = this.FAplikuj e2;
             let (re3, e3') = this.FAplikuj e3;
-            (re1 && re2 && re3, EIf(e1', e2', e3'))
+            (re1 && re2 && re3, EIf(e1', e2', e3', p))
 
     member private this.Przypisania =
         podstawienie

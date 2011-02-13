@@ -133,7 +133,7 @@ let private atom =
     (skipChar '(' >>. ws <!> fun () ->
         wyrazenie.Parsor .>> skipChar ')' .>> ws
     ) <|>
-    (kw "\\" <!> fun () ->
+    (withPos (kw "\\") <!> fun (_,pos) ->
         parsor{
             let! var = ident false;
             let! typ =
@@ -146,9 +146,9 @@ let private atom =
                     };
             do! skipChar '.' >>. ws;
             let! rest = wyrazenie.Parsor;
-            return ELambda(var,typ,rest)
+            return ELambda(var,typ,rest,pos)
         }) <|>
-    (kw "\\\\" <!> fun () ->
+    (withPos(kw "\\\\") <!> fun (_,pos) ->
         parsor{
             let! tvar = ident true;
             let tvar2 = Fresh.swierzaNazwa();
@@ -162,51 +162,51 @@ let private atom =
                     };
             do! skipChar '.' >>. ws;
             let! rest = localStateUpdateV (fun s -> (tvar,tvar2)::s) wyrazenie.Parsor;
-            return ETLambda(tvar,tvar2,kind,rest)
+            return ETLambda(tvar,tvar2,kind,rest,pos)
         }) <|>
-    (kw "let" <!> fun () ->
+    (withPos(kw "let") <!> fun (_,pos) ->
         parsor{
             let! x = ident false .>> skipChar '=' .>> ws;
             let! e1 = wyrazenie.Parsor .>> kw "in";
             let! e2 = wyrazenie.Parsor;
-            return ELet(x, e1, e2)
+            return ELet(x, e1, e2,pos)
         }) <|>
-    (kw "tlet" <!> fun () ->
+    (withPos(kw "tlet") <!> fun (_,pos) ->
         parsor{
             let! x = ident true .>> skipChar '=' .>> ws;
             let x2 = Fresh.swierzaNazwa();
             let! t = typ.Parsor .>> kw "in";
             let! e = localStateUpdateV (fun s -> (x,x2)::s) wyrazenie.Parsor;
-            return ETLet(x, x2, t, e)
+            return ETLet(x, x2, t, e, pos)
         }) <|>
-    (kw "true" <!> fun () -> parsor.Return ETrue) <|>
-    (kw "false" <!> fun () -> parsor.Return EFalse) <|>
-    (kw "if" <!> fun () ->
+    (withPos(kw "true") <!> fun (_,pos) -> parsor.Return(ETrue pos)) <|>
+    (withPos(kw "false") <!> fun (_,pos) -> parsor.Return(EFalse pos)) <|>
+    (withPos(kw "if") <!> fun (_,pos) ->
         parsor{
             let! e1 = wyrazenie.Parsor;
             do! kw "then"
             let! e2 = wyrazenie.Parsor;
             do! kw "else"
             let! e3 = wyrazenie.Parsor;
-            return EIf(e1, e2, e3)
+            return EIf(e1, e2, e3, pos)
         }) <|>
-    (ident false <!> fun x -> parsor{ return EZmienna x }) <|>
-    ((localStateV () pnumber .>> ws) <!> fun n -> parsor.Return( ENat n ))
+    (withPos(ident false) <!> fun x -> parsor{ return EZmienna x }) <|>
+    (withPos(localStateV () pnumber .>> ws) <!> fun n -> parsor.Return( ENat n ))
 do
     wyrazenie.Atom <- atom <??> "expresion"
-    wyrazenie.AddSuffixOperator (parsor{ let! arg = atom in return fun x -> EAplikacja(x, arg) }) 8
+    wyrazenie.AddSuffixOperator (parsor{ let! arg = atom in return fun x -> EAplikacja(x, arg, arg.Polozenie) }) 8
     wyrazenie.AddSuffixOperator (
         parsor{ 
-            let! arg = skipChar '[' >>. ws >>. typ.Parsor .>> skipChar ']' .>> ws in 
-            return fun x -> ETAplikacja(x, arg) 
+            let! arg = withPos(skipChar '[' >>. ws >>. typ.Parsor .>> skipChar ']' .>> ws) in 
+            return fun x -> ETAplikacja(x, fst arg, snd arg) 
         }) 8
-    wyrazenie.AddSuffixOperator (kw ":" <!> fun () -> parsor{ let! typ = typ.Parsor in return fun x -> EAnotacja(x, typ) }) 8
-    let aoper s f = kw s >>. parsor.Return(fun a b -> EOpArytmetyczny(a, b, s, f))
+    wyrazenie.AddSuffixOperator (withPos(kw ":") <!> fun (_,pos) -> parsor{ let! typ = typ.Parsor in return fun x -> EAnotacja(x, typ, pos) }) 8
+    let aoper s f = kw s >>. parsor.Return(fun a b -> EOpArytmetyczny(a, b, s, f, a.Polozenie))
     wyrazenie.AddInfixOperator (aoper "+" ( + )) Parsor.Expresion.LeftAssoc 4
     wyrazenie.AddInfixOperator (aoper "-" ( - )) Parsor.Expresion.LeftAssoc 4
     wyrazenie.AddInfixOperator (aoper "/" ( / )) Parsor.Expresion.LeftAssoc 5
     wyrazenie.AddInfixOperator (aoper "*" ( * )) Parsor.Expresion.LeftAssoc 5
-    let coper s f = box(kw s) >>. parsor.Return(fun a b -> EOpPorownania(a, b, s, f))
+    let coper s f = box(kw s) >>. parsor.Return(fun a b -> EOpPorownania(a, b, s, f, a.Polozenie))
     wyrazenie.AddInfixOperator (coper ">=" (>=)) Parsor.Expresion.LeftAssoc 2
     wyrazenie.AddInfixOperator (coper "<=" (<=)) Parsor.Expresion.LeftAssoc 2
     wyrazenie.AddInfixOperator (coper "=" (=)) Parsor.Expresion.LeftAssoc 2
