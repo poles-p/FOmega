@@ -14,12 +14,16 @@ let main =
                         let! (s, typ) = AlgorytmW.rekTyp (KontekstTypowania[]) term;
                         let! (_, kind) = AlgorytmW.rekRodzaj (KontekstTypowania[]) typ;
                         System.Console.WriteLine("{0}  :  {1}  ::  {2}", snd (s.FAplikuj term), typ, kind);
+                        System.Console.WriteLine();
+                        System.Console.WriteLine(Interpreter.oblicz term);
                         return ()
                     } |> ignore                
                 | Parsor.Core.Error -> ()
             with
             | SubstitutionException ex ->
                 System.Console.WriteLine("Error : {0}", ex)
+            | Interpreter.FOmegaRuntimeException ex ->
+                System.Console.WriteLine("Runtime error : {0}", ex)
             | :? System.IO.IOException as ex ->
                 System.Console.WriteLine("IO Exception : {0}", ex.Message)
     done
