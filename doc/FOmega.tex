@@ -393,47 +393,34 @@ Stąd, reguły typowania wyrażeń arytmetycznych i logicznych wyglądają nast�
 	\]
 Zdefiniowanie reguł ewaluacji pozostawiamy Czytelnikowi.
 
-\subsection{unit i sekwencje}
+\subsection{Unit i sekwencje}
 
-W zasadzie unita można nie wprowadzać: \\
-$\mathtt{unit = \lambda X::\ast.\lambda x:X.x}$ \\
-$\mathtt{Unit = \forall X::\ast.X \rightarrow X}$ \\
-Typowanie:
- 	\[\mathtt{ \frac{}{\Gamma \vdash unit:Unit}
-		}
-	\]
- 	\[\mathtt{ t_1;t_2 = (\lambda x:Unit.t_2)t_1 \hspace{3em} \text{gdzie x $\notin$ FV($t_2$)}
-		}
-	\]
-
-
-a to stare, może się przyda: \\
+W rachunku lambda z typami prostymi dodaliśmy do składnię języka rozszerzaliśmy o konstrukcje takie, jak: 
 
 \begin{tabular}{| l c r |}
   \hline
   $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
-   & $\mathtt{unit}$ & \\
+   & $\mathtt{unit}$ \textit{term unit}& \\
   $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
-   & $\mathtt{Unit}$ & \\
+   & $\mathtt{Unit}$ \textit{typ unit}& \\
   $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
-   & $\mathtt{unit}$ & \\
+   & $\mathtt{unit}$ \textit{wartość unit}& \\
   \hline
 \end{tabular} \\
-Tworzenie rodzaju:
- 	\[\mathtt{ \frac{}{\Gamma \vdash Unit::\ast}
+
+natomiast typowanie przebiegało następująco:~\[\mathtt{ \frac{}{\Gamma \vdash unit:Unit}
 		}
 	\]
-Typowanie:
- 	\[\mathtt{ \frac{}{\Gamma \vdash unit:Unit}
+a sekwencje definiowaliśmy jako:~\[\mathtt{ t_1;t_2 \;\overset{def}{=}\; (\lambda x:Unit.t_2)t_1 \hspace{3em} \text{gdzie x $\notin$ FV($t_2$)}
 		}
 	\]
- 	\[\mathtt{ t_1;t_2 = (\lambda x:Unit.t_2)t_1 \hspace{3em} \text{gdzie x $\notin$ FV($t_2$)}
+Aby pozostać przy wbudowanym unit w język wystarczy dodać regułę znajdowania rodzaju dla typu \texttt{Unit}:~\[\mathtt{ \frac{}{\Gamma \vdash Unit::\ast}
 		}
 	\]
-Ewaluacja:
- 	\[\mathtt{ aaa
-		}
-	\]
+
+W rachunku $F_\omega$ pojawia się możliwość zakodowania \texttt{unit} i \texttt{Unit}. Robimy to w taki sposób:
+$\mathtt{unit \;\overset{def}{=}\;= \lambda X::\ast.\lambda x:X.x}$ \\
+$\mathtt{Unit \;\overset{def}{=}\; \forall X::\ast.X \rightarrow X}$ \\
 
 \subsection{Definicje lokalne}
 
