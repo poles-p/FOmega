@@ -567,21 +567,19 @@ Jako przykład wbudowanych typów danych wybraliśmy listy. Podobne rekursywne s
   \hline
 \end{tabular} \\
 
-Tworzenie rodzaju:
- 	\[\mathtt{ \frac{\Gamma \vdash T::\ast}{\Gamma \vdash List\;T::\ast}
+Do reguł rodzajowania dodamy regułę:
+ 	\[\mathtt{ \frac{\Gamma \vdash T::K}{\Gamma \vdash List\;T::K}
 		}
 	\]
-Typowanie:
+czyli $\mathtt{List\;T}$ ma ten sam rodzaj, co jego elementy.
+Reguły typowania nieznacznie się zmienią:
  	\[\mathtt{ \frac{\Gamma \vdash List\;T :: \ast}{\Gamma \vdash nil[T] : List\;T } \qquad \frac{\Gamma \vdash t_1:T \;\;\;\Gamma \vdash t_2:List\;T}{\Gamma \vdash List[T]\;t_1\;t_2:List\;T}
 		}
 	\]
  	\[\mathtt{ \frac{\Gamma \vdash t:List\;T }{\Gamma \vdash head[T]\;t : T } \qquad \frac{\Gamma \vdash t:List\;T }{\Gamma \vdash tail[T]\;t : List\;T }
 		}
 	\]
-Ewaluacja:
- 	\[\mathtt{ aaa
-		}
-	\]
+a ewaluacja pozostanie ta sama, uzupełnienie jej pozostawiamy Czytelnikowi.
 \subsection{Typy egzystencjalne}
 
 System $F_\omega$ jest już w stanie zakodować typy egzystencjalne, choć wbudowane typy egzystencjalne niczemu nie szkodzą. Pokażemy oba podejścia do tego problemu, zaczynając od przedstawienia składni: \\
@@ -605,9 +603,7 @@ $\mathtt{\{\exists X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.T \
 $\mathtt{\{^*U::K,t\}\;as\; \{\exists X::K,T\}\; \overset{def}{=} \;let\;x=t\;in\;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;x}$ \\
 $\mathtt{let\;\{X::K,x\}=t\;in\;t'\;\overset{def}{=}\;t[T'](\lambda X::K.\lambda x:T.t')\hspace{3em} \text{gdzie $\mathtt{t':T'}$} }$ \\ \\
 
-Zauważmy, że dopiero obecność rodzajów pozwoliła nam na tego rodzaju sztuczki. W~systemie $F$ nie umiemy tak zrobić.
-
-Na pierwszy rzut oka termy te są niezrozumiałe. Ależ jak bardzo można się mylić -- są miłe i przyjemne dla swych wielbicieli. Pokażemy, że zachodzą podstawowe własności pakowania i odpakowania. \\
+Pokażemy, że zachodzą podstawowe własności pakowania i odpakowania. \\
 Rozważmy term $\mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\}}$. \\ 
 $ \mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\} }$ \\ 
 $ \mathtt{ = let\;x=t\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x = }$ \\
@@ -644,18 +640,18 @@ Przykłady powyższe obrazują działanie zakodowanych typów rekurencyjnych. Te
 }
 
 
-Tworzenie rodzaju:
- 	\[\mathtt{ \frac{a\;tutaj\;co?}{\Gamma \vdash \{\exists X::K,T\}::K}
+Na pewno musimy określić, jaki rodzaj dostaje $\mathtt{\{\exists X::K,T\}}$:
+ 	\[\mathtt{ \frac{\Gamma \vdash U::K \hspace{2em} \Gamma \vdash [X \mapsto U]T::K'}{\Gamma \vdash \{\exists X::K,T\}::K'}
 		}
 	\]
-Typowanie:
+oraz zdefiniować relację znajdowania typu odpowiednią dla $F_\omega$:
  	\[\mathtt{ \frac{\Gamma \vdash t:[X \mapsto U]T\hspace{2em}\Gamma \vdash U::K \hspace{2em}\Gamma \vdash \{\exists X::K,T\}::\ast}{\Gamma \vdash \{^*U::K,t\}\;as\;\{\exists X::K,T\} \; : \; \{\exists X::K,T\}}
 		}
 	\]
  	\[\mathtt{ \frac{\Gamma \vdash t_1:\{\exists X::K,T_1\}\hspace{2em}\Gamma,X::K,x:T_1 \vdash t_2:T_2}{\Gamma \vdash let\;\{X,x\}=t_1\;in\;t_2:T_2}
 		}
 	\]
-Ewaluacja:
+Ewaluacja nieznacznie się zmieni:
  	\[\mathtt{ let\;\{X,x\}=(\{^*U::K,v\}\;as\;T)\;\;in\;t \longrightarrow [X \mapsto U][x \mapsto v]t
 		}
 	\]
@@ -665,36 +661,7 @@ Ewaluacja:
  	\[\mathtt{ \frac{t_1\longrightarrow t_1'}{let\;\{X,x\}=t_1\;\;in\;t_2 \longrightarrow let\;\{X,x\}=t_1'\;\;in\;t_2}
 		}
 	\]
-\subsection{Typy rekurencyjne}
 
-Hmmm, no tu musze się zastanowić, to na dole dla zwykłej wersji. \\
-\begin{tabular}{| l c r |}
-  \hline
-  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
-   & $\mathtt{fold[T]\;t}$ & \textit{folding} \\
-   & $\mathtt{unfold[T]\;t}$ & \textit{unfolding}\\
-   & & \\
-  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
-   & $\mathtt{\mu X.T}$ & \textit{typ rekursywny} \\
-   & & \\
-  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
-   & $\mathtt{fold[T]\;v}$ & \textit{folding} \\
-  \hline  
-\end{tabular} \\
-Tworzenie rodzaju:
- 	\[\mathtt{\frac{}{\Gamma \vdash \mu X.T::\ast}
-		}
-	\]
-Typowanie:
- 	\[\mathtt{ \frac{ U=\mu X.T \hspace{2em} \Gamma \vdash t:[X\mapsto U]U}{\Gamma \vdash fold[U]\;t\; : U}
-		}
-	\]
-Ewaluacja:
- 	\[\mathtt{
-		}
-	\]
-
-\subsection{dopasowanie wzorca}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1130,24 +1097,6 @@ Nierozstzygalne są problemy:
     \end{itemize}
 
 
-\subsection{pare słów o rozszerzeniach}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Praktyczne zastosowanie}                       
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{equation}{0}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Podsumowanie}                       
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{equation}{0}
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1159,7 +1108,9 @@ Nierozstzygalne są problemy:
 \thispagestyle{empty}
 \begin{thebibliography}{99}
 
-\bibitem{ChK} Pierce, \textit{} 
+\bibitem{Pie} Pierce B., \textit{Types and programing languages}, The MIT Press, 2002 
+\bibitem{Urzy} Urzyczyn P., \textit{Materiały do wykładu Rachunek Lambda} 
+\bibitem{MZZ} Mazurak K.,Zhao J.,Zdancevic S., \textit{Lightweight Linear Types in System $F^\circ$}
 
 
 	  
