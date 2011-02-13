@@ -662,8 +662,19 @@ Ewaluacja nieznacznie się zmieni:
 		}
 	\]
 
+\subsection{Uzupełnianie relacji $\mathtt{\equiv}$}
 
-
+Po wprowadzeniu rozszerzeń z rozdziału trzeciego możemy rozszerzyć relację $\mathtt{\equiv}$:
+        \[\mathtt{ \frac{S \equiv T}{\{\exists X::K,S\} \equiv \{\exists X::K,T\}}
+                   \qquad
+                   \frac{S \equiv T}{List\;S \equiv List\;T}
+		}
+	\]
+        \[\mathtt{ \frac{T_1 \equiv T_1' \dots T_n \equiv T_n'}{\{l_i:T_i^{\;\;\;i \in 1..n}\} \equiv \{l_i:T_i'^{\;\;\;i \in 1..n}\}}
+                   \qquad
+                   \frac{T_1 \equiv T_1' \dots T_n \equiv T_n'}{<l_i:T_i^{\;\;\;i \in 1..n}> \equiv \{l_i:T_i'^{\;\;\;i \in 1..n}\}}
+		}
+	\]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Rekonstrukcja typów}
