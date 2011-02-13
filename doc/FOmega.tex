@@ -96,7 +96,7 @@ No to na razie taki bałagan
 W rozdziale tym chcielibyśmy się skupić na systemie $F_{\omega}$ okrojonym do niezbędnego minimum.
 Przedstawimy, jak wyglądają termy, typy i wartości tego języka, a także pokażemy, jak przebiega typowanie,
 znajdowanie rodzaju, ewaluacja czy sprawdzanie równości typów. Postaramy się pisać jasno i pokażemy parę przykładów, 
-aby nieobyty w temacie Czytelnik nie zgubił się.  W następnych rozdziałach XXX-XXX do tak zdefiniowanego systemu będziemy wprowadzać
+aby nieobyty w temacie Czytelnik nie zgubił się.  W rozdziale trzecim do tak zdefiniowanego systemu będziemy wprowadzać
 rozszerzenia.
 
 \subsection {Termy i typy w $F_\omega$}
@@ -122,7 +122,7 @@ Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy oraz typ
 
 Główną cechą systemu $\lambda_{\omega}$ jest to, że oprócz termów zależnych od termów mamy typy zależne od typów, czyli możemy mówić o aplikacji i abstrakcji typowej, a tak powstałe 'typy' będziemy nazywać konstruktorami. By nam się nie pomyliło z abstrakcją na termach, zmienne konstruktorowe będziemy zaczynać dużą literą. Przykładowo $\mathtt{Tb=\lambda X.X \rightarrow Bool}$ i $\mathtt{\lambda X.X}$ są abstrakcjami konstruktowymi, ale $\mathtt{\lambda x.x}$ jest abstrakcją na termach. 
 Do konstruktora $\mathtt{Tb}$ możemy zaaplikować $\mathtt{Bool}$ i dostaniemy $\mathtt{(\lambda X.X \rightarrow Bool)Bool}$ równoważne $\mathtt{Bool \rightarrow Bool}$. Jak widać, użyliśmy słowa \textit{równoważne}. W rachunku lambda z typami prostymi sposób konstrukcji typów gwarantował nam, że dwa typy $\mathtt{T_1}$ i $\mathtt{T_2}$ na pewno są różne (zakładając, że typy bazowe były sobie różne). W $\lambda_{\omega}$ jest inaczej -- konstruktory tego systemu możemy podzielić na klasy równoważności. Do klasy $\mathtt{Bool \rightarrow Bool}$ należą również $\mathtt{ (Tb^n) Bool }$ dla $n$ naturalnego, a $\mathtt{T^n}$ oznacza aplikację $n$ konstruktorów $\mathtt{T}$.
-Zauważmy, że odpowiednikiem takiej relacji równoważności w $\lambda_{\rightarrow}$  jest $\beta$-równoważność. W~świecie typów nazwiemy taką relację $\equiv$\footnote{formalnie zdefiniujemy tą relację w rozdziale XXX}. Każdy konstruktor typu jest silnie normalizowalny i zachodzi własność Churcha-Rossera. Przez \texttt{nf(T)} oznaczamy postać normalną konstruktora rodzaju \texttt{T}.
+Zauważmy, że odpowiednikiem takiej relacji równoważności w $\lambda_{\rightarrow}$  jest $\beta$-równoważność. W~świecie typów nazwiemy taką relację $\equiv$\footnote{formalnie zdefiniujemy tą relację w rozdziale 2.2.3}. Każdy konstruktor typu jest silnie normalizowalny i zachodzi własność Churcha-Rossera. Przez \texttt{nf(T)} oznaczamy postać normalną konstruktora rodzaju \texttt{T}.
 Dodatkowo wprowadzimy następującą regułę:
 $\mathtt{\frac{\Gamma \vdash t:S \hspace{1em} S\equiv T  }{\Gamma \vdash t:T}}$
 mówiącą, że jeżeli \texttt{S} jest konstruktorem termu \texttt{t}, to dowolny konstruktor \texttt{S} równoważny z \texttt{T} również jest konstruktorem \texttt{t}.  
@@ -221,7 +221,7 @@ Oprócz zwykłego podstawienia za zmienne, które pozostawiamy Czytelnikowi do u
 
 \subsubsection{Relacja $\equiv$}
 
-Jak wspomnieliśmy w rozdziale XXX, definiujemy na typach relację równoważności. W poniższych wzorach $\mathtt{S,S_1,S_2,T,T_1,T_2}$ to typy, \texttt{K} to rodzaj. Następujące trzy reguły:
+Jak wspomnieliśmy w rozdziale 2.1.1, definiujemy na typach relację równoważności. W poniższych wzorach $\mathtt{S,S_1,S_2,T,T_1,T_2}$ to typy, \texttt{K} to rodzaj. Następujące trzy reguły:
 	\[\mathtt{
 		\frac{}{T \equiv T}
                 \qquad
