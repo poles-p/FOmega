@@ -361,10 +361,13 @@ Tworzenie rodzaju:
 		}
 	\]
 Typowanie:
- 	\[\mathtt{ \frac{}{\Gamma \vdash true:Bool} \qquad \frac{}{\Gamma \vdash false:Bool} \quad \frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T \;\;\; \Gamma \vdash T::\ast}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T}
+ 	\[\mathtt{ \frac{}{\Gamma \vdash true:Bool} \qquad \frac{}{\Gamma \vdash false:Bool} \quad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash iszero\;t:Bool}
 		}
 	\]
- 	\[\mathtt{ \frac{}{\Gamma \vdash zero:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash succ\;t:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash pred\;t:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash iszero\;t:Bool}
+ 	\[\mathtt{\frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T \;\;\; \Gamma \vdash T::\ast}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T} 
+		}
+	\]
+ 	\[\mathtt{ \frac{}{\Gamma \vdash zero:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash succ\;t:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash pred\;t:Nat} 
 		}
 	\]
 Ewaluacja:
@@ -443,7 +446,9 @@ Tworzenie rodzaju: \\
 Typowanie:
  	\[\mathtt{
              \frac{\Gamma \vdash t_1:T_1 \;\dots\;\Gamma \vdash t_n:T_n \;\;\; \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash \{l_i=t_i^{\;\;\;i \in 1..n}\}:\{l_i:T_i^{\;\;\;i \in 1..n}\}}
-           \qquad
+            }
+	\]
+ 	\[\mathtt{
            \frac{\Gamma \vdash t : \{l_i:T_i^{\;\;\;i \in 1..n}\} \;\;\; \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash t.i : T_i} 
             }
 	\]
@@ -454,11 +459,12 @@ Ewaluacja: \\
                 \frac{e \longrightarrow e'}{e.i \longrightarrow e'.i}
 		}
 	\]
+\small{
  	\[\mathtt{
                 \frac{t_i \longrightarrow t_i'}{\{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i, \dots, l_n=t_n\} \longrightarrow \{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i', \dots, l_n=t_n\}}
 		}
 	\]
-
+}
 \subsection{Warianty}
 
 \begin{tabular}{| l c r |}
@@ -585,14 +591,14 @@ $ \mathtt{ \{Nat::K,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\; \{\exists X::K,\
 $ \mathtt{ = let\;x=\{a=zero, f:\lambda x:Nat.succ\;x\}\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x = }$ \\
 $ \mathtt{ = (\lambda x:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}.\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x)}$\\
 $ \mathtt{ \{a=zero, f:\lambda x:Nat.succ\;x\} \overset{\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}}{=}  }$ \\
-$ \mathtt{ = \lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\})}$ \\ \\
+$ \mathtt{ = \lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]\{a=zero, f:\lambda x:Nat.succ\;x\}}$ \\ \\
 co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,\{a:X, f:X \rightarrow Nat\}\}}$. \\
 }
 
 \normalsize{Uważne odpakowanie otrzymanego termu pozostawiamy Czytelnikowi jako ćwiczenie, my pozwolimy sobie przeprowadzać schemat wywodu:}\\
 \scriptsize{
-$ \mathtt{let\;\{X,x\}=\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\})\;in\;(x.f\;x.a)=}$
-$ \mathtt{=(\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}))[T'](\lambda X::K.\lambda x:T.(x.f\;x.a))=}$
+$ \mathtt{let\;\{X,x\}=\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]\{a=zero, f:\lambda x:Nat.succ\;x\}\;in\;(x.f\;x.a)=}$ \\
+$ \mathtt{=(\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]\{a=zero, f:\lambda x:Nat.succ\;x\})[T'](\lambda X::K.\lambda x:T.(x.f\;x.a))=}$\\
 }
 $ \mathtt{=((\lambda X::K.\lambda x:T.(x.f\;x.a))[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}))=}$ \\
 $ \mathtt{=(\{a=zero, f:\lambda x:Nat.succ\;x\}.f\;\{a=zero, f:\lambda x:Nat.succ\;x\}.a)=}$ \\
@@ -610,8 +616,9 @@ Tworzenie rodzaju:
 	\]
 Typowanie:
  	\[\mathtt{ \frac{\Gamma \vdash t:[X \mapsto U]T\hspace{2em}\Gamma \vdash U::K \hspace{2em}\Gamma \vdash \{\exists X::K,T\}::\ast}{\Gamma \vdash \{^*U::K,t\}\;as\;\{\exists X::K,T\} \; : \; \{\exists X::K,T\}}
-                   \qquad
-                   \frac{\Gamma \vdash t_1:\{\exists X::K,T_1\}\hspace{2em}\Gamma,X::K,x:T_1 \vdash t_2:T_2}{\Gamma \vdash let\;\{X,x\}=t_1\;in\;t_2:T_2}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t_1:\{\exists X::K,T_1\}\hspace{2em}\Gamma,X::K,x:T_1 \vdash t_2:T_2}{\Gamma \vdash let\;\{X,x\}=t_1\;in\;t_2:T_2}
 		}
 	\]
 Ewaluacja:
