@@ -422,6 +422,19 @@ W rachunku $F_\omega$ pojawia się możliwość zakodowania \texttt{unit} i \tex
 $\mathtt{unit \;\overset{def}{=}\;= \lambda X::\ast.\lambda x:X.x}$ \\
 $\mathtt{Unit \;\overset{def}{=}\; \forall X::\ast.X \rightarrow X}$ \\
 
+
+\subsection{Anotacje typowe}
+
+Anotacje typowe są przydatną konstrukcją używaną na przykład przy typach egzystencjalnych.\\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy}  \\
+   & $\mathtt{t\;as\;T}$ &\textit{anotacja typowa} \\
+  \hline
+\end{tabular} \\
+
+Ewaluacja i typowanie nie zmieniają się.
+
 \subsection{Definicje lokalne}
 
  	\[\mathtt{let\;x=t_1\;in\;t_2 \;\overset{def}{=}\;(\lambda x:T.t_2)t_1 \hspace{3em}\text{gdzie}\; t_1:T 
