@@ -31,7 +31,6 @@
 \usepackage{bm}
 \usepackage{amsthm}
 
-
  
 %%%%%%%%%%%%%%%%%%
 % Kropka po numerze paragrafu, podparagrafu itp. 
@@ -70,9 +69,12 @@
 \theoremstyle{plain}
 \newtheorem{twierdzenie}{Twierdzenie}
 \newtheorem{lemat}{Lemat}
+\newtheorem{fakt}{Fakt}
 
 \theoremstyle{definition}
 \newtheorem{definicja}{Definicja}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -82,7 +84,13 @@
 \setcounter{equation}{0}
 
 
-No to na razie taki bałagan
+Tematem naszej pracy jest system typów $F_\omega$. Praca powstała jako część teoretyczna do 
+projektu zaliczeniowego z systemu typów prowadzonego na Uniwersytecie Wrocławskim w roku akademickim
+2010/2011. W pracy przedstawiliśmy ten system głównie od strony teoretycznej, zarówno minimalną część
+$F_\omega$, jak i jego rozszerzenia,  ale zaprezentowaliśmy również stworzony przez nas algorytm 
+rekonstrukcji typów, choć rekonstrukcja typów w systemie $F_\omega$ jest 
+nierozstrzygalna. Wady i własności tego algorytmu również przedstawiliśmy w pracy.
+Część praktyczna do projektu została napisana w języku F\# i jest załączona do pracy.
 
 
 
@@ -96,7 +104,7 @@ No to na razie taki bałagan
 W rozdziale tym chcielibyśmy się skupić na systemie $F_{\omega}$ okrojonym do niezbędnego minimum.
 Przedstawimy, jak wyglądają termy, typy i wartości tego języka, a także pokażemy, jak przebiega typowanie,
 znajdowanie rodzaju, ewaluacja czy sprawdzanie równości typów. Postaramy się pisać jasno i pokażemy parę przykładów, 
-aby nieobyty w temacie Czytelnik nie zgubił się.  W następnych rozdziałach XXX-XXX do tak zdefiniowanego systemu będziemy wprowadzać
+aby nieobyty w temacie Czytelnik nie zgubił się.  W rozdziale trzecim do tak zdefiniowanego systemu będziemy wprowadzać
 rozszerzenia.
 
 \subsection {Termy i typy w $F_\omega$}
@@ -107,7 +115,8 @@ Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy oraz typ
   \hline
   $\mathtt{t}$ ::= &  & \textit{termy}  \\
    & $\mathtt{x}$ & \textit{zmienne}  \\
-   & $\mathtt{\lambda x:T.t}$ & \textit{abstrakcja} \\
+   & $\mathtt{\lambda x:T.t}$ & \textit{abstrakcja anotowana} \\
+   & $\mathtt{\lambda x.t}$ & \textit{abstrakcja nieanotowana} \\
    & $\mathtt{t \hspace{0.2em} t}$ & \textit{aplikacja} \\
    & & \\
   $\mathtt{T}$ ::= &  & \textit{typy} \\
@@ -122,7 +131,7 @@ Wszystkie trzy wywodzą się z rachunku lambda z typami prostymi. Termy oraz typ
 
 Główną cechą systemu $\lambda_{\omega}$ jest to, że oprócz termów zależnych od termów mamy typy zależne od typów, czyli możemy mówić o aplikacji i abstrakcji typowej, a tak powstałe 'typy' będziemy nazywać konstruktorami. By nam się nie pomyliło z abstrakcją na termach, zmienne konstruktorowe będziemy zaczynać dużą literą. Przykładowo $\mathtt{Tb=\lambda X.X \rightarrow Bool}$ i $\mathtt{\lambda X.X}$ są abstrakcjami konstruktowymi, ale $\mathtt{\lambda x.x}$ jest abstrakcją na termach. 
 Do konstruktora $\mathtt{Tb}$ możemy zaaplikować $\mathtt{Bool}$ i dostaniemy $\mathtt{(\lambda X.X \rightarrow Bool)Bool}$ równoważne $\mathtt{Bool \rightarrow Bool}$. Jak widać, użyliśmy słowa \textit{równoważne}. W rachunku lambda z typami prostymi sposób konstrukcji typów gwarantował nam, że dwa typy $\mathtt{T_1}$ i $\mathtt{T_2}$ na pewno są różne (zakładając, że typy bazowe były sobie różne). W $\lambda_{\omega}$ jest inaczej -- konstruktory tego systemu możemy podzielić na klasy równoważności. Do klasy $\mathtt{Bool \rightarrow Bool}$ należą również $\mathtt{ (Tb^n) Bool }$ dla $n$ naturalnego, a $\mathtt{T^n}$ oznacza aplikację $n$ konstruktorów $\mathtt{T}$.
-Zauważmy, że odpowiednikiem takiej relacji równoważności w $\lambda_{\rightarrow}$  jest $\beta$-równoważność. W~świecie typów nazwiemy taką relację $\equiv$\footnote{formalnie zdefiniujemy tą relację w rozdziale XXX}. Każdy konstruktor typu jest silnie normalizowalny i zachodzi własność Churcha-Rossera. Przez \texttt{nf(T)} oznaczamy postać normalną konstruktora rodzaju \texttt{T}.
+Zauważmy, że odpowiednikiem takiej relacji równoważności w $\lambda_{\rightarrow}$  jest $\beta$-równoważność. W~świecie typów nazwiemy taką relację $\equiv$\footnote{formalnie zdefiniujemy tą relację w rozdziale 2.2.3}. Każdy konstruktor typu jest silnie normalizowalny i zachodzi własność Churcha-Rossera. Przez \texttt{nf(T)} oznaczamy postać normalną konstruktora rodzaju \texttt{T}.
 Dodatkowo wprowadzimy następującą regułę:
 $\mathtt{\frac{\Gamma \vdash t:S \hspace{1em} S\equiv T  }{\Gamma \vdash t:T}}$
 mówiącą, że jeżeli \texttt{S} jest konstruktorem termu \texttt{t}, to dowolny konstruktor \texttt{S} równoważny z \texttt{T} również jest konstruktorem \texttt{t}.  
@@ -144,8 +153,9 @@ Teraz możemy $\lambda_{\rightarrow}$ rozszerzyć o następujące konstrukcje:
     \item abstrakcję i aplikację typową na typach \\ \\
 \begin{tabular}{| l c r |}
    \hline
-   $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
-   & $\mathtt{\lambda X::K.T}$ & \textit{abstrakcja konstruktorowa} \\
+   $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{\lambda X::K.T}$ & \textit{abstrakcja konstruktorowa anotowana} \\
+   & $\mathtt{\lambda X.T}$ & \textit{abstrakcja konstruktorowa nieanotowana} \\
    & $\mathtt{T\;T}$ & \textit{aplikacji konstruktorowa} \\
    \hline
 \end{tabular}
@@ -164,8 +174,9 @@ Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ w
     \item abstrakcję i aplikację typową na termach \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy} \\
-   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa} \\
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy} \\
+   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa anotowana} \\
+   & $\mathtt{\lambda X::K.t}$ & \textit{abstrakcja typowa nieanotowana}  \\
    & $\mathtt{t[T]}$ & \textit{aplikacja typowa} \\
   \hline
 \end{tabular}
@@ -173,8 +184,9 @@ Po tym krótkim wstępie możemy już zdefiniować odziedziczone z systemu $F$ w
     \item typ uniwersalny \\ \\
 \begin{tabular}{| l c r |}
   \hline
-  $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
-   & $\mathtt{\forall X::K.T}$ & \textit{typ uniwersalny} \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{\forall X::K.T}$ & \textit{typ uniwersalny anotowany} \\
+   & $\mathtt{\forall X.T}$ & \textit{typ uniwersalny nieanotowany} \\
   \hline
 \end{tabular}
 
@@ -221,7 +233,7 @@ Oprócz zwykłego podstawienia za zmienne, które pozostawiamy Czytelnikowi do u
 
 \subsubsection{Relacja $\equiv$}
 
-Jak wspomnieliśmy w rozdziale XXX, definiujemy na typach relację równoważności. W poniższych wzorach $\mathtt{S,S_1,S_2,T,T_1,T_2}$ to typy, \texttt{K} to rodzaj. Następujące trzy reguły:
+Jak wspomnieliśmy w rozdziale 2.1.1, definiujemy na typach relację równoważności. W poniższych wzorach $\mathtt{S,S_1,S_2,T,T_1,T_2}$ to typy, \texttt{K} to rodzaj. Następujące trzy reguły:
 	\[\mathtt{
 		\frac{}{T \equiv T}
                 \qquad
@@ -243,7 +255,7 @@ gwarantują nam równoważność relacji $\equiv$. Pozostałe reguły jak nastę
 
 definiują równoważność funkcji typowych, aplikacji i abstrakcji konstruktorowych oraz typów uniwersalnych.
 
-\subsubsection{Reguły rodzajowania}
+\subsubsection{Reguły znajdowania rodzaju}
 
 W systemie $F_\omega$ każdemu poprawnie zbudowanemu typowi przyporządkowujemy rodzaj.
 Przyporządkowanie to określa relacja $(.\vdash.::.)$ zdefiniowana następująco.
@@ -282,6 +294,12 @@ Każdemu poprawnie zbudowanemu termowi przyporządkowujemy typ. Przyporządkowan
                 \qquad
                 \frac{\Gamma \vdash t:S \hspace{1.5em} S \equiv T \hspace{1.5em} \Gamma \vdash T::\ast}{\Gamma \vdash t:T}}
 	\]
+	\[\mathtt{
+		\frac{\Gamma,X::K \vdash t:T }{\Gamma \vdash \lambda X::K.t \;:\forall X::K.T}
+                \qquad
+                \frac{\Gamma \vdash t:\forall X::K.T \hspace{1.5em} \Gamma \vdash T'::K}{\Gamma \vdash t[T']\;:[X \mapsto T']T}}
+	\]
+
 
 \subsection{Ewaluacja}
 
@@ -293,7 +311,7 @@ Wartości w $F_\omega$ zdefiniujemy dokładnie jak w $\lambda_{\rightarrow}$. \\
   \hline
 \end{tabular} \\
 
-Ewaluacja przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się na rozszerzeniach minimalnej wersji $F_\omega$ i pojawią się tam nowe rzeczy. Teraz, dla czytelności, przetoczymy reguły ewaluacji dla wersji minimalnej ($\mathtt{t_1,t_1',t_2,t_2',t}$ to termy, \texttt{v} to wartość, \texttt{x:T} to zmienna \texttt{x} typu \texttt{T}):
+Ewaluacja przebiega w sposób standardowy dla aplikacji i abstrakcji termów. Teraz, dla czytelności, przetoczymy te reguły ewaluacji ($\mathtt{t_1,t_1',t_2,t_2',t}$ to termy, \texttt{v} to wartość, \texttt{x:T} to zmienna \texttt{x} typu \texttt{T}):
 	\[\mathtt{
 		\frac{t_1 \longrightarrow t_1'}{t_1\;t_2 \longrightarrow t_1'\;t_2}
                 \qquad
@@ -302,52 +320,477 @@ Ewaluacja przebiega w sposób standardowy. W rozdziałach XXX-XXX skupimy się n
  	\[\mathtt{
 		(\lambda x:T.t)v \longrightarrow [x \mapsto v]t}
 	\]
-
-
+Do tego dochodzą reguły dla nowych w języku abstrakcji typowych i aplikacji typowych.
+	\[\mathtt{
+		\frac{t \longrightarrow t'}{t[T] \longrightarrow t'[T]}}
+	\]
+ 	\[\mathtt{
+		(\lambda X::K.t)[T] \longrightarrow [X \mapsto T]t}
+	\]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Własności i dowody}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{equation}{0}
-
-\begin{twierdzenie}[Progres]
-Niech $t$ będzie termem nie będącym wartością, oraz niech $\Gamma$ oraz $T$ będą
-kontekstem typowania i~typem, takim że zachodzi $\Gamma\vdash t : T$. Wówczas istnieje
-taki term $t'$, że $t \longrightarrow_\beta t'$.
-\end{twierdzenie}
-\begin{proof}
-\end{proof}
-
-\begin{twierdzenie}[Zachowanie typu]
-Niech zachodzi $\Gamma \vdash t:T$, oraz $t \longrightarrow_\beta t'$ dla pewnych
-$\Gamma$, $t$, $t'$ oraz $T$. Wówczas zachodzi
-$\Gamma\vdash t' : T$.
-\end{twierdzenie}
-\begin{proof}
-\end{proof}
-	
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Możliwe rozszerzenia}                                 
+\section{Rozszerzenia $F_\omega$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{equation}{0}
 
+W rozdziale tym chcielibyśmy poruszyć, jak w systemie $F_\omega$ zdefiniować najprostsze
+konstrukcje, takie jak wyrażenia arytmetyczne i logiczne, warianty, sekwencje wyrażeń, 
+typy egzystencjalne, rekordy i inne. Pokażemy również, jak przebiega typowanie, ewaluacja i 
+gdzieniegdzie dodamy reguły tworzenia rodzaju.
+
+Chcielibysmy podkreślić, że następująca reguła typowania:
+
+ 	\[\mathtt{ \frac{\Gamma \vdash t:T \;\;\; S\equiv T \;\;\; \Gamma \vdash S::\ast}{\Gamma \vdash t:S}
+		}
+	\]
+bardzo ułatwia definiowanie reguł typowania w $F_\omega$. W większości przypadków są one takie same lub
+lekko zmodyfikowane, dlatego nie powinny nastręczać trudności.
 
 \subsection{wyrażenia arytmetyczne i logiczne}
 
-\subsection{unit i sekwencje}
-\subsection{definicje lokalne}
+Wyreżania arytmetyczne i logiczne to część, bez której żaden język się nie obędzie. Oczywiście można je sobie zakodować w systemie $F_\omega$, ale normą są wbudowane w język wyrażenia. Termy, typy i wartości wyrażeń zdefiniujemy następująco: \\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{true}$ & \textit{prawda}  \\
+   & $\mathtt{false}$ & \textit{fałsz} \\
+   & $\mathtt{zero}$ & \textit{zero} \\
+   & $\mathtt{succ\;t}$ & \textit{następnik}  \\
+   & $\mathtt{pred\;t}$ & \textit{poprzednik} \\
+   & $\mathtt{iszero}$ & \textit{test na zero} \\
+   & $\mathtt{if\;t\;then\;t\;else\;t}$ & \textit{warunek} \\
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy} \\
+   & $\mathtt{Nat}$ & \textit{typ liczbowy} \\
+   & $\mathtt{Bool}$ & \textit{typ boolowski} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{typy} \\
+   & $\mathtt{true}$ & \textit{wartość prawdy} \\
+   & $\mathtt{false}$ & \textit{wartość fałszu} \\
+   & $\mathtt{nv}$ & \textit{wartość liczbowa} \\
+   & & \\
+  $\mathtt{nv}$ ::= & $\dots$ & \textit{wartość liczbowa} \\
+   & $\mathtt{zero}$ & \textit{wartość zera} \\
+   & $\mathtt{succ\;nv}$ & \textit{wartość następnika} \\
+  \hline
+\end{tabular} \\
+
+Na pewno musimy dodać reguły tworzenia rodzaju dla \texttt{Nat} i \texttt{Bool}, którym nadamy rodzaj~$\mathtt{\ast}$:
+ 	\[\mathtt{ \frac{}{\Gamma \vdash Bool::\ast} \qquad \frac{}{\Gamma \vdash Nat::\ast}
+		}
+	\]
+
+Typowanie wygląda dokładnie tak samo jak w rachunku lambda z typami prostymi. Możemy sobie pozwolić na takie reguły dzięki regule XXX.
+Przykładowo, nie tylko termy typu \texttt{Nat} mogą się dobrze otypować, gdy zaaplikujemy je do \texttt{succ}. Dla $\mathtt{t:(\lambda X.X)Nat}$
+otrzymamy:
+
+ 	\[\mathtt{ \frac{\frac{\Gamma \vdash t:(\lambda X.X)Nat\hspace{2em}\Gamma \vdash (\lambda X.X)Nat \equiv Nat \hspace{2em}\Gamma \vdash (\lambda X.X)Nat::\ast}{\Gamma \vdash t:Nat}}{\Gamma \vdash succ\;t:Nat} 
+		}
+	\]
+Nie musimy również pisać reguł typu:~\[\mathtt{\frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T\;\;\; \Gamma \vdash T::\ast}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T} 
+		}
+	\]
+ponieważ posiadanie typu przez term $\mathtt{t_2}$ gwarantuje nam, że ten typ będzie rodzaju $\mathtt{\ast}$.
+Stąd, reguły typowania wyrażeń arytmetycznych i logicznych wyglądają następująco w $F_\omega$:~\[\mathtt{ \frac{}{\Gamma \vdash true:Bool} \qquad \frac{}{\Gamma \vdash false:Bool} \quad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash iszero\;t:Bool}
+		}
+	\]
+ 	\[\mathtt{\frac{\Gamma \vdash t_1:Bool \;\;\; \Gamma \vdash t_2:T \;\;\; \Gamma \vdash t_3:T}{\Gamma \vdash if\;t_1\;then\;t_2\;else\;t_3:T} 
+		}
+	\]
+ 	\[\mathtt{ \frac{}{\Gamma \vdash zero:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash succ\;t:Nat} \qquad \frac{\Gamma \vdash t:Nat}{\Gamma \vdash pred\;t:Nat} 
+		}
+	\]
+Zdefiniowanie reguł ewaluacji pozostawiamy Czytelnikowi.
+
+\subsection{Unit i sekwencje}
+
+W rachunku lambda z typami prostymi dodaliśmy do składnię języka rozszerzaliśmy o konstrukcje takie, jak: 
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{unit}$ & \textit{term unit} \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{Unit}$ & \textit{typ unit} \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
+   & $\mathtt{unit}$ & \textit{wartość unit} \\
+  \hline
+\end{tabular} \\
+
+natomiast typowanie przebiegało następująco:~\[\mathtt{ \frac{}{\Gamma \vdash unit:Unit}
+		}
+	\]
+a sekwencje definiowaliśmy jako:~\[\mathtt{ t_1;t_2 \;\overset{def}{=}\; (\lambda x:Unit.t_2)t_1 \hspace{3em} \text{gdzie x $\notin$ FV($t_2$)}
+		}
+	\]
+Aby pozostać przy wbudowanym unit w język wystarczy dodać regułę znajdowania rodzaju dla typu \texttt{Unit}:~\[\mathtt{ \frac{}{\Gamma \vdash Unit::\ast}
+		}
+	\]
+
+W rachunku $F_\omega$ pojawia się możliwość zakodowania \texttt{unit} i \texttt{Unit}. Robimy to w taki sposób:
+$\mathtt{unit \;\overset{def}{=}\;= \lambda X::\ast.\lambda x:X.x}$ \\
+$\mathtt{Unit \;\overset{def}{=}\; \forall X::\ast.X \rightarrow X}$ \\
+
+
+\subsection{Anotacje typowe}
+
+Anotacje typowe są przydatną konstrukcją używaną na przykład przy typach egzystencjalnych.\\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy}  \\
+   & $\mathtt{t\;as\;T}$ &\textit{anotacja typowa} \\
+  \hline
+\end{tabular} \\
+
+Ewaluacja i typowanie nie zmieniają się.
+
+\subsection{Definicje lokalne}
+
+Do zbioru termów dodamy następujące dwie konstrukcje:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  t ::= &  &  \\
+   & $\textrm{let} \ x = t \ \textrm{in} \ t$ & \textit{zmienna lokalna} \\
+   & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
+  \hline
+\end{tabular} \\
+
+Oczywiście możemy zdefiniować \texttt{let} i \texttt{tlet} jako:
+ 	\[\mathtt{let\;x=t_1\;in\;t_2 \;\overset{def}{=}\;(\lambda x:T.t_2)t_1 \hspace{3em}\text{gdzie}\; t_1:T 
+		}
+	\]
+ 	\[\mathtt{tlet\;X=T\;in\;t \;\overset{def}{=}\;(\lambda X::K.t)T \hspace{3em}\text{gdzie}\; T::K 
+		}
+	\]
+Reguły typowania i ewaluacji pozostają bez zmian dla \texttt{let}, ale zdefiniujemy je dla \texttt{tlet}.
+Typowanie:
+ 	\[\mathtt{ \frac{\Gamma,X:S \vdash t:T}{\Gamma \vdash tlet\;X=S\;in\;t : [X \mapsto S]T}
+		}
+	\]
+i ewaluacja:
+ 	\[\mathtt{ tlet\;X=S\;in\;t \longrightarrow [X \mapsto S]t
+		}
+	\]
+ 	\[\mathtt{ \frac{t \longrightarrow t'}{tlet\;X=T\;in\;t \longrightarrow tlet\;X=T\;in\;t'}
+		}
+	\]
+
+\subsection{Pary}
+
+Składnię par zdefiniujemy następująco:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{(t,t)}$ & \textit{para} \\
+   & $\mathtt{t.1}$ & \textit{projekcja na pierwszy element} \\ 
+   & $\mathtt{t.2}$ & \textit{projekcja na drugi element} \\ 
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{T_1\times T_2}$ & \textit{typ pary} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
+   & $\mathtt{(v,v)}$ & \textit{wartość pary} \\
+  \hline
+\end{tabular} \\
+
+Do relacji tworzenia rodzaju dodamy regułę nadającą rodzaj typowi $\mathtt{\{l_i:T_i^{\;\;\;i \in 1..n}\}}$:~\[\mathtt{
+             \frac{\Gamma \vdash T_1::\ast \hspace{2em} \Gamma \vdash T_2::\ast}{\Gamma \vdash T_1\times T_2::\ast}
+		}
+	\]
+oraz wprowadzimy niewielkie zmiany w regułach typowania:~\[\mathtt{
+             \frac{\Gamma \vdash t_1:T_1 \hspace{2em} \Gamma \vdash t_2:T_2 \hspace{2em}\Gamma \vdash T_1\times T_2::\ast}{\Gamma \vdash (t_1,t_2):T_1\times T_2}
+            }
+	\]
+ 	\[\mathtt{
+           \frac{\Gamma \vdash t : T_1\times T_2}{\Gamma \vdash t.1 : T_1} 
+           \qquad
+           \frac{\Gamma \vdash t : T_1\times T_2}{\Gamma \vdash t.2 : T_2} 
+            }
+	\]
+a ewaluację pozostawimy bez zmian: \\
+ 	\[\mathtt{
+                \frac{t \longrightarrow t'}{t.i \longrightarrow t'.i} \hspace{3em} \text{gdzie } i\in\{1,2\}
+		}
+	\]
+ 	\[\mathtt{
+                \frac{t_1 \longrightarrow t_1'}{(t_1,t_2) \longrightarrow (t_1',t_2)} 
+                \qquad
+                \frac{t_2 \longrightarrow t_2'}{(v_1,t_2) \longrightarrow (v_1,t_2')} 
+		}
+	\]
+ 	\[\mathtt{
+                (v_1,v_2).i \longrightarrow v_i \hspace{3em} \text{gdzie } i\in\{1,2\}
+		}
+	\]
+
 \subsection{Rekordy}
-\subsection{warianty}
-\subsection{punkt stały}
-\subsection{listy}
-\subsection{typy egzystencjalne}
-\subsection{typy rekurencyjne}
-\subsection{dopasowanie wzorca}
+
+Składnię rekordów zdefiniujemy następująco:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{\{l_i=t_i^{\;\;\;i \in 1..n}\}}$ & \textit{rekord} \\
+   & $\mathtt{t.l}$ & \textit{projekcja} \\ 
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{\{l_i:T_i^{\;\;\;i \in 1..n}\}}$ & \textit{typ rekordu} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\dots$ & \textit{wartości}  \\
+   & $\mathtt{\{l_i=v_i^{\;\;\;i \in 1..n}\}}$ & \textit{wartość rekordu} \\
+  \hline
+\end{tabular} \\
+
+Do relacji tworzenia rodzaju dodamy regułę nadającą rodzaj typowi $\mathtt{\{l_i:T_i^{\;\;\;i \in 1..n}\}}$:~\[\mathtt{
+             \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}
+		}
+	\]
+oraz wprowadzimy niewielkie zmiany w regułach typowania:~\[\mathtt{
+             \frac{\Gamma \vdash t_1:T_1 \;\dots\;\Gamma \vdash t_n:T_n \hspace{2em} \Gamma \vdash \{l_i:T_i^{\;\;\;i \in 1..n}\}::\ast}{\Gamma \vdash \{l_i=t_i^{\;\;\;i \in 1..n}\}:\{l_i:T_i^{\;\;\;i \in 1..n}\}}
+            }
+	\]
+ 	\[\mathtt{
+           \frac{\Gamma \vdash t : \{l_i:T_i^{\;\;\;i \in 1..n}\}}{\Gamma \vdash t.i : T_i} 
+            }
+	\]
+a ewaluację pozostawimy bez zmian: \\
+ 	\[\mathtt{
+                \{l_i=v_i^{\;\;\;i \in 1..n}\}.i \longrightarrow v_i
+                \qquad
+                \frac{t \longrightarrow t'}{t.i \longrightarrow t'.i}
+		}
+	\]
+\small{
+ 	\[\mathtt{
+                \frac{t_i \longrightarrow t_i'}{\{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i, \dots, l_n=t_n\} \longrightarrow \{l_1=v_1, \dots, l_{i-1}=v_{i-1}, l_i=t_i', \dots, l_n=t_n\}}
+		}
+	\]
+}
+
+\subsection{Sumy}
+
+Składnię sum zdefiniujemy następująco:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{inl\;t}$ & \textit{tagowanie lewe} \\
+   & $\mathtt{inr\;t}$ & \textit{tagowanie prawe} \\
+   & $\mathtt{case\;t\;of\;inl\;x\Rightarrow t\;|\;inr\;x\Rightarrow t }$ & \textit{case}\\
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{T+T}$ & \textit{typ sumy}\\
+  \hline
+\end{tabular} \\
+
+Typ sumy dostanie rodzaj $\mathtt{\ast}$:
+ 	\[\mathtt{
+             \frac{\Gamma \vdash T_1::\ast \hspace{2em} \Gamma \vdash T_2::\ast}{\Gamma \vdash T_1+T_2::\ast}
+		}
+	\]
+a w regułach typowania wprowadzimy małe zmiany:
+ 	\[\mathtt{ \frac{\Gamma \vdash t_0:T_1+T_2 \hspace{2em} \Gamma,x_1:T_1 \vdash t_1:T \hspace{2em} \Gamma,x_2:T_2 \vdash t_2:T}{\Gamma \vdash case\;t_0\;of\;inl\;x_1\Rightarrow t_1\;|\;inr\;x_2\Rightarrow t_2 : T}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t_1 : T_1 \hspace{2em} \Gamma \vdash T_1+T_2::\ast}{\Gamma \vdash inl\;t_1:T_1+T_2}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t_2 : T_2 \hspace{2em} \Gamma \vdash T_1+T_2::\ast}{\Gamma \vdash inr\;t_2:T_1+T_2}
+		}
+	\]
+Ewaluację pozostawiamy bez zmian.
 
 
+\subsection{Warianty}
+
+Składnię wariantów zdefiniujemy następująco:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{<l=t>\;as\;T}$ & \textit{tagowanie} \\
+   & $\mathtt{case\;t\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n}}$ & \textit{case}\\
+   & & \\
+  $\mathtt{T}$ ::= & $\dots$ & \textit{typy}  \\
+   & $\mathtt{<l_i:T_i^{\;\;\;i \in 1..n}>}$ & \textit{typ wariantu}\\
+  \hline
+\end{tabular} \\
+
+Podobnie jak przy rekordach, typ wariantu dostanie rodzaj $\mathtt{\ast}$:
+ 	\[\mathtt{
+             \frac{\Gamma \vdash T_1::\ast \;\dots\;\Gamma \vdash T_n::\ast}{\Gamma \vdash <l_i:T_i^{\;\;\;i \in 1..n}>::\ast}
+		}
+	\]
+a w regułach typowania wprowadzimy małe zmiany:
+ 	\[\mathtt{ \frac{\Gamma \vdash t_0:<l_i:T_i^{\;\;\;i \in 1..n}> \hspace{2em} \Gamma,x_1:T_1 \vdash t_1:T \;\dots\; \Gamma,x_n:T_n \vdash t_n:T}{\Gamma \vdash case\;t_0\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n}\; : T}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t_j : T_j \hspace{2em} \Gamma \vdash <l_i:T_i^{\;\;\;i \in 1..n}>::\ast}{\Gamma \vdash <l_j=t_j> as <l_i:T_i^{\;\;\;i \in 1..n}> \;: <l_i:\;T_i^{\;\;\;i \in 1..n}>}
+		}
+	\]
+natomiast ewaluacja pozostanie bez zmian:
+ 	\[\mathtt{ case\;(<l_j=t_j>\;as\;T)\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n} \longrightarrow [x_j \mapsto v_j]t_j
+		}
+	\]
+ 	\[\mathtt{ \frac{t \longrightarrow t'}{case\;t\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n} \longrightarrow case\;t'\;of\;<l_i=x_i>\Rightarrow t_i^{\;\;\;i \in 1..n} }
+		}
+	\]
+ 	\[\mathtt{ \frac{t_j \longrightarrow t_j'}{<l_j=t_j>\;as\;T \longrightarrow <l_j=t_j'>\;as\;T }
+		}
+	\]
+
+\subsection{Punkt stały}
+
+Do składni języka dodamy jedynie jeden term:\\
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{fix \;x:T.t}$ & \textit{punkt stały}\\
+  \hline
+\end{tabular} \\
+
+Typowanie zostanie lekko zmodyfikowane:\\
+ 	\[\mathtt{\frac{\Gamma, x:T \vdash t:S \hspace{2em} \Gamma \vdash T::\ast \hspace{2em} S\equiv T}{\Gamma \vdash fix\;x:T.t:T}}
+	\]
+a ewaluacja pozostanie bez zmian: \\
+ 	\[\mathtt{ fix\;x:T.t \longrightarrow [x \mapsto fix\;x:T.t]t
+		}
+	\]
+
+\subsection{Listy}
+
+Jako przykład wbudowanych typów danych wybraliśmy listy. Podobne rekursywne struktury, jak na przykład drzewa, możemy dodać do języka w analogiczny sposób, jednak rekurencyjne typy danych odwiodą nas od tej konieczności. \\
+  
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\dots$ & \textit{termy}  \\
+   & $\mathtt{nil[T]}$ & \textit{lista pusta}  \\
+   & $\mathtt{cons[T]\;t\;t}$ & \textit{konstruktor listy} \\
+   & $\mathtt{isnil[T]\;t}$ & \textit{test na pustość listy} \\
+   & $\mathtt{head[T]\;t\;t}$ & \textit{głowa listy} \\
+   & $\mathtt{tail[T]\;t}$ & \textit{ogon listy} \\
+   & & \\
+  $\mathtt{T}$ ::= &  & \textit{typy} \\
+   & $\mathtt{List\;T}$ & \textit{typ listy} \\
+   & & \\
+  $\mathtt{v}$ ::= &  & \textit{typy} \\
+   & $\mathtt{nil\;[T]}$ & \textit{wartość pustej listy} \\
+   & $\mathtt{cons\;[T]\;v\;v}$ & \textit{wartość listy niepustej} \\
+  \hline
+\end{tabular} \\
+
+Do reguł rodzajowania dodamy regułę:
+ 	\[\mathtt{ \frac{\Gamma \vdash T::K}{\Gamma \vdash List\;T::K}
+		}
+	\]
+czyli $\mathtt{List\;T}$ ma ten sam rodzaj, co jego elementy.
+Reguły typowania nieznacznie się zmienią:
+ 	\[\mathtt{ \frac{\Gamma \vdash List\;T :: \ast}{\Gamma \vdash nil[T] : List\;T } \qquad \frac{\Gamma \vdash t_1:T \;\;\;\Gamma \vdash t_2:List\;T}{\Gamma \vdash List[T]\;t_1\;t_2:List\;T}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t:List\;T }{\Gamma \vdash head[T]\;t : T } \qquad \frac{\Gamma \vdash t:List\;T }{\Gamma \vdash tail[T]\;t : List\;T }
+		}
+	\]
+a ewaluacja pozostanie ta sama, uzupełnienie jej pozostawiamy Czytelnikowi.
+\subsection{Typy egzystencjalne}
+
+System $F_\omega$ jest już w stanie zakodować typy egzystencjalne, choć wbudowane typy egzystencjalne niczemu nie szkodzą. Pokażemy oba podejścia do tego problemu, zaczynając od przedstawienia składni: \\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\mathtt{t}$ ::= & $\cdots$ & \textit{termy}  \\
+   & $\mathtt{\{^*T::K,t\}\;as\;T}$ & \textit{pakowanie} \\
+   & $\mathtt{let\;\{X,x\}=t\;in\;t}$ & \textit{odpakowanie} \\
+   & & \\
+  $\mathtt{T}$ ::= & $\cdots$ & \textit{typy}  \\
+   & $\mathtt{\{\exists X::K,T\}}$ & \textit{typ egzystencjalny} \\
+   & & \\
+  $\mathtt{v}$ ::= & $\cdots$ & \textit{wartości}  \\
+   & $\mathtt{\{^*T,v\}\;as\;T}$ & \textit{pakowanie} \\
+  \hline
+\end{tabular} \\
+
+W systemie $F_\omega$ powyższe elementy języka możemy zdefiniować następująco: \\
+$\mathtt{\{\exists X::K,T\}\;\overset{def}{=}\;\forall Y::\ast.(\forall X::K.T \rightarrow Y) \rightarrow Y}$ \\
+$\mathtt{\{^*U::K,t\}\;as\; \{\exists X::K,T\}\; \overset{def}{=} \;let\;x=t\;in\;\lambda Y::\ast.(\lambda f:\forall X::K.T \rightarrow Y) .f\;[U]\;x}$ \\
+$\mathtt{let\;\{X::K,x\}=t\;in\;t'\;\overset{def}{=}\;t[T'](\lambda X::K.\lambda x:T.t')\hspace{3em} \text{gdzie $\mathtt{t':T'}$} }$ \\ \\
+
+Pokażemy, że zachodzą podstawowe własności pakowania i odpakowania. \\
+Rozważmy term $\mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\}}$. \\ 
+$ \mathtt{ \{^*U::K,t\}\;as\; \{\exists X::K,T\} }$ \\ 
+$ \mathtt{ = let\;x=t\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x = }$ \\
+$ \mathtt{ = (\lambda x:[X \mapsto U]T.\lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U]x)t = }$ \\
+$ \mathtt{ \overset{t:[X \mapsto U]T}{=} \lambda Y::\ast.\lambda f:(\forall X::K.T \rightarrow Y).f[U](t:[X \mapsto U]T)}$ \\
+co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.T \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,T\}}$. \\
+
+Rozważmy bardziej życiowy przykład, aby Czytelnik mógł jeszcze raz przeanalizować pakowanie. Oto typowanie w systemie $F$ przykładowego termu:\\ 
+ 	\[\mathtt{ \frac{\Gamma \vdash \{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X,f:X \rightarrow Nat\}}{\Gamma \{^*X,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\;\{\exists X,\{a:X,f:X \rightarrow Nat\}\}}
+		}
+	\]
+Następnie wyprowadzimy ten term w $F_\omega$: \\ \\
+\small{
+$ \mathtt{ \{Nat::K,\{a=zero, f:\lambda x:Nat.succ\;x\}\}\;as\; \{\exists X::K,\{a:X, f:X \rightarrow Nat\}\}= }$ \\ 
+$ \mathtt{ = let\;x=\{a=zero, f:\lambda x:Nat.succ\;x\}\;in\;\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x = }$ \\
+$ \mathtt{ = (\lambda x:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}.\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]x)}$\\
+$ \mathtt{ \{a=zero, f:\lambda x:Nat.succ\;x\} \overset{\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}}{=}  }$ \\
+$ \mathtt{ = \lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]\{a=zero, f:\lambda x:Nat.succ\;x\}}$ \\ \\
+co jest typu $\mathtt{\forall Y::\ast.(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y) \rightarrow Y}$, czyli z definicji $\mathtt{\{\exists X::K,\{a:X, f:X \rightarrow Nat\}\}}$. \\
+}
+
+\normalsize{Uważne odpakowanie otrzymanego termu pozostawiamy Czytelnikowi jako ćwiczenie, my pozwolimy sobie przeprowadzać schemat wywodu:}\\
+\scriptsize{
+$ \mathtt{let\;\{X,x\}=\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]\{a=zero, f:\lambda x:Nat.succ\;x\}\;in\;(x.f\;x.a)=}$ \\
+$ \mathtt{=(\lambda Y::\ast.\lambda f:(\forall X::K.\{a:X, f:X \rightarrow Nat\} \rightarrow Y).f[Nat]\{a=zero, f:\lambda x:Nat.succ\;x\})[T'](\lambda X::K.\lambda x:T.(x.f\;x.a))=}$\\
+}
+$ \mathtt{=((\lambda X::K.\lambda x:T.(x.f\;x.a))[Nat](\{a=zero, f:\lambda x:Nat.succ\;x\}:[X \mapsto Nat]\{a:X, f:X \rightarrow Nat\}))=}$ \\
+$ \mathtt{=(\{a=zero, f:\lambda x:Nat.succ\;x\}.f\;\{a=zero, f:\lambda x:Nat.succ\;x\}.a)=}$ \\
+$ \mathtt{=(\lambda x:Nat.succ\;x)zero=succ\;zero}$ \\ 
+
+
+\normalsize{
+Przykłady powyższe obrazują działanie zakodowanych typów rekurencyjnych. Teraz zdefiniujemy wbudowane w język konstrukcje typów rekurencyjnych dla systemu $F_\omega$. Do definicji termów, typów i wartości dodaliśmy już elementy w tabelce na początku rozdziału. Pokażemy, w jaki sposób przebiega typowanie i ewaluacja. \\
+}
+
+
+Na pewno musimy określić, jaki rodzaj dostaje $\mathtt{\{\exists X::K,T\}}$:
+ 	\[\mathtt{ \frac{\Gamma,X::K \vdash T::\ast}{\Gamma \vdash \{\exists X::K,T\}::\ast}
+		}
+	\]
+oraz zdefiniować relację znajdowania typu odpowiednią dla $F_\omega$:
+ 	\[\mathtt{ \frac{\Gamma \vdash t:[X \mapsto U]T\hspace{2em}\Gamma \vdash U::K \hspace{2em}\Gamma \vdash \{\exists X::K,T\}::\ast}{\Gamma \vdash \{^*U::K,t\}\;as\;\{\exists X::K,T\} \; : \; \{\exists X::K,T\}}
+		}
+	\]
+ 	\[\mathtt{ \frac{\Gamma \vdash t_1:\{\exists X::K,T_1\}\hspace{2em}\Gamma,X::K,x:T_1 \vdash t_2:T_2}{\Gamma \vdash let\;\{X,x\}=t_1\;in\;t_2:T_2}
+		}
+	\]
+Ewaluacja nieznacznie się zmieni:
+ 	\[\mathtt{ let\;\{X,x\}=(\{^*U::K,v\}\;as\;T)\;\;in\;t \longrightarrow [X \mapsto U][x \mapsto v]t
+		}
+	\]
+ 	\[\mathtt{ \frac{t \longrightarrow t'}{\{^*U::K,t\}\;as\;T \longrightarrow \{^*U::K,t'\}\;as\;T}
+		}
+	\]
+ 	\[\mathtt{ \frac{t_1\longrightarrow t_1'}{let\;\{X,x\}=t_1\;\;in\;t_2 \longrightarrow let\;\{X,x\}=t_1'\;\;in\;t_2}
+		}
+	\]
+
+\subsection{Uzupełnianie relacji $\mathtt{\equiv}$}
+
+Po wprowadzeniu rozszerzeń z rozdziału trzeciego możemy rozszerzyć relację $\mathtt{\equiv}$:
+        \[\mathtt{ \frac{S \equiv T}{\{\exists X::K,S\} \equiv \{\exists X::K,T\}}
+                   \qquad
+                   \frac{S \equiv T}{List\;S \equiv List\;T}
+		}
+	\]
+        \[\mathtt{ \frac{T_1 \equiv T_1' \dots T_n \equiv T_n'}{\{l_i:T_i^{\;\;\;i \in 1..n}\} \equiv \{l_i:T_i'^{\;\;\;i \in 1..n}\}}
+                   \qquad
+                   \frac{T_1 \equiv T_1' \dots T_n \equiv T_n'}{<l_i:T_i^{\;\;\;i \in 1..n}> \equiv <l_i:T_i'^{\;\;\;i \in 1..n}>}
+		}
+	\]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Rekonstrukcja typów}
@@ -355,40 +798,764 @@ $\Gamma\vdash t' : T$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Inne własności $F_\omega$}
+\subsection{Kilka słów o składni.}
+
+Rozważmy język z rozdziału drugiego rozszerzony o następujące konstrukcje: \\
+
+\begin{tabular}{| l c r |}
+  \hline
+  t ::= &  &  \\
+   & $\textrm{let} \ x = t \ \textrm{in} \ t$ & \textit{zmienna lokalna} \\
+   & $\textrm{tlet} \ X = T \ \textrm{in} \ t$ & \textit{typ lokalny} \\
+   & & \\
+  T ::= &  &  \\
+   & $\bar{X}$ & \textit{zmienna typowa (kwantyfikowana schematem)} \\
+   & & \\
+  K ::= & & \\
+   & $\widehat{X}$ & \textit{zmienna rodzajowa (kwantyfikowana schematem)} \\
+   & & \\
+  \hline
+\end{tabular} \\
+
+W dodatku zakładamy, że wszystkie konstruktorowe zmienne związane są unikatowe (tzn. zmienna $X$ może
+występować za conajwyżej jednym kwantyfikatorem).
+
+Ważnym założeniem jest to, że $\bar{X}::*$, co nam ułatwi sprawę przy unifikacji, a~zarazem zbytnio nie ograniczy języka.
+  
+Jeżeli chcemy dodać ML-polimorfizm, będą nam portrzebne schematy typów i schematy rodzajów:\\
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\left<T\right>$ ::= &  & \textit{schemat typu} \\
+   & $T$ & \textit{typ schematu} \\
+   & $\Omega \bar{X}.\left<T\right>$ & \textit{kwantyfikacja zmiennej typowej} \\
+   & $\Omega \widehat{X}.\left<T\right>$ & \textit{kwantyfikacja zmiennej rodzajowej} \\
+   & & \\
+  $\left<K\right>$ ::= &  & \textit{schemat rodzaju} \\
+   & $K$ & \textit{rodzaj schematu}\\
+   & $\Omega \widehat{X}.\left<K\right>$ & \textit{kwantyfikacja zmiennej rodzajowej} \\
+   & & \\
+  \hline
+\end{tabular} \\
+
+Będziemy używać następującego cukru syntaktycznego:
+\[
+\Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m.T \equiv 
+\Omega \bar{X}_1. \dots \Omega \bar{X}_n. \Omega \widehat{X}_1. \dots \Omega \widehat{X}_m.T
+\]
+I analogicznie dla rodzajów.
+
+Teraz sam kontekst typowania ma postać:
+
+\begin{tabular}{| l c r |}
+  \hline
+  $\Gamma$ ::= &  & \\
+   & $\emptyset$ & \\
+   & $\Gamma, x:\left<T\right>$ & \\
+   & $\Gamma, X::\left<K\right>$ & \\
+   & & \\
+  \hline
+\end{tabular} \\
+
+Jeżeli chcemy spojrzeć na ten język, jak na język programowania z~rekonstrukcją typów, można
+dopuścić nieanotowane kwantyfikatory, które parser będzie zamieniać na anotowane świeżą zmienną schematową 
+(typową albo rodzajową w~zależności od kwantyfikatora). Z~drugiej strony nie ma potrzeby pozwalać programiście
+jawnie korzystać ze zmiennych schematowych.
+
+\subsection{Zbiory zmiennych i~podstawienia}
+
+W~dalszej części będziemy używać różnych zbiorów zmiennych występujących w~konstrukcjach w~naszym języku, więc
+to jest dobre miejsce by te zbiory i~operacje zdefiniować.
+
+\subsubsection{Wszystkie zmienne schematowe}
 
 \begin{definicja}
-Reguły przepisywania typów w systemie $F_{\omega}$ w wersji Curry'ego standardowe, oprócz: \\
-
-$\frac{\Gamma \vdash M : \forall X \sigma}{\Gamma \vdash M : nf(\sigma [ X := \tau ])}$
+\emph{Zbiorem schematowych zmiennych typowych typu/schematu $T$} nazwiemy zbiór $\bar{Var}(T)$ zdefiniowany następująco
+\begin{align*}
+\bar{Var}(X) & = \emptyset \\
+\bar{Var}(T_1 \to T_2) & = \bar{Var}(T_1) \cup \bar{Var}(T_2) \\
+\bar{Var}(\forall X :: K.T) & = \bar{Var}(T) \\
+\bar{Var}(\lambda X :: K.T) & = \bar{Var}(T) \\
+\bar{Var}(T_1 \; T_2) & = \bar{Var}(T_1) \cup \bar{Var}(T_2) \\
+\bar{Var}(\bar{X}) & = \{ \bar{X} \}
+\end{align*}
+\begin{align*}
+\bar{Var}(\Omega \bar{X}.\left<T\right>) & = \{ \bar{X} \} \cup \bar{Var}(\left<T\right>) \\
+\bar{Var}(\Omega \widehat{X}.\left<T\right>) & = \bar{Var}(\left<T\right>)
+\end{align*}
 \end{definicja}
 
+\begin{definicja}
+Anologicznie definijuemy \emph{zbiór zmiennych rodzajowych rodzaju/typu/schematu $T$}.
+\begin{align*}
+\widehat{Var}(*) & = \emptyset \\
+\widehat{Var}(K_1 \Rightarrow K_2) & = \widehat{Var}(K_1) \cup \widehat{Var}(K_2) \\
+\widehat{Var}(\widehat{X}) & = \{ \widehat{X} \}
+\end{align*}
+\begin{align*}
+\widehat{Var}(X) & = \emptyset \\
+\widehat{Var}(T_1 \to T_2) & = \widehat{Var}(T_1) \cup \widehat{Var}(T_2) \\
+\widehat{Var}(\forall X :: K.T) & = \widehat{Var}(K) \cup \widehat{Var}(T) \\
+\widehat{Var}(\lambda X :: K.T) & = \widehat{Var}(K) \cup \widehat{Var}(T) \\
+\widehat{Var}(T_1 \; T_2) & = \widehat{Var}(T_1) \cup \widehat{Var}(T_2) \\
+\widehat{Var}(\widehat{X}) & = \emptyset
+\end{align*}
+\begin{align*}
+\widehat{Var}(\Omega \bar{X}.\left<T\right>) & = \widehat{Var}(\left<T\right>) \\
+\widehat{Var}(\Omega \widehat{X}.\left<T\right>) & = \{ \widehat{X} \} \cup \widehat{Var}(\left<T\right>)
+\end{align*}
+\end{definicja}
 
-Nierozstzygalne są problemy:
+\subsubsection{Zmienne typowe wolne i~związane}
+
+\begin{definicja}
+\emph{Zbiór zmiennych typowych wolnych termu/typu $T$} nazwiemy zbiór $FTV(T)$ zdefiniowany następująco
+\begin{align*}
+FTV(X) & = X \\
+FTV(T_1 \to T_2) & = FTV(T_1) \cup FTV(T_2) \\
+FTV(\forall X :: K . T) & = FTV(T) \setminus \{ X \} \\
+FTV(\lambda X :: K . T) & = FTV(T) \setminus \{ X \} \\
+FTV(T_1 \; T_2) & = FTV(T_1) \cup FTV(T_2) \\
+FTV(\bar{X}) & = \emptyset \\
+\end{align*}
+\begin{align*}
+FTV(x) & = \emptyset \\
+FTV(\lambda x : T.t) & = FTV(T) \cup FTV(t) \\
+FTV(t_1 \; t_2) & = FTV(t_1) \cup FTV(t_2) \\
+FTV(\lambda X :: K.t) & = FTV(t) \setminus \{ X \} \\
+FTV(t[T]) & = FTV(t) \cup FTV(T) \\
+FTV(\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = FTV(t_1) \cup FTV(t_2) \\
+FTV(\textrm{tlet} \ X = T \ \textrm{in} \ t) & = FTV(T) \cup (FTV(t) \setminus \{ X \}) \\
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+\emph{Zbiór zmiennych typowych związanych termu/typu $T$} nazwiemy zbiór $BTV(T)$ zdefiniowany następująco
+\begin{align*}
+BTV(X) & = \emptyset \\
+BTV(T_1 \to T_2) & = BTV(T_1) \cup BTV(T_2) \\
+BTV(\forall X :: K . T) & = BTV(T) \cup \{ X \} \\
+BTV(\lambda X :: K . T) & = BTV(T) \cup \{ X \} \\
+BTV(T_1 \; T_2) & = BTV(T_1) \cup BTV(T_2) \\
+BTV(\bar{X}) & = \emptyset \\
+\end{align*}
+\begin{align*}
+BTV(x) & = \emptyset \\
+BTV(\lambda x : T.t) & = BTV(T) \cup BTV(t) \\
+BTV(t_1 \; t_2) & = BTV(t_1) \cup BTV(t_2) \\
+BTV(\lambda X :: K.t) & = BTV(t) \cup \{ X \} \\
+BTV(t[T]) & = BTV(t) \cup BTV(T) \\
+BTV(\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = BTV(t_1) \cup BTV(t_2) \\
+BTV(\textrm{tlet} \ X = T \ \textrm{in} \ t) & = BTV(T) \cup BTV(t) \cup \{ X \} \\
+\end{align*}
+\end{definicja}
+
+\subsubsection{Podstawienia}
+
+Założenie o~unikalności zmiennych związanych wiąże się z~niewielką modyfkacją podstawienia.
+\[
+\{X := T\} Y = 
+	\begin{cases}
+		\alpha T & X=Y, \alpha \ \textrm{jest przemianowaniem zmiennych} \\
+		& \textrm{związanych w~$T$ na świeże} \\
+		Y & X \neq Y
+	\end{cases} \\
+\]
+Reszta definicji pozostaje bez zmian.
+
+Przy rekonstrukcji typów będziemy dodatkowo używać podstawienia, które dodatkowo wstawia świeże zmienne rodzajowe.
+Zdefiniujemy je podobnie:
+\[
+\{X(\{\widehat{X}_1, \dots, \widehat{X}_n\}) := T\} Y = 
+	\begin{cases}
+		\alpha \sigma T & X=Y, \alpha \ \textrm{jest przemianowaniem zmiennych} \\
+		& \textrm{związanych w~$T$ na świeże}, \\
+		& \sigma = [\widehat{X}_1 := fresh, \dots, \widehat{X}_n := fresh] \\
+		Y & X \neq Y
+	\end{cases} \\
+\]
+\[
+\ldots
+\]
+$\sigma$ jest podstawieniem schematowym, definicja jego działania pojawi się później.
+
+Purystów matematycznych może przerażać pojawiająca się w~definicji ,,świeża zmienna'', oznaczana
+jako $fresh$. Jest to zmienna która dotychczas nigdzie się nie pojawiła, i~nie będzie wprowadzona więcej niż raz.
+Można ją formalnie zdefiniować pamiętając cały czas zbiór użytych zmiennych i~przekazując go jako dodatkowy argument do prawie
+wszystkich operacji, ale spowodowało by to znaczne pogorszenie czytelności tego dokumentu, dlatego tak nie robimy.
+Zainteresowany Czytelnik może samodzielnie poprawić przytoczone tu definicje i~twierdzenia formalnie definiując świeżą zmienną.
+
+Dla przytoczonych tu definicji później zajdzie potrzeba rozszerzenia ich na konteksty i~podstawienia.
+Rozszerzenia te są na tyle oczywiste i~naturalne, że nie ma potrzeby ich przytaczania.
+
+\subsection{$\beta$-unifikacja}
+
+Podczas rekonstukcji typów pojawiają się równania więzów które należy rozwiązać. Samo rozwiązanie
+sprowadza się do unifikacji pewnych termów, ale tutaj, ze względu na możliwość występowania funkcji
+typowych, termy równoważne nie muszą być równe, więc sama unifikacja powinna sprowadzać termy do
+$\beta$-równych sobie.
+
+Taka unifikacja niesie ze sobą wiele problemów. Po pierwsze, będziemy chcieli używać podstawienia (za zmienne schematowe),
+będącego unifikatorem, na innych termach. To zaś grozi uzewnętrznieniem zmiennych związanych. Drugi
+problem to taki, że samo podstawienie nie musi zrównywać termów, które da się zrównać, ale różnią się
+nazwami zmiennych związanych.
+
+Z pierwszym problemem poradzimy sobie, traktując podstawienia jako funkcję częściową, tzn. samo podstawienie
+oprócz przyporządkowań postaci $[\bar{X} := T]$, może również zawierać podstawienia postaci $[\bar{X} := fail]$.
+Dodając operację anulowania podstawienia otrzymujemy:
+\[
+[\bar{X} := T] \setminus X = 
+\begin{cases}
+[\bar{X} := fail] & X \in    FTV(T) \\
+[\bar{X} := T]    & X \notin FTV(T)
+\end{cases}
+\]
+
+Z drugim problemem poradzimy sobie traktując unifikator jako parę zawierającą podstawienie, które dobrze działa
+na zewnątrz, oraz term będący wynikiem unifikacji.
+
+\begin{definicja}
+\emph{Podstawieniem schematowym} nazwiemy skończony zbiór par postaci $(\bar{X},T)$, $(\bar{X},fail)$ oraz $(\widehat{X},K)$, takich że
+$\bar{X} \notin \bar{Var}(T)$ oraz $\widehat{X} \notin \widehat{Var}(K)$ (po podstawieniu powinny zniknąć wszystkie zmienne, za 
+które coś podstawiliśmy). 
+\emph{Podstawieniem schematowym pustym} nazwiemy podstawienie schematowe będące zbiorem pustym i~będziemy oznaczać przez $[]$.
+Podstawienia schematowe będziemy reprezentować jako listy postaci
+\[
+[\bar{X}_1 := T_1, \dots, \bar{X}_k := T_k, \bar{X}_{k+1} := fail, \dots , \bar{X}_n := fail, \widehat{X}_1 := K_1, \dots, \widehat{X}_m := K_m].
+\]
+\emph{Dziedziną} podstawienia schematowego $\sigma$ nazwiemy zbiór takich zmiennych typowych $\bar{X}$ i~rodzajowych $\widehat{X}$, że
+$(\bar{X}, T) \in \sigma$ lub $(\bar{X}, fail) \in \sigma$ oraz $(\widehat{X}, K) \in \sigma$. Dziedzinę podstawienia schematowego $\sigma$
+będziemy oznaczać przez $Dom(\sigma)$.
+\end{definicja}
+
+\begin{definicja}
+Podstawienie schematowe może działać na rodzajach, typach, termach i~kontekstach. Jeżeli w~podstawieniu występuje
+para $\widehat{X} := K$, to za wszystkie wystąpienia zmiennej~$\widehat{X}$ zostanie podstawione $K$. Analogicznie
+się dzieje w~przypadku wystąpienia pary $\bar{X} := T$. Jeżeli w~podstawieniu schematowym wystąpi para $\bar{X} := fail$,
+a~w~typie/termie/kontekście do którego podstawienie aplikujemy występuje zmienna $\bar{X}$, to podstawienie jest niemożliwe.
+
+Niech $\sigma$ będzie podstawieniem schematowym. Działanie podstawienia formalnie definiujemy jako:
+\begin{align*}
+\sigma * & = * \\
+\sigma (K_1 \Rightarrow K_2) & = \sigma K_1 \Rightarrow \sigma K_2 \\
+\sigma \widehat{X} & = 
+	\begin{cases}
+		K & (\widehat{X},K) \in \sigma \\
+		\widehat{X} & \textrm{wpp}
+	\end{cases} \\
+\end{align*}
+\begin{align*}
+\sigma X & = X \\
+\sigma(T_1 \to T_2) & = \sigma T_1 \to \sigma T_2 \\
+\sigma(\forall X :: K.T) & = \forall X :: \sigma K. \sigma T \\
+\sigma(\lambda X :: K.T) & = \lambda X :: \sigma K. \sigma T \\
+\sigma(T_1 \; T_2) & = (\sigma T_1) \; (\sigma T_2) \\
+\sigma \bar{X} & = 
+	\begin{cases}
+		\alpha T & (\bar{X},T) \in \sigma, \alpha \ \textrm{jest przemianowaniem} \\
+		& \textrm{wprowadzającym świeże zmienne związane} \\
+		fail & (\bar{X},fail) \in \sigma \\
+		\bar{X} & \textrm{wpp}
+	\end{cases} \\
+\end{align*}
+\begin{align*}
+\sigma x & = x \\
+\sigma (\lambda x : T.t) & = \lambda x : \sigma T. \sigma t \\
+\sigma (t_1 \; t_2) & = (\sigma t_1) \; (\sigma t_2) \\
+\sigma (\lambda X :: K. t) & = \lambda X :: \sigma X . \sigma t \\
+\sigma (t[T]) & = (\sigma t)[\sigma T] \\
+\sigma (\textrm{let} \ x = t_1 \ \textrm{in} \ t_2) & = \textrm{let} \ x = \sigma t_1 \ \textrm{in} \ \sigma t_2 \\
+\sigma (\textrm{tlet} \ x = T \ \textrm{in} \ t) & = \textrm{tlet} \ x = \sigma T \ \textrm{in} \ \sigma t \\
+\end{align*}
+\begin{align*}
+\sigma (\Omega\bar{X}.\left<T\right>) & =
+	\begin{cases}
+		\Omega\bar{X}.\sigma\left<T\right> & \bar{X} \notin Dom(\sigma) \\
+		\Omega\bar{Y}.\sigma[\bar{X}:=\bar{Y}]\left<T\right> & \bar{X} \in Dom(\sigma) \land \bar{Y} \notin Dom(\sigma) \land \bar{Y} \notin \bar{Var}(\left<T\right>)
+	\end{cases} \\
+\sigma (\Omega\widehat{X}.\left<T\right>) & =
+	\begin{cases}
+		\Omega\widehat{X}.\sigma\left<T\right> & \widehat{X} \notin Dom(\sigma) \\
+		\Omega\widehat{Y}.\sigma[\widehat{X}:=\widehat{Y}]\left<T\right> & \widehat{X} \in Dom(\sigma) \land \widehat{Y} \notin Dom(\sigma) \land \widehat{Y} \notin \widehat{Var}(\left<T\right>)
+	\end{cases}
+\end{align*}
+\begin{align*}
+\sigma \emptyset & = \emptyset \\
+\sigma (\Gamma, x : \left<T\right>) & = \sigma \Gamma, x : \sigma \left<T\right> \\
+\sigma (\Gamma, X :: \left<K\right>) & = \sigma \Gamma, X :: \sigma \left<K\right> \\
+\end{align*}
+\end{definicja}
+
+\begin{definicja}
+Powiemy, że podstawienie schematowe $\rho$ jest \emph{złożeniem} podstawień schematowych $\sigma$ i~$\theta$, 
+które będziemy oznaczać $\sigma\circ\theta$ jeżeli
+dla każdego rodzaju $K$, typu $T$, termu $t$ i~kontekstu $\Gamma$ zachodzi:
+\begin{align*}
+\rho K & = \sigma(\theta K) \\
+\rho T & = \sigma(\theta T) \\
+\rho t & = \sigma(\theta t) \\
+\rho \Gamma & = \sigma(\theta \Gamma)
+\end{align*}
+\end{definicja}
+
+\begin{lemat}
+Niech $\sigma$ i~$\theta$ będą podstawieniami schematowymi. Wówczas zachodzi
+\begin{align*}
+\sigma \circ \theta = & \{ (\widehat{X}, \sigma K) | (\widehat{X}, K) \in \theta \} \\
+\cup & \{ (\widehat{X}, K) \in \sigma | \widehat{X} \notin Dom(\theta) \} \\
+\cup & \{ (\bar{X}, \sigma T) | (\bar{X}, T) \in \theta \land \sigma T \neq fail \} \\
+\cup & \{ (\bar{X}, fail) | \exists (\bar{X}, T) \in \theta . \sigma T = fail \} \\
+\cup & \{ (\bar{X}, T) \in \sigma | \bar{X} \notin Dom(\theta) \} \\
+\cup & \{ (\bar{X}, fail) \in \sigma | \bar{X} \notin Dom(\theta) \}
+\end{align*}
+Pozwala nam to algorytmicznie wyliczać złożenia podstawień schematowych.
+\end{lemat}
+
+
+\begin{definicja}
+\emph{Anulowaniem zbioru $A$ zmiennych konstruktorowych z~podstawienia schematowego $\sigma$} nazwiemy operację
+zdefiniowaną następująco:
+\begin{align*}
+\sigma \setminus A = & \{ (\widehat{X}, K) \in \sigma \} \cup \{ (\bar{X}, fail) \in \sigma \} \\
+\cup & \{ (\bar{X}, T) \in \sigma | FTV(T) \cap A = \emptyset \} \\
+\cup & \{ (\bar{X}, fail) | \exists (\bar{X}, T) \in \sigma . FTV(T) \cap A \neq \emptyset \}
+\end{align*}
+\emph{Anulowanie zmiennej $X$ z~podstawienia schematowego $\sigma$} oznaczamy przez $\sigma \setminus X$ i~definiujemy jako $\sigma \setminus \{X\}$.
+\end{definicja}
+
+\begin{definicja}
+\emph{$\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taką parę $(\sigma, S)$, że istnieje
+podstawienie schematowe $\theta$ i~przemianowania zmiennych związanych $\alpha_1$ i~$\alpha_2$ takie, że:
+\[
+\theta \alpha_1 T_1 =_\beta S =_\beta \theta \alpha_2 T_2
+\]
+oraz
+\[
+\theta \setminus BTV(S) = \sigma
+\]
+\end{definicja}
+
+\begin{definicja}
+Powiemy, że $\beta$-unifikator $(\sigma, S)$ jest \emph{ogólniejszy} od $\beta$-unifikatora
+$(\theta, T)$, jeżeli istnieje takie podstawienie schematowe $\rho$ i~przemianowanie $\alpha$, że
+\[
+\rho\alpha S =_\beta T \quad \textrm{oraz} \quad \rho\alpha\sigma = \theta
+\]
+\end{definicja}
+
+\begin{definicja}
+\emph{Najogólniejszym $\beta$-unifikatorem} dla konstruktorów typów $T_1$ i $T_2$ nazwiemy taki $\beta$-unifikator,
+który jest ogólniejszy od wszystkich innych $\beta$-unifikatorów tychże konstruktorów typów.
+\end{definicja}
+
+\begin{lemat}
+Niech $A$ i $B$ będą podzbiorami zbioru zmiennych konstruktorowych, niech $\theta$ będzie podstawieniem schematowym.
+Wówczas zachodzi
+\[
+(\theta \setminus A) \setminus B = \theta \setminus (A \cup B).
+\]
+\label{lsub0}
+\end{lemat}
+
+\begin{lemat}
+Niech $A$ będzie podzbiorem zbioru zmiennych konstruktorowych, niech $\theta$ i~$\rho$ będą podstawieniami schematowymi, oraz
+niech zachodzi $FTV(\rho) \cap A = \emptyset$. Wówczas zachodzi 
+\[
+(\rho \circ \theta) \setminus A = \rho \circ (\theta \setminus A)
+\].
+\label{lsub1}
+\end{lemat}
+
+\begin{lemat}
+Niech $A$ będzie podzbiorem zbioru zmiennych konstruktorowych, niech $\theta$ będzie dowolnym podstawieniem schematowym,
+niech $\rho$ będzie podstawieniem schematowym takim, że $FTV(\rho) \cap A = \emptyset$ (w~szczególności zawierającym tylko zmienne rodzajowe). 
+Wówczas zachodzi
+\[
+(\theta \circ \rho) \setminus A = (\theta \setminus A) \circ \rho
+\]
+\label{lsub2}
+\end{lemat}
+
+\begin{lemat}
+Niech $(\sigma, S)$ będzie $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$, oraz niech $\rho$ będzie 
+podstawieniem schematowym takim, że \mbox{$FTV(\rho) \cap BTV(S) = \emptyset$}.
+Wówczas $(\rho \circ \sigma, \rho S)$ również jest $\beta$-unifikatorem dla konstruktorów typów $T_1$ i~$T_2$.
+\label{lunif1}
+\end{lemat}
+\begin{proof}
+Wiemy, że istnieją takie $\theta$, $\alpha_1$ i~$\alpha_2$, że
+\[
+\theta \alpha_1 T_1 =_\beta S =_\beta \theta \alpha_2 T_2 \quad \textrm{oraz} \quad \theta \setminus BTV(S) = \sigma
+\]
+A wtedy zachodzi
+\[
+(\rho \circ \theta) \alpha_1 T_1 = \rho(\theta \alpha_1 T_1) =_\beta \rho S =_\beta \rho(\theta \alpha_2 T_2) = (\rho \circ \theta_2) \alpha_2 T_2
+\]
+oraz z lematu \ref{lsub1}
+\[
+(\rho \circ \theta) \setminus BTV(S) = \rho \circ (\theta \setminus BTV(S)) = \rho \circ \sigma
+\]
+\end{proof}
+
+\begin{lemat}
+Niech $T_1$ i~$T_2$ będą konstruktorami typów, $\rho$ niech będzie podstawieniem schematowym takim, że 
+$FTV(\rho) \cap BTV(T_1) = \emptyset$ oraz $FTV(\rho) \cap BTV(T_2) = \emptyset$, a $(\sigma, S)$ niech będzie 
+\mbox{$\beta$-unifikatorem} konstruktorów $(\rho T_1, \rho T_2)$.
+Wówczas $(\sigma \circ \rho, S)$ jest $\beta$-unifikatorem konstruktorów $(T_1, T_2)$.
+\label{lunif2}
+\end{lemat}
+\begin{proof}
+Niech $i \in \left\{1,2\right\}$.\\
+Z tego, że $(\sigma, S)$ jest $\beta$-unifikatorem konstruktorów $(\rho T_1, \rho T_2)$ wiemy, że istnieje takie
+$\theta$ oraz $\alpha_i$, że
+\[
+\theta \alpha_i \rho T_i =_\beta S \quad \textrm{oraz} \quad \theta \setminus BTV(S) = \sigma
+\]
+A~wtedy z~tego, że $FTV(\rho) \cap BTV(T_i) = \emptyset$
+\[
+(\theta \circ \rho) \alpha_i T_i = \theta \alpha_i \rho T_i =_\beta S
+\]
+oraz z~lematu \ref{lsub2} mamy
+\[
+(\theta \circ \rho) \setminus BTV(S) = (\theta \circ BTV(S)) \circ \rho = \sigma \circ \rho
+\]
+Co kończy dowód.
+\end{proof}
+
+\subsubsection{Algorytm $\beta$-unifikacji}
+
+Przy unifikacji wszystkie nieanotowane kwantyfikatory traktujemy jak anotowane unikatową zmienną.
+Funkcja $unify$ to klasyczna unifikacja (na rodzajach).\\
+\begin{tabular}{l}
+$unify_\beta(T_1, T_2) \ \textrm{when} \ T_1 =_\beta T_2 \ = $ \\
+$\qquad ([], T_1)$ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(\bar{X}, T) = $ \\
+$\qquad \textrm{if} \ \bar{X} \in \bar{Var}(T) \ \textrm{then} \ fail $ \\
+$\qquad \textrm{else} \ ([\bar{X} := T], T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T, \bar{X}) = $ \\
+$\qquad \textrm{if} \ \bar{X} \in \bar{Var}(T) \ \textrm{then} \ fail $ \\
+$\qquad \textrm{else} \ ([\bar{X} := T], T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(\forall X_1::K_1.T_1, \forall X_2::K_2.T_2) = $ \\
+$\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ X_3 = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K \sigma_K \{X_1 := X_3\}T_1, \sigma_K \{X_2 := X_3\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_3) \circ \sigma_K, \forall X_3::\sigma_T \sigma_K K_1.T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(\lambda X_1::K_1.T_1, \lambda X_2::K_2.T_2) = $ \\
+$\qquad \textrm{let} \ \sigma_K = unify(K_1, K_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ X_3 = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_T, T) = unify_\beta(\sigma_K \{X_1 := X_3\}T_1, \sigma_K \{X_2 := X_3\}T_2) \ \textrm{in} $ \\
+$\qquad\qquad ((\sigma_T \setminus X_3) \circ \sigma_K, \lambda X_3::\sigma_T \sigma_K K_1.T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T_1 \rightarrow S_1, T_2 \rightarrow S_2) = $ \\
+$\qquad \textrm{let} \ (\theta, T) = unify_\beta(T_1, T_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma, S) = unify_\beta(\theta S_1, \theta S_2) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma \circ \theta, \sigma T \rightarrow S) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T_1, T_2) \ \textrm{when} \ T_1 \longrightarrow_\beta S_1 \ = $ \\
+$\qquad unify_\beta(S_1, T_2)$ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(T_1, T_2) \ \textrm{when} \ T_2 \longrightarrow_\beta S_2 \ = $ \\
+$\qquad unify_\beta(T_1, S_2)$ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$unify_\beta(V_1 \; T_1, V_2 \; T_2) = $ \\
+$\qquad \textrm{let} \ (\theta, V) = unify_\beta(V_1, V_2) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma, T) = unify_\beta(\theta T_1, \theta T_2) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma \circ \theta, \sigma V \; T) $ \\
+\end{tabular} \\
+
+\subsubsection{Własności}
+
+\begin{fakt}
+Algorytm $unify_\beta$ dla konstruktorów typów, dla których daje się określić rodzaj, zatrzymuje się.
+\end{fakt}
+\begin{proof}
+Trywialne. Wynika z~tego, że algorytm jest sterowany składnią, oraz z~silnej normalizowalności kostruktorów typów.
+\end{proof}
+\begin{twierdzenie}
+Niech $T_1$ oraz $T_2$ będą konstruktorami typów, które daje się orodzajować. Wówczas jeśli
+$unify_\beta(T_1, T_2) = (\sigma, S)$, to $(\sigma, S)$ jest $\beta$-unifikatorem konstruktorów typów
+$T_1$ i~$T_2$.
+\end{twierdzenie}
+\begin{proof}
+Indukcja po głebokości rekursji.
+
+Możliwe są następujące przypadki:
+\begin{itemize}
+\item $T_1 =_\beta T_2$ lub $T_1 \equiv \bar{X}$ lub $T_2 \equiv \bar{X}$ \\
+dla tych przypadków teza zachodzi trywialnie.
+\item $T_1 \equiv \forall X_1::K_1.T'_1$ oraz $T_2 \equiv \forall X_2::K_2.T'_2$ \\
+Wtedy z założenia indukcyjnego $(\sigma_T, T)$ jest $\beta$-unifikatorem konstruktorów typów
+$\sigma_K \{X_1:=X_3\}T'_1$ oraz $\sigma_K\{X_2:=X_3\}T'_2$, gdzie $\sigma_K$ jest unifikatorem rodzajów $K_1$ i~$K_2$.
+Istnieje więc takie podstawienie schematowe $\theta$ oraz przemianowania $\alpha_1$ i~$\alpha_2$, że zachodzą równości
+\[
+\theta \alpha_1 \sigma_K \{X_1:=X_3\}T'_1 =_\beta T =_\beta \theta \alpha_2 \sigma_K \{X_2:=X_3\} T'_2
+\]
+\[
+\theta \setminus BTV(T) = \sigma_T
+\]
+A wtedy
+\[
+(\theta \circ \sigma_K)\alpha_1\{X_1:=X_3\} \forall X_1::K_1.T'_1 = \forall X_3::\theta\sigma_K K_1. \theta\sigma_K\alpha_1 \{X_1 := X_3\} T'_1 =
+\]
+\[
+= \forall X_3::(\theta \setminus BTV(T))\sigma_K K_1.\theta \alpha_1 \sigma_K \{X_1 := X_3\}T'_1 =_\beta \forall X_3::\sigma_T\sigma_K K_1.T
+\]
+oraz
+\[
+(\theta \circ \sigma_K) \setminus BTV(\forall X_3::\sigma_T\sigma_K K_1.T) = (\theta \setminus (\{X_3\} \cup BTV(T))) \circ \sigma_K =
+\]
+\[
+= (\sigma_T \setminus X_3) \circ \sigma_K
+\]
+Analogicznie pokażemy pozostałe dwie równości dla konstruktora $T_2$.\\ Zatem 
+\mbox{$((\sigma_T \setminus X_3) \circ \sigma_K, \forall X_3::\sigma_T \sigma_K K_1.T)$} jest $\beta$-unifikatorem konstruktorów $T_1$ i~$T_2$.
+\item $T_1 \equiv \lambda X_1::K_1.T'_1$ oraz $T_2 \equiv \lambda X_2::K_2.T'_2$ \\
+Dla tego przypadku dowód przeprowadzamy analogicznie do przypadku poprzedniego.
+\item $T_1 \equiv T'_1 \rightarrow S_1$ oraz $T_2 \equiv T'_2 \rightarrow S_2$ \\
+Teza wynika wprost z~założenia indukcyjnego oraz lematów \ref{lunif1} i \ref{lunif2}.
+\item $T_1 \longrightarrow_\beta S_1$ lub $T_2 \longrightarrow_\beta S_2$ \\
+Wynika z~założenia indukcyjnego i~z~faktu, że $\beta$-redukcja zachowuje $\beta$-równość.
+\item $T_1 \equiv V_1\;S_1$ oraz $T_2 \equiv V_2\;S_2$ \\
+Dowód przeprowadzamy analogicznie do przypadku z typem funkcji.
+\end{itemize}
+\end{proof}
+
+\begin{fakt}
+Algorytm $unify_\beta$ działający na konstruktorach typów nie zawierających zmiennych schematowych
+zwraca pusty unifikator jeśli konstruktory są $\beta$ równe, w~przeciwnym przypadku zawodzi (zawraca $fail$).
+\end{fakt}
+
+
+\begin{fakt}
+Jeżeli w~algorytmie pierwszy przypadek sprawdzający $\beta$-równość konstruktorów zamienimy na analogiczy 
+sprawdzający tożsamość zmiennych typowych (a~przy rozszerzeniach jeszcze typów bazowych), otrzymamy algorytm
+równoważny.
+\end{fakt}
+
+
+\subsection{Rekonstrukcja typów}
+
+\subsubsection{Algorytm W}
+
+Dla rodzajów: \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash X :: ?) = $ \\
+$\qquad \textrm{let} \ \Omega \widehat{X}_1 \dots \widehat{X}_n.K = \Gamma(X) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \widehat{Y}_1, \dots, \widehat{Y}_n = fresh \ \textrm{in} $ \\
+$\qquad\qquad ([], [\widehat{X}_1 := \widehat{Y}_1, \dots ,\widehat{X}_n := \widehat{Y}_n]K) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash T_1 \rightarrow T_2 :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K_1) = kindof(\Gamma \vdash T_1 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, K_2) = kindof(\sigma_1 \Gamma \vdash \sigma_1 T_1 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \rho_1 = unify(\sigma_2 K_1, *) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \rho_2 = unify(\rho_1 K_2, *) \ \textrm{in} $ \\
+$\qquad\qquad (\rho_2 \circ \rho_1 \circ \sigma_2 \circ \sigma_1, *) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash \forall X::K.T :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma, K_T) = kindof(\Gamma, X::K \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \rho = unify(K_T, *) \ \textrm{in} $ \\
+$\qquad\qquad (\rho \circ \sigma, *) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash \lambda X::K.T :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma, K_T) = kindof(\Gamma, X::K \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma, \sigma K \Rightarrow K_T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash T_1 \; T_2 :: ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K_1) = kindof(\Gamma \vdash T_1 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, K_2) = kindof(\sigma_1 \Gamma \vdash \sigma_1 T_2 :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \widehat{X} = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \sigma_3 = unify(\sigma_2 K_1, K_2 \Rightarrow \widehat{X}) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \sigma_3 \widehat{X}) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$kindof(\Gamma \vdash \bar{X} :: ?) = $ \\
+$\qquad\qquad ([], *) $ \\
+\end{tabular} \\
+
+Dla typów:\\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash x : ?) = $ \\
+$\qquad \textrm{let} \ \Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m.T = \Gamma(x) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \bar{Y}_1, \dots, \bar{Y}_n, \widehat{Y}_1, \dots, \widehat{Y}_m = fresh \ \textrm{in} $ \\
+$\qquad\qquad ([], [\bar{X}_1 := \bar{Y}_1, \dots ,\bar{X}_n := \bar{Y}_n,\widehat{X}_1 := \widehat{Y}_1, \dots ,\widehat{X}_m := \widehat{Y}_m]T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \lambda x:T.t : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K) = kindof(\Gamma \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \sigma_2 = unify(K, *) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_3, T_t) = typeof(\sigma_2 \sigma_1(\Gamma, x:T) \vdash \sigma_2 \sigma_1 t : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \sigma_3 \sigma_2 \sigma_1 T \rightarrow T_t) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash t_1 \; t_2 : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, T_1) = typeof(\Gamma \vdash t_1 : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_2) = typeof(\sigma_1 \Gamma \vdash \sigma_1 t_2 : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \bar{X} = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_3, T'_2 \to T_3) = unify_\beta(\sigma_2 T_1, T_2 \rightarrow \bar{X}) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, T_3) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \lambda X::K.t : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma, T) = typeof(\Gamma, X::K \vdash t : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma \setminus X, \forall X::\sigma K.T) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash t[T] : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, T_t) = typeof(\Gamma \vdash t : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, K) = kindof(\sigma_1 \Gamma \vdash \sigma_1 T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \bar{X} = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ Y = fresh \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_3, \forall Z :: K' . T') = unify_\beta(\sigma_2 T_t, \forall Y::K.\bar{X}) \textrm{in} $ \\
+$\qquad\qquad (\sigma_3 \circ \sigma_2 \circ \sigma_1, \{Y:=\sigma_3 \sigma_2 \sigma_1 T\} T') $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \textrm{let} \ x=t_1 \ \textrm{in} \ t_2 : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, T_1) = typeof(\Gamma \vdash t_1 : ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \bar{X}_1, \dots, \bar{X}_n \right\} = \bar{Var}(T_1) \setminus \bar{Var}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ \left\{ \widehat{X}_1, \dots, \widehat{X}_m \right\} = \widehat{Var}(T_1) \setminus \widehat{Var}(\Gamma) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_2) = typeof(\sigma_1 \Gamma, x:\Omega \bar{X}_1 \dots \bar{X}_n \widehat{X}_1 \dots \widehat{X}_m. T_2 \vdash \sigma_1 t_2 : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_2 \circ \sigma_1, T_2) $ \\
+\end{tabular} \\
+\begin{tabular}{l}
+$typeof(\Gamma \vdash \textrm{tlet} \ X=T \ \textrm{in} \ t : ?) = $ \\
+$\qquad \textrm{let} \ (\sigma_1, K) = kindof(\Gamma \vdash T :: ?) \ \textrm{in} $ \\
+$\qquad \textrm{let} \ (\sigma_2, T_t) = typeof(\sigma_1 \Gamma \vdash \{ X(\widehat{Var}(K) \setminus \widehat{Var}(\Gamma)) := \sigma_1 T \} \sigma_1 t : ?) \ \textrm{in} $ \\
+$\qquad\qquad (\sigma_2 \circ \sigma_1, T_t) $ \\
+\end{tabular} \\
+
+\subsubsection{Własności}
+
+\begin{twierdzenie}
+Funkcja $typeof$ zatrzymuje się.
+\end{twierdzenie}
+
+\begin{twierdzenie}
+Niech $t$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas \mbox{$typeof(\Gamma \vdash t : ?) = (\sigma, T)$} wtedy 
+i~tylko wtedy, gdy $\Gamma \vdash t : T'$, gdzie $T' =_\beta T$ oraz $\sigma = []$ (tzn. gdy program zawiera wszystkie anotacje, algorytm $typeof$ wykonuje zwykłą 
+kontrolę typów w~systemie $F_\omega$).
+\label{twtypecheck}
+\end{twierdzenie}
+\begin{proof}
+Szkic dowodu:
+\begin{enumerate}
+\item Indukcyjnie po strukturze typu pokazujemy analogiczne twierdzenie dla rodzajów i~funkcji $kindof$:\\
+Niech $T$ i~$\Gamma$ nie zawierają zmiennych schematowych. Wówczas \mbox{$kindof(\Gamma \vdash t :: ?) = (\sigma, K)$} wtedy
+i~tylko wtedy gdy $\Gamma \vdash T :: K$ oraz $\sigma = []$.
+\item Indukcyjnie po strukturze wyrażenia $t$ pokażemy implikację tezy w~jedną stronę.
+\item Pokazujemy indukcyjnie, że drzewa wyprowadzenia $\Gamma \vdash t : T$ można zawsze przebudować tak, by
+z~reguły
+\[
+\frac{\Gamma \vdash t : S \quad S \equiv T \quad \Gamma \vdash T :: *}{\Gamma \vdash t : T}
+\]
+korzystać jedynie nad argumentem aplikacji i~w~korzeniu drzewa wyprowadzenia.
+\item Indukcyjnie po tak przebudowanym drzewie pokażemy implikację tezy w~drugą stronę.
+\end{enumerate}
+\end{proof}
+
+\begin{twierdzenie}
+Niech $t$ i~$\Gamma$ będą takim termem i~kontekstem, że $typeof(\Gamma \vdash t : ?) = (\sigma, T)$. Wówczas
+istnieje takie podstawienie schematowe $\theta$, że zachodzą następujące własności:
+\begin{itemize}
+\item $\theta \Gamma \vdash \theta t : T$
+\item $\theta \setminus BTV(t) = \sigma$
+\end{itemize}
+\end{twierdzenie}
+\begin{proof}
+Szkic dowodu:
+\begin{enumerate}
+\item Podobnie jak w~dowodzie twierdzenia \ref{twtypecheck} najpierw indukcyjnie dowodzimy analogicznego twierdzenia
+dla funkcji $kindof$ i~relacji rodzajowania.
+\item Indukcyjnie po strukturze termu $t$ pokazujemy tezę. Podstawienie schematowe $\theta$ konstruujemy tak jak podstawienie schematowe
+$\sigma$ tyle, że z~pominięciem anulowania zmiennych związanych. W~miejscach w~których korzystamy z~$\beta$-unifikacji
+korzystamy z~definicji \mbox{$\beta$-unifikatora} by skonstruować podstawienie schematowe $\theta$.
+\end{enumerate}
+\end{proof}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Inne własności $F_\omega$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setcounter{equation}{0}
+
+\subsection{Nierozstrzygalność}
+
+\begin{fakt}
+Nierozstrzygalne są problemy:
     \begin{itemize}
-        \item sprawdzania typu: dane $\Gamma, M, \tau$, Czy $\Gamma \vdash M : \tau$
-        \item typowalność: dane M, Czy $\exists \Gamma \tau . \Gamma \vdash M : \tau$
+        \item sprawdzania typu: dane $\Gamma, M, \tau$, pytamy czy $\Gamma \vdash M : \tau$
+        \item typowalność: dane M, pytamy czy $\exists \Gamma \tau . \Gamma \vdash M : \tau$
+        \item sprawdzania niepustości typu 
     \end{itemize}
+\end{fakt}
+
+\subsection{Redukcja $\mathtt{\Rightarrow}$ na typach - definicja i własności}
+
+Jak już wspomnieliśmy, możemy na typach zdefiniować redukcję, która przebiega bardzo podobnie do $\beta$-redukcji na termach.\\
+
+	\[\mathtt{
+		\frac{}{T \Rightarrow T}
+                \qquad
+                \frac{S_1 \Rightarrow T_1 \;\;\; S_2 \Rightarrow T_2}{S_1 \rightarrow S_2 \Rightarrow T_1 \rightarrow T_2}}
+	\]
+	\[\mathtt{
+                \frac{S_1 \Rightarrow T_1 \;\; S_2 \Rightarrow T_2}{S_1\;S_2 \Rightarrow T_1\;T_2}
+                \qquad
+                \frac{S \Rightarrow T}{\forall X::K.S \Rightarrow \forall X::K.T} }
+	\]
+	\[\mathtt{
+		\frac{S \Rightarrow T}{\lambda X::K.S \Rightarrow \lambda X::K.T}
+                \qquad
+                (\lambda X::K.S)T \equiv [X \mapsto T]S}
+	\] 
+	\[\mathtt{
+                \frac{S_1 \Rightarrow T_1 \;\;\; S_2 \Rightarrow T_2}{(\lambda X::K.S_1)S_2 \Rightarrow [X \mapsto T_2]T_1 }}
+	\]
 
 
-\subsection{pare słów o rozszerzeniach}
-\section{Praktyczne zastosowanie}                       
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{equation}{0}
+\begin{lemat}
+Jeśli S$\Rightarrow $T i S $\Rightarrow $U, to istnieje P takie, że T $\Rightarrow$P i U $\Rightarrow$P.
+\end{lemat}
+\begin{lemat}
+Zachodzi własność Churcha-Rossera dla $\Rightarrow$, czyli jeśli S$\Rightarrow ^*$T i S $\Rightarrow ^*$U, to istnieje P takie, że T $\Rightarrow ^*$P i U $\Rightarrow ^*$P.
+\end{lemat}
+\begin{lemat}
+S $\equiv$ T zachodzi wtedy i tylko wtedy, gdy S $\Leftrightarrow^*$T.
+\end{lemat}
 
+\subsection{Inne własności}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Podsumowanie}                       
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{equation}{0}
+\begin{twierdzenie}
+Jeżeli $\Gamma \vdash t:T$ i $t \rightarrow t'$ to $t':T$.
+\end{twierdzenie}
 
+\begin{lemat}
+Jeśli $t$ jest zamkniętą wartością i $\vdash t:T_1 \rightarrow T_2$, to $t$ jest abstrakcją.  
+\end{lemat}
+\begin{lemat}
+Jeśli $t$ jest zamkniętą wartością i $\vdash t:\forall X:T_1.T_2$, to $t$ jest abstrakcją typową. 
+\end{lemat}
 
-
+\begin{twierdzenie}
+Jeżeli $\vdash t:T$ dla pewnego $T$, to albo $t$ jest wartością, albo jakiś $t'$ taki, że $t \rightarrow t'$.
+\end{twierdzenie}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -399,7 +1566,9 @@ Nierozstzygalne są problemy:
 \thispagestyle{empty}
 \begin{thebibliography}{99}
 
-\bibitem{ChK} Pierce, \textit{} 
+\bibitem{Pie} Pierce B., \textit{Types and programing languages}, The MIT Press, 2002 
+\bibitem{Urzy} Urzyczyn P., \textit{Materiały do wykładu Rachunek Lambda} 
+\bibitem{MZZ} Mazurak K.,Zhao J.,Zdancevic S., \textit{Lightweight Linear Types in System $F^\circ$}
 
 
 	  
