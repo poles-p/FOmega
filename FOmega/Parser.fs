@@ -125,6 +125,7 @@ let private atomTypu =
         }) <|>
     (kw "Nat" <!> fun () -> parsor.Return TNat) <|>
     (kw "Bool" <!> fun () -> parsor.Return TBool) <|>
+    (kw "?" <!> fun () -> parsor.Return(TWZmienna(Fresh.swierzaNazwa()))) <|>
     (ident true <!> fun x -> 
         parsor{
             let! var = getState;

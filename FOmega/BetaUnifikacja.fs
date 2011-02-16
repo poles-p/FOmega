@@ -30,22 +30,32 @@ let rec unifikuj(k1 : Rodzaj, k2 : Rodzaj) pos =
         None
 
 /// <summary>
+/// Jeżeli typ ma postać TWartość(x,t), pomija informację o jego nazwie
+/// </summary>
+let rec wartosc t =
+    match t with
+    | TWartosc(_, v) -> wartosc v
+    | _ -> t
+
+/// <summary>
 /// Beta redukcja konstruktorów typów. Funkcja wykonuje jeden krok w porządku gorliwym.
 /// </summary>
 let rec betaRedukuj t =
     match t with
-    | TAplikacja(TLambda(x, x2, k, t1), t2) ->
-        match betaRedukuj t2 with
-        | None -> Some(t1.Podstaw x2 t2)
-        | Some t2' -> Some(TAplikacja(TLambda(x, x2, k, t1), t2))
     | TAplikacja(t1, t2) ->
-        opt{
-            let! t1' = betaRedukuj t1;
-            return TAplikacja(t1', t2)
-        }
+        match wartosc t1 with
+        | TLambda(x, x2, k, t1') ->
+            match betaRedukuj t2 with
+            | None -> Some(t1'.Podstaw x2 t2)
+            | Some t2' -> Some(TAplikacja(t1, t2))
+        | _ ->
+            opt{
+                let! t1' = betaRedukuj t1;
+                return TAplikacja(t1', t2)
+            }
     | TWartosc(x, t2) ->
         match betaRedukuj t2 with
-        | None -> Some t2
+        | None -> None
         | Some t2' -> Some( TWartosc(x, t2') )
     | _ -> None
 
