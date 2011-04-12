@@ -638,7 +638,7 @@ type Wyrazenie =
                 "(" + res + ")"
             else res
         | EAnotacja(e,t,_) ->
-            let res = e.ToString 9 + " :: " + t.ToString();
+            let res = e.ToString 9 + " : " + t.ToString();
             if prior > 8 then
                 "(" + res + ")"
             else res

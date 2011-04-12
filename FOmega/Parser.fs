@@ -14,10 +14,10 @@ open Parsor.State
 /// znakiem nowego wiersza, albo ciąg znaków pomiędzy sekwencjami '/*' i '*/)'
 /// </summary>
 let private ws =
-    whiteSpace >>. 
     skipMany (
         (skipString "//" <!> fun () -> skipLine) <|>
-        (skipString "/*" <!> fun () -> skipUntil (skipString "*/") getToken .>> whiteSpace)
+        (skipString "/*" <!> fun () -> skipUntil (skipString "*/") getToken) <|>
+        whiteSpace1
     ) 
 
 let private oper str f =

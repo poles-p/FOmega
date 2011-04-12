@@ -139,17 +139,19 @@ let rec rekTyp (gamma : KontekstTypowania) term =
     | ELet(x, e1, e2, pos) ->
         opt{
             let! (s1, t1) = rekTyp gamma e1;
-            let tv = Set.toList (t1.WolneTWZmienne - gamma.WolneTWZmienne); // TODO: nie jestem pewien, czy trzeba wykonać podstawienie na gammie
-            let kv = Set.toList (t1.WolneKWZmienne - gamma.WolneKWZmienne);
-            let gamma2 = (s1.Aplikuj(pos, gamma)).Rozszerz(SchematTypu(x, tv, kv, t1));
+            let gamma' = (s1.Aplikuj(pos, gamma));
+            let tv = Set.toList (t1.WolneTWZmienne - gamma'.WolneTWZmienne);
+            let kv = Set.toList (t1.WolneKWZmienne - gamma'.WolneKWZmienne);
+            let gamma2 = gamma'.Rozszerz(SchematTypu(x, tv, kv, t1));
             let! (s2, t2) = rekTyp gamma2 (s1.Aplikuj e2);
             return (s2 * s1, t2)
         }
     | ETLet(x, x2, t, e, pos) ->
         opt{
             let! (s1, k) = rekRodzaj gamma t pos;
-            let kv = Set.toList (k.WolneKWZmienne - gamma.WolneKWZmienne);
-            let! (s2, tk) = rekTyp (s1.Aplikuj(pos, gamma)) ((s1.Aplikuj e).PodstawKopieTypu x2 kv (s1.Aplikuj(pos, t)));
+            let gamma' = (s1.Aplikuj(pos, gamma));
+            let kv = Set.toList (k.WolneKWZmienne - gamma'.WolneKWZmienne);
+            let! (s2, tk) = rekTyp gamma' ((s1.Aplikuj e).PodstawKopieTypu x2 kv (s1.Aplikuj(pos, t)));
             return (s2 * s1, tk)
         }
     | ENat _ -> Some(Podstawienie[], TNat)
